@@ -99,6 +99,10 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .rank-tabs button.sel{border-color:var(--amarillo);color:var(--amarillo)}
 .rank-quien{display:flex;align-items:center;gap:6px}.rank-quien span{display:flex;flex-direction:column}.rank-quien small{font-size:10px;color:var(--tiza-2)}
 .tabla-rank .pts{color:var(--amarillo);font-weight:700}
+.tabla-rank tr.yo td{background:rgba(126,212,146,.10)}
+.tabla-rank tr.yo td:first-child{box-shadow:inset 3px 0 0 var(--verde)}
+.menu-nombre{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;margin:4px 0 8px}
+.menu-nombre input{font:inherit;background:#0e1a13;color:var(--tiza);border:2px solid var(--borde);padding:3px 8px;width:140px}
 .tabla-rank tr.top td{background:rgba(245,213,71,.06)}
 .recibido{font-style:normal;color:var(--verde);font-weight:700}
 .caja h2{font-size:24px;text-align:center;margin-bottom:4px}
@@ -274,6 +278,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
     <h1 class="titulo">UADE<span>SURVIVOR</span></h1>
     <p class="sub">Sobreviví a la carrera. Los profes no perdonan.</p>
     <div class="barra-creditos"><span class="chip">Créditos: <b id="menuCreditos">0</b></span></div>
+    <label class="menu-nombre">Jugador: <input id="menuNombre" maxlength="14" placeholder="Poné tu nombre"></label>
     <div class="grilla-pj" id="grillaPj"></div>
     <p class="desc-pj" id="descPj"></p>
     <button class="btn jugar" id="btnJugar">A cursar</button>
@@ -328,7 +333,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   <button class="btn sec" data-cerrar>Listo</button>
 </div></div>
 
-<div class="modal oculto" id="mRanking"><div class="caja"><h2>🏆 Ranking</h2><p class="sub">Las mejores partidas jugadas en este dispositivo</p>
+<div class="modal oculto" id="mRanking"><div class="caja"><h2>🏆 Ranking</h2><p class="sub" id="rankSub">Ranking online de la temporada</p>
   <label class="rank-nombre">Tu nombre: <input id="rankNombre" maxlength="14" placeholder="¿Quién juega?"></label>
   <div class="rank-mejores" id="rankMejores"></div>
   <div class="rank-tabs" id="rankTabs"></div>
@@ -384,7 +389,11 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
    1. CONSTANTES
    ========================================================= */
 const STORAGE_KEY = 'facusurvivor';
-const SCHEMA_VERSION = 8;
+// Temporada: al cambiarla, todos arrancan de cero (se guarda una copia del progreso viejo en este navegador)
+const TEMPORADA = 'temporada-1';
+// Base de datos online (Firebase Realtime Database). Vacío = sin online.
+const DB_URL = 'https://uadesurvivor-default-rtdb.firebaseio.com';
+const SCHEMA_VERSION = 9;
 const ESCENARIOS = {
   facu:  { nombre:'Pasillos de la facu', desde:0,   desc:'Primer año: pasillos abiertos.' },
   aula:  { nombre:'Aula 305',            desde:240, desc:'Filas de bancos. Los tiros de los profes se frenan en los bancos.' },
@@ -668,7 +677,7 @@ const KIOSCO = [
    ========================================================= */
 function estadoInicial(){
   return { version:SCHEMA_VERSION, creditos:0, mejoras:{vida:0,danio:0,vel:0,iman:0,hab:0,revivir:0,entreno:0}, records:{}, partidas:[], ultimoPj:'ruso', sonido:true,
-    tickets:0, skins:{}, skinSel:{}, logros:{}, stats:{}, inicio:[], campo:campoInicial(), escenario:'facu', jugador:'' };
+    tickets:0, skins:{}, skinSel:{}, logros:{}, stats:{}, inicio:[], campo:campoInicial(), escenario:'facu', jugador:'', temporada:TEMPORADA, pendOnline:[] };
 }
 function campoInicial(){ return { nombre:'LA ESTANCIA', animales:{}, lotes:[null,null,null,null], edificios:{}, ult:Date.now() }; }
 function migrarA5(d){
@@ -681,6 +690,7 @@ function migrarA5(d){
   if (typeof d.campo.ult !== 'number') d.campo.ult = Date.now();
   return d;
 }
+function migrarA9(d){ if (typeof d.temporada !== 'string') d.temporada = ''; if (!Array.isArray(d.pendOnline)) d.pendOnline = []; return d; }
 function migrarA8(d){ if (typeof d.jugador !== 'string') d.jugador = ''; return d; }
 function migrarA7(d){ d.mejoras = Object.assign({}, d.mejoras); if (typeof d.mejoras.entreno !== 'number') d.mejoras.entreno = 0; return d; }
 function migrarA6(d){ if (typeof d.escenario !== 'string') d.escenario = 'facu'; return d; }
@@ -699,7 +709,7 @@ function completar(d){
   if (typeof out.creditos !== 'number' || !isFinite(out.creditos)) out.creditos = 0;
   if (!out.records || typeof out.records !== 'object') out.records = {};
   if (!Array.isArray(out.partidas)) out.partidas = [];
-  migrarA4(out); migrarA5(out); migrarA6(out); migrarA8(out);
+  migrarA4(out); migrarA5(out); migrarA6(out); migrarA8(out); migrarA9(out);
   if (!ESCENARIOS[out.escenario]) out.escenario = 'facu';
   return out;
 }
@@ -714,6 +724,7 @@ function migrar(d){
   if (v < 6) out = migrarA6(out);
   if (v < 7) out = migrarA7(out);
   if (v < 8) out = migrarA8(out);
+  if (v < 9) out = migrarA9(out);
   out = completar(out);
   out.version = SCHEMA_VERSION;
   return out;
@@ -735,6 +746,14 @@ function guardar(){
   catch(e){ if (!avisoGuardado){ avisoGuardado = true; toast('Ojo: este navegador no deja guardar el progreso.'); } }
 }
 let datos = cargar();
+// reboot de temporada: todo de cero, pero el progreso viejo queda guardado aparte en este navegador
+if (datos.temporada !== TEMPORADA){
+  const viejo = datos, tuvo = (viejo.partidas||[]).length > 0 || viejo.creditos > 0;
+  if (tuvo){ try { localStorage.setItem(STORAGE_KEY + '-antes-de-' + TEMPORADA, JSON.stringify(viejo)); } catch(_){} }
+  datos = estadoInicial(); datos.jugador = viejo.jugador || ''; datos.sonido = viejo.sonido !== false;
+  guardar();
+  if (tuvo) setTimeout(() => toast('¡Nueva temporada! Todos arrancan de cero.'), 800);
+}
 
 /* =========================================================
    4. UTILIDADES
@@ -3153,6 +3172,7 @@ function terminar(gano){
   const nuevoRec = !rec || (gano && !rec.gano) || (gano===!!rec.gano && run.tiempo > rec.tiempo);
   if (nuevoRec) datos.records[G.pj.id] = run;
   datos.partidas.push(run); if (datos.partidas.length > 50) datos.partidas = datos.partidas.slice(-50);
+  subirPartida(Object.assign({}, run, { puntaje:puntaje(run), skin:datos.skinSel[G.pj.id]||'normal' }));
   datos.ultimoPj = G.pj.id;
   // tickets y estadísticas
   const tickets = Math.floor(G.t/120) + G.st.tickets + (gano?3:0);
@@ -3604,8 +3624,9 @@ function cerrarModales(){ document.querySelectorAll('.modal').forEach(m => m.cla
 
 /* ---------- menú ---------- */
 let pjSel = datos.ultimoPj || 'ruso';
+function renderNombreMenu(){ const i = $('#menuNombre'); if (i && document.activeElement !== i) i.value = datos.jugador || ''; }
 function renderMenu(){
-  $('#menuCreditos').textContent = datos.creditos;
+  $('#menuCreditos').textContent = datos.creditos; renderNombreMenu();
   renderEscenarios();
   const g = $('#grillaPj');
   g.innerHTML = PERSONAJES.map(p => {
@@ -3642,26 +3663,63 @@ function renderKiosco(){
     datos.creditos -= c; datos.mejoras[k.id] = l+1; guardar(); renderKiosco(); renderMenu();
   });
 }
+/* ---------- online: ranking compartido (Firebase Realtime Database por REST, sin librerías) ---------- */
+const online = () => !!DB_URL;
+const rutaOnline = () => `${DB_URL.replace(/\/$/,'')}/temporadas/${TEMPORADA}/partidas`;
+async function subirPartida(run){
+  if (!online() || !run.jugador) return;
+  datos.pendOnline.push(run); guardar();
+  await enviarPendientes();
+}
+async function enviarPendientes(){
+  if (!online() || !datos.pendOnline.length) return;
+  const quedan = [];
+  for (const r of datos.pendOnline){
+    try {
+      const res = await fetch(rutaOnline() + '.json', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(r) });
+      if (!res.ok) quedan.push(r);
+    } catch(e){ quedan.push(r); }
+  }
+  datos.pendOnline = quedan; guardar();
+}
+async function bajarRanking(){
+  const res = await fetch(rutaOnline() + '.json', { cache:'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const d = await res.json() || {};
+  return Object.values(d).filter(r => r && typeof r === 'object' && r.jugador);
+}
 const puntaje = r => Math.round(2*(r.tiempo||0) + (r.kills||0) + 400*(r.jefes||0) + (r.gano ? 3000 : 0));
 const fmtFecha = f => f ? f.slice(8,10) + '/' + f.slice(5,7) : '';
 let rankFiltro = 'todos';
 function caritaPJ(id){ const h = hojaPJ(id); return h ? `<img class="rank-cara" src="${aplicarSkin(h.abajo[0], datos.skinSel[id]).toDataURL()}" alt="">` : ''; }
-function renderRanking(){
-  const nom = id => (PERSONAJES.find(p=>p.id===id)||{nombre:id}).nombre;
+let rankCache = null;
+function caritaSkin(pj, skin){ const h = (SKINS[skin] && SKINS[skin].traje && SPR_SKIN[skin]) || SPR_PJ[pj]; return h ? `<img class="rank-cara" src="${aplicarSkin(h.abajo[0], skin).toDataURL()}" alt="">` : ''; }
+async function renderRanking(recargar){
   const inp = $('#rankNombre'); inp.value = datos.jugador || '';
-  inp.oninput = () => { datos.jugador = inp.value.trim().slice(0,14); guardar(); };
-  // el récord de cada personaje
-  $('#rankMejores').innerHTML = PERSONAJES.map(p => {
-    const runs = datos.partidas.filter(r => r.pj===p.id); const m = runs.sort((a,b) => puntaje(b)-puntaje(a))[0];
-    return `<div class="rank-card">${caritaPJ(p.id)}<b>${esc(p.nombre)}</b>${m ? `<span class="pts">${puntaje(m).toLocaleString('es-AR')}</span><small>${fmtT(m.tiempo)}${m.gano ? ' · recibido' : ''}</small>` : '<small>sin partidas</small>'}</div>`;
-  }).join('');
-  $('#rankTabs').innerHTML = [['todos','Todas']].concat(PERSONAJES.map(p => [p.id, p.nombre])).map(([k,n]) => `<button class="${k===rankFiltro?'sel':''}" data-k="${k}">${esc(n)}</button>`).join('');
-  $('#rankTabs').querySelectorAll('button').forEach(b => b.onclick = () => { rankFiltro = b.dataset.k; renderRanking(); });
-  const lista = datos.partidas.filter(r => rankFiltro==='todos' || r.pj===rankFiltro).sort((a,b) => puntaje(b)-puntaje(a)).slice(0,10);
-  if (!lista.length){ $('#rankingCont').innerHTML = '<p class="vacio">Todavía no hay partidas acá.</p>'; return; }
+  inp.oninput = () => { datos.jugador = inp.value.trim().slice(0,14); guardar(); renderNombreMenu(); };
+  const cont = $('#rankingCont');
+  if (!online()){ $('#rankMejores').innerHTML = ''; $('#rankTabs').innerHTML = ''; cont.innerHTML = '<p class="vacio">El ranking online todavía no está conectado.</p>'; return; }
+  if (!datos.jugador) cont.insertAdjacentHTML('beforebegin', '');
+  if (!rankCache || recargar){
+    cont.innerHTML = '<p class="vacio">Cargando el ranking…</p>';
+    try { await enviarPendientes(); rankCache = await bajarRanking(); }
+    catch(e){ cont.innerHTML = '<p class="vacio">No se pudo cargar el ranking. ¿Hay internet?</p>'; return; }
+  }
+  const todas = rankCache.slice();
+  const nom = id => (PERSONAJES.find(p=>p.id===id)||{nombre:id}).nombre;
+  // el mejor de cada jugador
+  const mejores = {};
+  for (const r of todas){ const k = r.jugador.toLowerCase(); if (!mejores[k] || puntaje(r) > puntaje(mejores[k])) mejores[k] = r; }
+  const podio = Object.values(mejores).sort((a,b) => puntaje(b)-puntaje(a)).slice(0,4);
+  $('#rankMejores').innerHTML = podio.length ? podio.map((r,i) => `<div class="rank-card">${caritaSkin(r.pj, r.skin)}<b>${['🥇','🥈','🥉','4°'][i]} ${esc(r.jugador)}</b><span class="pts">${puntaje(r).toLocaleString('es-AR')}</span><small>${esc(nom(r.pj))}${r.gano ? ' · recibido' : ''}</small></div>`).join('') : '';
+  $('#rankTabs').innerHTML = [['todos','Todas']].concat(PERSONAJES.map(p => [p.id, p.nombre])).map(([k,n]) => `<button class="${k===rankFiltro?'sel':''}" data-k="${k}">${esc(n)}</button>`).join('') + '<button data-k="__r">↻ Actualizar</button>';
+  $('#rankTabs').querySelectorAll('button').forEach(b => b.onclick = () => { if (b.dataset.k==='__r') renderRanking(true); else { rankFiltro = b.dataset.k; renderRanking(); } });
+  const lista = todas.filter(r => rankFiltro==='todos' || r.pj===rankFiltro).sort((a,b) => puntaje(b)-puntaje(a)).slice(0,20);
+  if (!lista.length){ cont.innerHTML = '<p class="vacio">Todavía nadie jugó esta temporada. ¡Sé el primero!</p>'; return; }
   const medalla = i => i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
-  $('#rankingCont').innerHTML = `<table class="tabla-rank"><tr><th>#</th><th>Quién</th><th class="num">Puntaje</th><th class="num">Tiempo</th><th class="num">Bajó</th><th class="num">Profes</th></tr>` +
-    lista.map((r,i) => `<tr class="${i<3?'top':''}"><td>${medalla(i)}</td><td><div class="rank-quien">${caritaPJ(r.pj)}<span><b>${esc(r.jugador || nom(r.pj))}</b><small>${r.jugador ? esc(nom(r.pj)) + ' · ' : ''}${fmtFecha(r.fecha)}${r.gano ? ' · <i class="recibido">RECIBIDO</i>' : ''}</small></span></div></td><td class="num pts">${puntaje(r).toLocaleString('es-AR')}</td><td class="num">${fmtT(r.tiempo)}</td><td class="num">${esc(r.kills)}</td><td class="num">${esc(r.jefes??0)}</td></tr>`).join('') + '</table>';
+  const yo = (datos.jugador||'').toLowerCase();
+  cont.innerHTML = `<table class="tabla-rank"><tr><th>#</th><th>Quién</th><th class="num">Puntaje</th><th class="num">Tiempo</th><th class="num">Bajó</th><th class="num">Profes</th></tr>` +
+    lista.map((r,i) => `<tr class="${i<3?'top':''} ${r.jugador.toLowerCase()===yo?'yo':''}"><td>${medalla(i)}</td><td><div class="rank-quien">${caritaSkin(r.pj, r.skin)}<span><b>${esc(r.jugador)}</b><small>${esc(nom(r.pj))} · ${fmtFecha(r.fecha)}${r.gano ? ' · <i class="recibido">RECIBIDO</i>' : ''}</small></span></div></td><td class="num pts">${puntaje(r).toLocaleString('es-AR')}</td><td class="num">${fmtT(r.tiempo)}</td><td class="num">${esc(r.kills)}</td><td class="num">${esc(r.jefes??0)}</td></tr>`).join('') + '</table>';
 }
 function renderAyuda(){
   const en = Object.keys(TIPOS_EN);
@@ -3707,7 +3765,11 @@ function procesarImport(texto){
 /* =========================================================
    6. EVENTOS
    ========================================================= */
-$('#btnJugar').onclick = () => { acostarPantalla(); nuevaPartida(pjSel); };
+$('#menuNombre').oninput = e => { datos.jugador = e.target.value.trim().slice(0,14); guardar(); };
+$('#btnJugar').onclick = () => {
+  if (online() && !datos.jugador){ toast('Poné tu nombre arriba para entrar al ranking'); $('#menuNombre').focus(); return; }
+  acostarPantalla(); nuevaPartida(pjSel); };
+setTimeout(enviarPendientes, 3000);
 $('#sonBtn').onclick = () => { audioInit(); setSonido(!datos.sonido); };
 function enPantallaCompleta(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
 function alternarPantallaCompleta(){
@@ -3738,7 +3800,7 @@ document.querySelectorAll('#campoTabs button').forEach(b => b.onclick = () => { 
 $('#btnLogros').onclick = () => { renderLogros(); $('#mLogros').classList.remove('oculto'); };
 $('#btnTirar1').onclick = () => tirar(1);
 $('#btnTirar10').onclick = () => tirar(10);
-$('#btnRanking').onclick = () => { renderRanking(); $('#mRanking').classList.remove('oculto'); };
+$('#btnRanking').onclick = () => { renderRanking(true); $('#mRanking').classList.remove('oculto'); };
 $('#btnAyuda').onclick = () => { renderAyuda(); $('#mAyuda').classList.remove('oculto'); };
 $('#btnBackup').onclick = () => { $('#importResumen').innerHTML = ''; $('#mBackup').classList.remove('oculto'); };
 $('#btnExportar').onclick = exportar;
