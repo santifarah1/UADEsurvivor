@@ -313,7 +313,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 </div></div>
 
 <div class="modal oculto" id="mAyuda"><div class="caja ayuda"><h2>Cómo se juega</h2>
-  <p>Te movés arrastrando el dedo (o con WASD / flechas). Tu personaje ataca y apunta solo: vos esquivás. Las zonas rojas en el piso avisan dónde va a pegar algo: salí de ahí.</p>
+  <p>Te movés arrastrando el dedo (o con WASD / flechas). Tu personaje ataca y apunta solo: vos esquivás. Hay lagunitas desparramadas por el mapa: si te quedás quieto adentro te curan (después se secan un rato). Las zonas rojas en el piso avisan dónde va a pegar algo: salí de ahí.</p>
   <h3>Ataques (slots)</h3>
   <p>En la compu, cuando subís de nivel elegís la opción con 1, 2 o 3; en el vínculo marcás los slots con los números y confirmás con Enter.</p>
   <p>Tenés hasta 4 ataques en los slots de abajo a la izquierda, pero se usa uno a la vez: tocá el que quieras (o teclas 1-4, Q y E para rotar). Al subir de nivel elegís un ataque nuevo, mejorar uno o algo pasivo.</p>
@@ -1230,6 +1230,56 @@ function renderChunk(cx, cy){
   }
   return c;
 }
+/* ---------- lagunas que curan: dispersas por el mundo, te curan si te quedás quieto adentro ---------- */
+const LAG = { celda:1500, r:75, cura:8, agua:70, recarga:45 };
+function lagunaDe(cx, cy){
+  const h = hashT(cx*31+7, cy*17-3);
+  if (h % 10 >= 6) return null;                                  // 6 de cada 10 zonas tienen una
+  const m = 260, x = cx*LAG.celda + m + (h>>>4) % (LAG.celda-2*m), y = cy*LAG.celda + m + (h>>>14) % (LAG.celda-2*m);
+  if (Math.hypot(x, y) < 300) return null;                       // no justo donde arrancás
+  return { id:cx+','+cy, x, y };
+}
+function lagunasCerca(x, y, rad){
+  const out = [], c = LAG.celda;
+  for (let cx = Math.floor((x-rad)/c); cx <= Math.floor((x+rad)/c); cx++)
+    for (let cy = Math.floor((y-rad)/c); cy <= Math.floor((y+rad)/c); cy++){ const l = lagunaDe(cx, cy); if (l) out.push(l); }
+  return out;
+}
+function estadoLaguna(l){ G.lagunas = G.lagunas || {}; return G.lagunas[l.id] = G.lagunas[l.id] || { agua:LAG.agua, quieto:0 }; }
+function actualizarLagunas(dt){
+  if (G.dim) return;
+  const j = G.jug;
+  for (const k in (G.lagunas||{})){ const st = G.lagunas[k]; if (st.agua < LAG.agua) st.agua = Math.min(LAG.agua, st.agua + LAG.agua/LAG.recarga*dt*(st.agua<=0?1:0.35)); }
+  for (const l of lagunasCerca(j.x, j.y, LAG.r+20)){
+    const st = estadoLaguna(l);
+    if (dist2(j, l.x, l.y) > LAG.r*LAG.r){ st.quieto = 0; continue; }
+    if (j.mov){ st.quieto = 0; if (j.hp < j.maxHp && st.agua > 0 && G.t - (G.lagAviso||-9) > 6){ G.lagAviso = G.t; texto(l.x, l.y-34, 'quedate quieto para curarte', '#bfe3ff'); } continue; }
+    st.quieto += dt;
+    if (st.quieto > 0.4 && st.agua > 0 && j.hp < j.maxHp){
+      const c = Math.min(LAG.cura*dt, st.agua, j.maxHp - j.hp); j.hp += c; st.agua -= c;
+      st.tx = (st.tx||0) - dt; if (st.tx<=0){ st.tx = 0.6; texto(j.x+rnd(-10,10), j.y-44, '+' + Math.max(1, Math.round(LAG.cura*0.6)), '#7ed492'); }
+      if (st.agua <= 0){ texto(l.x, l.y-30, 'se secó… vuelve en un rato', '#bfe3ff'); }
+    }
+  }
+}
+function dibujarLagunas(){
+  if (G.dim) return;
+  for (const l of lagunasCerca(cam.x, cam.y, Math.max(VW,VH))){
+    const x = bx_(l.x), y = by_(l.y), R = Math.round(LAG.r/K); if (x < -R-4 || x > BW+R+4 || y < -R-4 || y > BH+R+4) continue;
+    const st = (G.lagunas||{})[l.id], lleno = st ? Math.max(0, st.agua)/LAG.agua : 1, r = Math.max(3, Math.round(R*(0.45+0.55*lleno)));
+    pElipse(x, y, R+2, Math.round((R+2)*0.6), '#6b5236');                       // borde de barro
+    pElipse(x, y, R, Math.round(R*0.6), '#8a6a44');
+    if (lleno > 0.02){
+      pElipse(x, y, r, Math.round(r*0.6), '#3f7fb3'); pElipse(x, y-1, Math.max(2,r-3), Math.max(1,Math.round((r-3)*0.6)), '#5a9fd6');
+      for (let k=0;k<3;k++){ const a = G.t*0.8 + k*2.1; rect(Math.round(x + Math.cos(a)*r*0.5), Math.round(y + Math.sin(a)*r*0.25), 3, 1, '#bfe3ff'); }
+      if (Math.floor(G.t*2 + l.x)%3===0) rect(x + ((l.x>>3)%7) - 3, y - 2, 1, 1, '#ffffff');
+    }
+    // juncos
+    rect(x-R-1, y-5, 1, 5, '#4f8a3a'); rect(x-R+1, y-7, 1, 7, '#6fae3a'); rect(x+R-1, y-6, 1, 6, '#4f8a3a'); rect(x+R+1, y-4, 1, 4, '#6fae3a');
+    // si estás adentro y quieto, brilla
+    if (st && st.quieto > 0.4 && lleno > 0){ bctx.globalAlpha = 0.35 + 0.25*Math.sin(G.t*8); pAnillo(x, y, R+3, '#7ed492', 1, Math.round((R+3)*0.6)); bctx.globalAlpha = 1; }
+  }
+}
 /* ---------- escenarios con obstáculos ---------- */
 const obsCache = new Map();
 let zonaLibre = { x:0, y:0 };
@@ -1265,7 +1315,7 @@ function obstaculos(esc, cx, cy){
   const k = esc+':'+cx+','+cy; let l = obsCache.get(k); if (l) return l;
   const S = CH*K, ox = cx*S, oy = cy*S;
   l = obsLocal(esc, cx, cy).map(o => ({ x:ox+o.x*K, y:oy+o.y*K, w:o.w*K, h:o.h*K, t:o.t }))
-       .filter(o => !libreDe(o.x, o.y, o.w, o.h));   // alrededor de donde cambió el mapa queda libre
+       .filter(o => !libreDe(o.x, o.y, o.w, o.h) && !lagunasCerca(o.x+o.w/2, o.y+o.h/2, 120).some(l => o.x < l.x+LAG.r+40 && o.x+o.w > l.x-LAG.r-40 && o.y < l.y+LAG.r+40 && o.y+o.h > l.y-LAG.r-40));   // alrededor de donde cambió el mapa queda libre
   obsCache.set(k, l); if (obsCache.size > 400) obsCache.delete(obsCache.keys().next().value);
   return l;
 }
@@ -1332,6 +1382,7 @@ function renderEscenario(esc, cx, cy){
   for (const o of obsLocal(esc, cx, cy)){
     const wx = cx*S + o.x*K, wy = cy*S + o.y*K;
     if (libreDe(wx, wy, o.w*K, o.h*K)) continue;
+    if (lagunasCerca(wx+o.w*K/2, wy+o.h*K/2, 120).some(l => wx < l.x+LAG.r+40 && wx+o.w*K > l.x-LAG.r-40 && wy < l.y+LAG.r+40 && wy+o.h*K > l.y-LAG.r-40)) continue;
     if (o.t==='banco') bancoLargo(g,o.x,o.y,o.w);
     else if (o.t==='columna') columna(g,o.x,o.y);
     else if (o.t==='fardo') fardo(g,o.x,o.y);
@@ -2391,6 +2442,7 @@ function actualizar(dt){
   G.t += dt;
   if (!G.dim){ const e = escenarioPorTiempo(G.t); if (e !== G.escenario) cambiarEscenario(e); }
   revisarVinculoGuardado();
+  actualizarLagunas(dt);
   if (G.flashMapa > 0) G.flashMapa -= dt;
   const j = G.jug;
   let ix = (teclas.r?1:0) - (teclas.l?1:0), iy = (teclas.d?1:0) - (teclas.u?1:0);
@@ -2533,6 +2585,7 @@ function dibujar(){
   }
   const j = G.jug;
 
+  dibujarLagunas();
   // marcas de goma del clásico y manchas de salsa de las pizzas
   if (G.marcas) for (const m of G.marcas){ bctx.globalAlpha = Math.min(1, m.vida/1.5)*0.55; rect(bx_(m.x)-1, by_(m.y), 3, 2, '#1a1a1a'); }
   if (G.manchas) for (const m of G.manchas){ bctx.globalAlpha = Math.min(1, m.vida)*0.6; const x = bx_(m.x), y = by_(m.y);
