@@ -649,6 +649,7 @@ const JF_EB = { orbe:{k:'jt_orbe',pulsa:true}, foto:{k:'jt_foto',gira:true}, mar
 const DIOS = { tipoEn:'gente', id:'tato', nombre:'Tato, "Dios"', hp:1e9, vel:82, r:34, arena:'santuario', dim:'El Santuario',
   look:{piel:'#e8b98f', pelo:'#2a1d12', ropa:'#f2efe6', barba:'#2a1d12', pantalon:'#e6dcc0'},
   frases:['Soy Dios','No me pueden matar','Arrodíllense','¿Quién los dejó entrar?','Yo ya me recibí hace rato','Pidan perdón','Esto es mi santuario','Les saco una foto para el recuerdo'] };
+function barraJefe(e){ if (e.def && e.def.id==='tato'){ if (e.arrod > 0) return 0; return Math.max(0, 1 - (e.acum||0)/(e.umbral||9000)); } return Math.max(0, e.hp/e.maxHp); }
 const defJefe = id => JEFES.find(d => d.id===id) || (id==='tato' ? DIOS : null);
 // orden de los legendarios: todos mezclados, Mariano siempre al final. La vida depende del puesto, no de quién sea
 const HP_ORDEN = [900, 1600, 2600, 3800, 5200, 7000, 9000, 12000];
@@ -2625,7 +2626,7 @@ function salirArena(gano){
   }
 }
 function crearTato(x, y, enColiseo){
-  const e = { jefe:true, leg:true, def:DIOS, x, y, r:DIOS.r, hp:DIOS.hp, maxHp:DIOS.hp, vel:enColiseo ? 96 : DIOS.vel, dmg:28, xp:0, t3:6, atk:0,
+  const e = { jefe:true, leg:true, def:DIOS, x, y, r:DIOS.r, hp:DIOS.hp, maxHp:DIOS.hp, vel:enColiseo ? 96 : DIOS.vel, dmg:15, acum:0, umbral:9000, xp:0, t3:6, atk:0,
     kx:0, ky:0, lento:0, flash:0, t1:3, t2:5, frase:'', fraseT:0, fraseCd:2, dash:0, pre:0, visible:true, visT:3, invisible:false, mira:1, paso:0, fase0:0 };
   G.enemigos.push(e); return e;
 }
@@ -2642,7 +2643,7 @@ function empezarDios(){
   G.jefe = crearTato(0, -300, false); G.jefe.entrada = 2.2;
   G.efectos.push({ tipo:'flash', vida:0.6, t:0.6 }); chunks.clear(); tocarTema('mariano'); sfx('grieta');
   mostrarBanner('¡Llegó Tato! Es Dios: no se puede matar. Aguantá ' + fmtT(dur));
-  $('#jefeNom').textContent = DIOS.nombre + ' · inmortal'; $('#jefeBarra').classList.remove('oculto');
+  $('#jefeNom').textContent = 'Tato, "Dios" · llená la barra y se arrodilla'; $('#jefeBarra').classList.remove('oculto');
 }
 // los jefes que le ganaste van volviendo, de a uno, cada vez más duros
 function traerEco(){
@@ -2726,7 +2727,16 @@ function actualizarJefe(e, dt, dx, dy, d){
       if (e.t3<=0){ e.t3 = 12; const lado = Math.random()<0.5 ? -1 : 1, b = disparoG(bordeX(lado, j), j.y, lado>0 ? 0 : Math.PI, 125, 20, 'mixer', def.id, 26); b.vida = 7.5; b.pasa = true; hablar(e,'¡Cuidado con el mixer!',1.6); }
       break;
     case 'tato': {
-      e.hp = e.maxHp;
+      // no se muere, pero lo que le pegás se acumula: cuando llenás la barra se arrodilla un rato y suelta premios
+      const recibido = Math.max(0, e.maxHp - e.hp); e.hp = e.maxHp;
+      if (!(e.arrod > 0)){ e.acum = (e.acum||0) + recibido; e.umbral = e.umbral || 9000;
+        if (e.acum >= e.umbral){ e.arrod = 5; e.acum = 0; e.umbral = Math.round(e.umbral*1.45); avanzar = 0; G.juicios = []; G.ebalas = [];
+          hablar(e, '…bueno, me arrodillo un ratito', 2.5); mostrarBanner('¡Tato se arrodilló! Aprovechá'); sfx('jefe'); G.sacudon = 0.4;
+          for (let i=0;i<20;i++) G.gemas.push({ x:e.x+rnd(-70,70), y:e.y+rnd(-70,70), v:8 });
+          G.items.push({ x:e.x+30, y:e.y+20, tipo:'cofre', id:'t'+Math.floor(G.t) }); if (Math.random()<0.6) G.items.push({ x:e.x-30, y:e.y+20, tipo:'bizcochito' }); } }
+      if (e.arrod > 0){ e.arrod -= dt; avanzar = 0; e.atk = 0.2; e.pose = 'e'; if (e.arrod <= 0){ hablar(e, 'Ya está. Soy Dios de nuevo', 2); e.t1 = 1; e.t2 = 2; } break; }
+      // nunca más lento que vos
+      const jv = (j.st && j.st.vel) || 100; e.vel = Math.max(DIOS.vel, jv*0.85);
       if (e.entrada > 0){ e.entrada -= dt; avanzar = 0; if (e.entrada <= 0){ G.sacudon = 0.5; G.efectos.push({ tipo:'anillo', x:e.x, y:e.y, r:10, max:260, t:0.7, vida:0.7, color:'245,213,71' }); anillo(e, 20, 150, 12, 'orbe', Math.random()); hablar(e, 'Soy Dios', 2.5); } break; }
       // pasado el minuto 30 se pone cada vez más pesado
       const furia = 1 + Math.max(0, G.t - 1800)/420;
@@ -2800,7 +2810,7 @@ function actualizarEnemigos(dt){
     }
     if (G.dim) limitarArena(e, e.r*0.5);
     else chocar(e, e.r*0.75);
-    if (!e.invisible && !j.muerto && d < e.r + j.r - 2 && !(MINIONS[e.tipo] && MINIONS[e.tipo].ia==='bomba')) dañarJugador(e.dmg, e.leg ? e.def.id : null);
+    if (!e.invisible && !j.muerto && !(e.arrod > 0) && d < e.r + j.r - 2 && !(MINIONS[e.tipo] && MINIONS[e.tipo].ia==='bomba')) dañarJugador(e.dmg, e.leg ? e.def.id : null);
     G.jug = jg0;
   }
   const ms = G.enemigos;
@@ -2863,6 +2873,7 @@ function dañarJugador(dmg, de){
   const j = G.jug; if (j.inv>0 || G.fin || j.muerto) return;
   if (de==='sebas' && (j.pjId || G.pj.id)==='feo') dmg *= 1.5;           // Sebas lo odia al Feo
   if ((de==='diego' || de==='pato') && (j.pjId || G.pj.id)==='pili') dmg *= 1.5;   // y estos dos, a Pili
+  if (de==='tato') dmg = Math.max(dmg, j.maxHp * dmg/100 * (1 + Math.max(0, G.t - 1800)/900));
   dmg *= (j.st && j.st.def) || 1;
   j.hp -= dmg; j.inv = 0.5;
   if (!G.coop || j===G.jugLocal){ G.sacudon = 0.15; sfx('danio'); }
@@ -3397,7 +3408,7 @@ function renderHud(){
   const pv = Math.max(0, j.hp/j.maxHp), hb = $('#hpBar');
   hb.style.width = (pv*100) + '%'; hb.classList.toggle('baja', pv<0.35);
   $('#hpTx').textContent = Math.ceil(Math.max(0,j.hp)) + '/' + j.maxHp;
-  if (G.jefe) $('#jefeHp').style.width = Math.max(0, G.jefe.hp/G.jefe.maxHp*100) + '%';
+  if (G.jefe) $('#jefeHp').style.width = barraJefe(G.jefe)*100 + '%';
   const tot = HABILIDADES[G.pj.hab].cd * j.st.habCd, p = Math.max(0, G.habCd/tot);
   $('#habCd').style.background = p>0 ? `conic-gradient(rgba(0,0,0,.7) ${p*360}deg, transparent 0)` : 'none';
   $('#habTx').textContent = G.carga>0 ? '…' : p>0 ? Math.ceil(G.habCd) : 'LISTA';
@@ -4269,7 +4280,7 @@ function aplicarEleccionRemota(o, el){
 let uidN = 0;
 function armarSnapshot(){
   const lim = (arr, n) => arr.length > n ? arr.slice(arr.length - n) : arr;
-  const jefe = G.jefe && G.jefe.hp>0 ? { n:G.jefe.def.nombre, p:Math.max(0, G.jefe.hp/G.jefe.maxHp) } : null;
+  const jefe = G.jefe && G.jefe.hp>0 ? { n:$('#jefeNom').textContent || G.jefe.def.nombre, p:+barraJefe(G.jefe).toFixed(3) } : null;
   const J = todosLosJugadores().map(p => {
     const o = G.otros.find(x => x.jug===p), hab = o ? o.hab : G;
     return [p.mpId || MP.yo, r1(p.x), r1(p.y), r1(p.hp), r1(p.maxHp), p.mira||1, p.mov?1:0, p.muerto?1:0, p.inv>0?1:0, p.pjId || G.pj.id, p.skin || datos.skinSel[G.pj.id] || 'normal', p.nombre || datos.jugador || '', +(p.reviveT||0).toFixed(1), hab.buff>0?1:0, r1((p.dir||{}).x*10||0), r1((p.dir||{}).y*10||0)];
