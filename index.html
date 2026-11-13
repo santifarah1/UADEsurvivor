@@ -88,7 +88,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .tabla-stats .up{color:var(--verde)}.tabla-stats .down{color:var(--rojo)}
 .tag.stat{background:#e8964a;color:#1d1d22}
 .rank-nombre{display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 10px;justify-content:center}
-.rank-nombre input{font:inherit;background:#0e1a13;color:var(--tiza);border:2px solid var(--borde);padding:4px 8px;width:150px}
+.rank-nombre input{font:inherit;font-size:17px;background:#0e1a13;color:var(--tiza);border:3px solid var(--borde);padding:8px 12px;width:min(240px,60vw);min-height:42px}
 .rank-mejores{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
 .rank-card{display:flex;flex-direction:column;align-items:center;background:rgba(0,0,0,.25);border:2px solid var(--borde);padding:6px 2px;text-align:center}
 .rank-card b{font-size:12px}.rank-card small{font-size:10px;color:var(--tiza-2)}.rank-card .pts{color:var(--amarillo);font-weight:700;font-variant-numeric:tabular-nums}
@@ -101,13 +101,14 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .tabla-rank .pts{color:var(--amarillo);font-weight:700}
 .tabla-rank tr.yo td{background:rgba(126,212,146,.10)}
 .tabla-rank tr.yo td:first-child{box-shadow:inset 3px 0 0 var(--verde)}
-.menu-nombre{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;margin:4px 0 8px}
-.menu-nombre input{font:inherit;background:#0e1a13;color:var(--tiza);border:2px solid var(--borde);padding:3px 8px;width:140px}
+.menu-nombre{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;margin:6px 0 10px;flex-wrap:wrap}
+.menu-nombre input{font:inherit;font-size:18px;font-weight:700;background:#0e1a13;color:var(--tiza);border:3px solid var(--borde);padding:8px 12px;width:min(260px,70vw);min-height:44px}
 .tabla-rank tr.top td{background:rgba(245,213,71,.06)}
 .recibido{font-style:normal;color:var(--verde);font-weight:700}
 .modal.coop{background:rgba(10,20,14,.35)}
 .multi-codigo{font-size:44px;font-weight:700;letter-spacing:8px;text-align:center;color:var(--amarillo);text-shadow:3px 3px 0 #0c1810}
-.multi-unir{display:flex;gap:6px;margin-top:10px}.multi-unir input{flex:1;font:inherit;font-size:22px;letter-spacing:6px;text-align:center;background:#0e1a13;color:var(--tiza);border:2px solid var(--borde);padding:6px;min-width:0}
+.multi-unir{display:flex;flex-direction:column;gap:8px;margin-top:12px}.multi-unir input{width:100%;font:inherit;font-size:34px;font-weight:700;letter-spacing:12px;text-align:center;background:#0e1a13;color:var(--amarillo);border:3px solid var(--borde);padding:12px 8px;min-height:64px;text-transform:uppercase}
+.multi-unir input:focus,.menu-nombre input:focus,.rank-nombre input:focus{outline:none;border-color:var(--amarillo)}
 .multi-lista{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .multi-jug{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);border:2px solid var(--borde);padding:4px 6px}
 .multi-jug span{display:flex;flex-direction:column}.multi-jug small{font-size:10px;color:var(--tiza-2)}
@@ -115,6 +116,8 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .multi-pjs button{display:flex;flex-direction:column;align-items:center;background:rgba(0,0,0,.25);border:2px solid var(--borde);color:var(--tiza);font:inherit;padding:4px}
 .multi-pjs button.sel{border-color:var(--amarillo)}.multi-pjs small{font-size:10px}
 .multi-error{color:var(--rojo);font-size:12px;min-height:1em;margin:6px 0 0;text-align:center}
+#mpEspera{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:25;background:rgba(10,10,16,.85);border:2px solid var(--amarillo);color:var(--amarillo);padding:6px 12px;font-size:14px;font-weight:700;pointer-events:none}
+.cx-ok{font-style:normal;color:var(--verde)}.cx-lenta{font-style:normal;color:var(--amarillo)}
 .coop{font-style:normal;color:var(--violeta);font-weight:700}
 .caja h2{font-size:24px;text-align:center;margin-bottom:4px}
 .caja .sub{margin-bottom:14px}
@@ -210,7 +213,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 #consBtns .k{position:absolute;left:3px;top:1px;font-size:9px;color:var(--tiza-2)}
 #consBtns .pxic{width:28px;height:28px}
 .campo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.campo-nombre input{width:100%;text-align:center;font:inherit;font-size:22px;font-weight:700;color:var(--amarillo);background:transparent;border:0;border-bottom:2px dashed var(--borde);padding:4px;text-transform:uppercase}
+.campo-nombre input{width:100%;min-height:48px;text-align:center;font:inherit;font-size:24px;font-weight:700;color:var(--amarillo);background:transparent;border:0;border-bottom:2px dashed var(--borde);padding:4px;text-transform:uppercase}
 #cvCampo{width:100%;height:auto;display:block;margin:8px 0;border:3px solid #000;box-shadow:var(--sombra);image-rendering:pixelated}
 .campo-juntar{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .campo-juntar #campoProd{flex:1;font-size:13px;color:var(--tiza-2);line-height:1.4}
@@ -264,6 +267,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   <div class="jefe-barra oculto" id="jefeBarra"><div class="nom" id="jefeNom"></div><div class="b"><i id="jefeHp"></i></div></div>
 </div>
 <div id="cercaTipo" class="oculto"></div>
+<div id="mpEspera" class="oculto"></div>
 <div id="slots" class="oculto"></div>
 <div id="consBtns" class="oculto"></div>
 <div id="habNombre" class="oculto"></div>
@@ -2619,11 +2623,25 @@ function actualizarGemas(dt){
   G.items = G.items.filter(i => !i.tomado);
   let subio = false;
   while (j.xp >= j.xpNext){ j.xp -= j.xpNext; j.nivel++; j.xpNext = xpPara(j.nivel); G.pendientes++; subio = true; }
-  if (subio){ recalcular(); for (const o of (G.otros||[])){ o.jug.nivel = j.nivel; conJugador(o, recalcular); } }
+  if (subio){ recalcular(); for (const o of (G.otros||[])){ o.jug.nivel = j.nivel; conJugador(o, recalcular); } if (G.coop) G.mpGracia = performance.now() + 900; }
   if (G.pendientes>0 && !hayModalAbierto() && !G.fin) mostrarNivel();
 }
 
+function mpEsperando(){
+  if (!G || !G.coop || G.espejo) return [];
+  const n = [];
+  if (hayModalAbierto()) n.push(datos.jugador || 'Anfitrión');
+  for (const o of (G.otros||[])) if (!o.fuera && o.input && o.input.md) n.push(o.nombre);
+  if (!n.length && G.mpGracia > performance.now() && (G.otros||[]).some(o => !o.fuera)) n.push('…');
+  return n;
+}
+function mostrarEspera(nombres){
+  const el = $('#mpEspera'); if (!el) return;
+  el.classList.toggle('oculto', !nombres.length);
+  if (nombres.length) el.textContent = 'EN PAUSA · Eligiendo mejora: ' + nombres.join(', ');
+}
 function actualizar(dt){
+  if (G.coop && !G.espejo){ const esp = mpEsperando(); G.mpPausa = esp; mostrarEspera(esp); if (esp.length) return; }
   G.t += dt;
   if (!G.dim){ const e = escenarioPorTiempo(G.t); if (e !== G.escenario) cambiarEscenario(e); }
   revisarVinculoGuardado();
@@ -3549,6 +3567,7 @@ function dibujarCampo(dt){
 setInterval(() => { if (!$('#campo').classList.contains('oculto')) renderCampo(); }, 30000);
 function volverMenu(){
   if (G && G.coop && !G.fin) mpAlTerminar(false);
+  mostrarEspera([]);
   G = null; joy = null; pararTema(); soltarPantalla();
   $('#hud').classList.add('oculto'); ['#slots','#habBtn','#habNombre','#consBtns','#cercaTipo'].forEach(s => $(s).classList.add('oculto')); $('#banner').style.opacity = 0;
   cerrarModales(); renderMenu(); $('#menu').classList.remove('oculto');
@@ -3740,6 +3759,78 @@ function enviador(minMs){
   return (p, d) => { pendiente = [p, d]; salir(); };
 }
 const mpSnap = enviador(140), mpInput = enviador(90), mpHb = enviador(1000);
+const RTC_OK = !!window.RTCPeerConnection && !/nortc/.test(location.hash);
+const RTC_CFG = { iceServers:[{ urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302'] }] };
+MP.pcs = {}; MP.canal = null; MP.rtcCierres = [];
+function esperarIce(pc){ return new Promise(res => { if (pc.iceGatheringState === 'complete') return res(); const t = setTimeout(res, 2500); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete'){ clearTimeout(t); res(); } }); }); }
+const abierto = ch => ch && ch.readyState === 'open';
+function mandar(ch, obj){ try { const txt = JSON.stringify(obj); ch.send(txt); return true; } catch(e){ return false; } }
+// invitado: ofrece una conexión directa al anfitrión
+async function rtcInvitado(){
+  if (!RTC_OK || MP.canal) return;
+  try {
+    const pc = new RTCPeerConnection(RTC_CFG);
+    const rap = pc.createDataChannel('rap', { ordered:false, maxRetransmits:0 }), conf = pc.createDataChannel('conf', { ordered:true });
+    MP.canal = { pc, rap, conf };
+    const alRecibir = ev => { try { const m = JSON.parse(ev.data); if (m.k === 's') aplicarSnapshot(m.d); } catch(e){} };
+    rap.onmessage = alRecibir; conf.onmessage = alRecibir;
+    rap.onopen = () => renderMulti(); pc.onconnectionstatechange = () => renderMulti();
+    await pc.setLocalDescription(await pc.createOffer()); await esperarIce(pc);
+    await NET.put(`salas/${MP.sala}/rtc/${MP.yo}/offer`, { type:pc.localDescription.type, sdp:pc.localDescription.sdp });
+    const cerrar = NET.escuchar(`salas/${MP.sala}/rtc/${MP.yo}/answer`, async (path, data) => {
+      if (path === '/' && data && data.sdp && !pc.remoteDescription){ try { await pc.setRemoteDescription(data); } catch(e){} }
+    });
+    MP.rtcCierres.push(cerrar);
+  } catch(e){ MP.canal = null; }
+}
+// anfitrión: contesta las ofertas
+function rtcAnfitrion(){
+  if (!RTC_OK) return;
+  let arbol = {};
+  const cerrar = NET.escuchar(`salas/${MP.sala}/rtc`, (path, data) => {
+    arbol = path === '/' ? (data || {}) : (aplicarRuta(arbol, path, data) || {});
+    const ofertas = arbol;
+    for (const id in ofertas){ const o = ofertas[id]; if (o && o.offer && !MP.pcs[id]) responderRtc(id, o.offer); }
+  });
+  MP.rtcCierres.push(cerrar);
+}
+async function responderRtc(id, offer){
+  try {
+    const pc = new RTCPeerConnection(RTC_CFG), reg = MP.pcs[id] = { pc, rap:null, conf:null };
+    pc.ondatachannel = ev => {
+      const ch = ev.channel; reg[ch.label] = ch;
+      ch.onmessage = e => { try { recibirDeInvitado(id, JSON.parse(e.data)); } catch(_){} };
+      ch.onopen = () => renderMulti();
+    };
+    pc.onconnectionstatechange = () => renderMulti();
+    await pc.setRemoteDescription(offer);
+    await pc.setLocalDescription(await pc.createAnswer()); await esperarIce(pc);
+    await NET.put(`salas/${MP.sala}/rtc/${id}/answer`, { type:pc.localDescription.type, sdp:pc.localDescription.sdp });
+  } catch(e){ delete MP.pcs[id]; }
+}
+function recibirDeInvitado(id, m){
+  if (!G || !G.otros) return;
+  if (m.k === 'i') recibirInput(id, m.d);
+  else if (m.k === 'e') procesarEleccion(id, m.d);
+}
+function procesarEleccion(id, el){
+  if (!el) return;
+  const k = id + '/' + (el.n ?? Math.random()); if (MP.eleVistas.has(k)) return; MP.eleVistas.add(k);
+  aplicarEleccionRemota(G.otros.find(o => o.id===id), el);
+}
+function rtcCerrar(){
+  for (const c of MP.rtcCierres) try { c(); } catch(_){}
+  MP.rtcCierres = [];
+  for (const id in MP.pcs) try { MP.pcs[id].pc.close(); } catch(_){}
+  MP.pcs = {};
+  if (MP.canal) try { MP.canal.pc.close(); } catch(_){}
+  MP.canal = null;
+}
+function estadoConexion(id){
+  if (id === MP.yo) return MP.modo === 'host' ? '' : (MP.canal && abierto(MP.canal.rap) ? 'directa' : 'por internet');
+  if (MP.modo !== 'host') return '';
+  const r = MP.pcs[id]; return r && abierto(r.rap) ? 'directa' : 'por internet';
+}
 const mpOn = () => !!(G && G.coop);
 const r1 = v => Math.round(v);
 
@@ -3848,7 +3939,7 @@ function armarSnapshot(){
   return {
     t:+G.t.toFixed(2), n:G.jugLocal.nivel, xp:r1(G.jugLocal.xp), xn:r1(G.jugLocal.xpNext), k:G.kills, jm:G.jefesMuertos,
     esc:G.escenario, zl:[r1(zonaLibre.x), r1(zonaLibre.y)], cl:G.clima, dim:G.dim ? G.dim.id : null, lg:G.legsCoop||0, it:+(G.integrador||0).toFixed(1),
-    ban:[G.bannerSeq||0, G.bannerTxt||''], jefe, J, B, E,
+    ban:[G.bannerSeq||0, G.bannerTxt||''], pa:G.mpPausa || [], jefe, J, B, E,
     P:lim(G.balas, 160).map(b => [b.tipo, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), +(b.rot||0).toFixed(2), b.homing?1:0, b.id%97]),
     Q:lim(G.ebalas, 160).map(b => [b.tipo, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy)]),
     C:G.charcos.map(c => [r1(c.x), r1(c.y), r1(c.r), +c.vida.toFixed(2), c.id%97]),
@@ -3893,9 +3984,11 @@ function otrosVisibles(){
 const suave = (a, b, k) => a + (b - a) * k;
 function aplicarSnapshot(S){
   if (!S || !G || !G.espejo) return;
+  if (MP.ultT !== undefined && S.t < MP.ultT - 0.001 && S.t > MP.ultT - 30) return;
+  MP.ultT = S.t;
   MP.ultSnap = performance.now();
   const j = G.jug;
-  G.tObj = S.t; G.kills = S.k; G.jefesMuertos = S.jm || 0; G.clima = S.cl; G.integrador = S.it || 0;
+  G.tObj = S.t; G.kills = S.k; G.mpPausaVis = S.pa || []; G.jefesMuertos = S.jm || 0; G.clima = S.cl; G.integrador = S.it || 0;
   if (S.n > j.nivel){ G.pendientes += S.n - j.nivel; j.nivel = S.n; recalcular(); }
   j.xp = S.xp; j.xpNext = S.xn;
   if (S.esc !== G.escenario || !zonaLibre || zonaLibre.x !== S.zl[0] || zonaLibre.y !== S.zl[1]){
@@ -3974,11 +4067,13 @@ function aplicarSnapshot(S){
 }
 function actualizarEspejo(dt){
   const j = G.jug;
-  G.t = G.tObj !== undefined ? suave(G.t, G.tObj, Math.min(1, dt*5)) + dt*0.5 : G.t + dt;
+  G.t = G.tObj !== undefined ? suave(G.t, G.tObj, Math.min(1, dt*5)) + (G.mpPausaVis && G.mpPausaVis.length ? 0 : dt*0.5) : G.t + dt;
   if (G.flashMapa > 0) G.flashMapa -= dt;
+  // si alguien está eligiendo mejora, el anfitrión frena todo
+  const enPausa = G.mpPausaVis && G.mpPausaVis.length; mostrarEspera(G.mpPausaVis || []);
   // me muevo yo (mi posición la decido yo)
   let ix = 0, iy = 0;
-  if (!j.muerto){
+  if (!j.muerto && !enPausa){
     ix = (teclas.r?1:0) - (teclas.l?1:0); iy = (teclas.d?1:0) - (teclas.u?1:0);
     if (joy){ const dx = joy.x-joy.ox, dy = joy.y-joy.oy, l = Math.hypot(dx,dy); if (l>6){ const k = Math.min(1, l/45); ix = dx/l*k; iy = dy/l*k; } }
     if (!ix && !iy && (pad.ax || pad.ay)){ ix = pad.ax; iy = pad.ay; }
@@ -4000,8 +4095,8 @@ function actualizarEspejo(dt){
   const k = Math.min(1, dt*12);
   for (const p of (G.otrosVis||[])){ const ox = p.x; p.x = suave(p.x, p.tx, k); p.y = suave(p.y, p.ty, k); if (Math.abs(p.x-ox) > 0.3) p.paso += dt*11; }
   for (const e of G.enemigos){ const ox = e.x, oy = e.y; e.x = suave(e.x, e.tx, k); e.y = suave(e.y, e.ty, k); if (Math.abs(e.x-ox) + Math.abs(e.y-oy) > 0.2) e.paso += dt*8; if (e.flash>0) e.flash -= dt; }
-  for (const b of G.balas){ b.x += b.vx*dt; b.y += b.vy*dt; }
-  for (const b of G.ebalas){ b.x += b.vx*dt; b.y += b.vy*dt; }
+  if (!enPausa){ for (const b of G.balas){ b.x += b.vx*dt; b.y += b.vy*dt; }
+  for (const b of G.ebalas){ b.x += b.vx*dt; b.y += b.vy*dt; } }
   for (const t of G.textos){ t.vida -= dt; t.y -= 40*dt; }
   for (const f of G.efectos) f.vida -= dt;
   for (const a of G.avisos) a.t = Math.max(0.01, a.t - dt);
@@ -4009,7 +4104,10 @@ function actualizarEspejo(dt){
   if (G.banner){ G.banner.t -= dt; if (G.banner.t<=0){ G.banner = null; $('#banner').style.opacity = 0; } }
   if (G.sacudon>0) G.sacudon -= dt;
   // mando lo mío
-  mpInput(`salas/${MP.sala}/inputs/${MP.yo}`, { x:r1(j.x), y:r1(j.y), m:j.mov?1:0, mi:j.mira||1, dx:+(j.dir.x||0).toFixed(2), dy:+(j.dir.y||0).toFixed(2), s:j.activo, h:MP.habN, md:hayModalAbierto()?1:0, t:Date.now() });
+  const miInput = { x:r1(j.x), y:r1(j.y), m:j.mov?1:0, mi:j.mira||1, dx:+(j.dir.x||0).toFixed(2), dy:+(j.dir.y||0).toFixed(2), s:j.activo, h:MP.habN, md:hayModalAbierto()?1:0, t:Date.now() };
+  MP.inT = (MP.inT||0) - dt;
+  if (MP.canal && abierto(MP.canal.rap)){ if (MP.inT <= 0){ MP.inT = 0.033; mandar(MP.canal.rap, { k:'i', d:miInput }); } }
+  else mpInput(`salas/${MP.sala}/inputs/${MP.yo}`, miInput);
   revisarVinculoGuardado();
   if (G.pendientes>0 && !hayModalAbierto() && !G.fin) mostrarNivel();
   G.hudT -= dt; if (G.hudT<=0){ G.hudT = 0.1; renderHud(); renderTipoCerca(); }
@@ -4018,7 +4116,8 @@ function actualizarEspejo(dt){
 function mpEnviarEleccion(o){
   if (!MP.sala) return;
   MP.eleN++;
-  NET.post(`salas/${MP.sala}/elecciones/${MP.yo}`, Object.assign({}, o, { n:MP.eleN }));
+  const el = Object.assign({}, o, { n:MP.eleN });
+  if (!(MP.canal && abierto(MP.canal.conf) && mandar(MP.canal.conf, { k:'e', d:el }))) NET.post(`salas/${MP.sala}/elecciones/${MP.yo}`, el);
 }
 
 /* ---------- arrancar y terminar ---------- */
@@ -4036,7 +4135,7 @@ function mpIniciarAnfitrion(){
   MP.cierres.push(NET.escuchar(`salas/${MP.sala}/elecciones`, (path, data) => {
     if (!G || !G.otros || !data) return;
     const partes = path.split('/').filter(Boolean);
-    const procesar = (id, pid, el) => { const k = id + '/' + pid; if (MP.eleVistas.has(k)) return; MP.eleVistas.add(k); aplicarEleccionRemota(G.otros.find(o => o.id===id), el); };
+    const procesar = (id, pid, el) => procesarEleccion(id, el);
     if (!partes.length){ for (const id in data) for (const pid in data[id]) procesar(id, pid, data[id][pid]); }
     else if (partes.length === 1){ for (const pid in data) procesar(partes[0], pid, data[pid]); }
     else procesar(partes[0], partes[1], data);
@@ -4049,7 +4148,7 @@ function mpIniciarInvitado(){
   acostarPantalla(); nuevaPartida(yo.pj || pjSel);
   G.coop = true; G.espejo = true; G.cons = []; renderCons();
   G.jug.nombre = datos.jugador; G.otrosVis = []; G.tObj = 0;
-  MP.ultSnap = performance.now(); MP.legsVistos = 0; MP.habN = 0; MP.firmaB = '';
+  MP.ultSnap = performance.now(); MP.legsVistos = 0; MP.habN = 0; MP.firmaB = ''; MP.ultT = undefined;
   MP.cierres.push(NET.escuchar(`salas/${MP.sala}/estado`, (path, data) => {
     if (path === '/') aplicarSnapshot(data);
   }));
@@ -4062,9 +4161,23 @@ function mpIniciarInvitado(){
 function mpTerminarInvitado(gano){ if (!G || G.fin) return; terminar(gano); }
 function mpTick(dt){
   if (!G || !G.coop) return;
-  if (G.host && !G.fin){ G.snapT -= dt; if (!(G.snapT > 0)){ G.snapT = 0.14; mpSnap(`salas/${MP.sala}/estado`, armarSnapshot()); } }
+  if (G.host && !G.fin){
+    G.snapT -= dt; G.snapFbT = (G.snapFbT||0) - dt;
+    if (!(G.snapT > 0)){
+      G.snapT = 0.05;
+      let snap = null, faltan = false;
+      for (const o of G.otros){
+        if (o.fuera) continue;
+        const r = MP.pcs[o.id];
+        if (r && abierto(r.rap)){ snap = snap || armarSnapshot(); const txt = JSON.stringify({ k:'s', d:snap }); try { if (txt.length < 60000) r.rap.send(txt); else if (abierto(r.conf)) r.conf.send(txt); } catch(e){ faltan = true; } }
+        else faltan = true;
+      }
+      if (faltan && G.snapFbT <= 0){ G.snapFbT = 0.14; mpSnap(`salas/${MP.sala}/estado`, snap || armarSnapshot()); }
+    }
+  }
 }
 function mpCerrar(){
+  rtcCerrar();
   for (const c of MP.cierres) try { c(); } catch(_){}
   MP.cierres = [];
   if (MP.hb){ clearInterval(MP.hb); MP.hb = null; }
@@ -4075,7 +4188,7 @@ async function mpAlTerminar(gano){
     await NET.put(`salas/${MP.sala}/estado`, armarSnapshot());
     await NET.put(`salas/${MP.sala}/info/resultado`, { gano:!!gano });
     await NET.put(`salas/${MP.sala}/info/estado`, 'fin');
-    setTimeout(() => { NET.del(`salas/${MP.sala}/estado`); NET.del(`salas/${MP.sala}/inputs`); NET.del(`salas/${MP.sala}/elecciones`); }, 8000);
+    const sc = MP.sala; setTimeout(() => { NET.del(`salas/${sc}/estado`); NET.del(`salas/${sc}/inputs`); NET.del(`salas/${sc}/elecciones`); NET.del(`salas/${sc}/rtc`); }, 8000);
   } else if (MP.sala) {
     NET.del(`salas/${MP.sala}/jugadores/${MP.yo}`);
   }
@@ -4128,6 +4241,7 @@ function entrarSala(codigo){
     renderMulti();
   });
   MP.lobby = [cerrar, cerrarJ];
+  if (MP.modo === 'host') rtcAnfitrion(); else rtcInvitado();
   MP.hb = setInterval(() => { if (MP.sala) mpHb(`salas/${MP.sala}/jugadores/${MP.yo}/ts`, Date.now()); }, 4000);
   renderMulti();
 }
@@ -4157,7 +4271,7 @@ function renderMulti(){
   const js = Object.entries(MP.jugadores), soyHost = MP.modo === 'host';
   v.innerHTML = `<p class="sub">Código de la sala</p><div class="multi-codigo">${esc(MP.sala)}</div>
     <p class="sub" style="margin:4px 0 10px">Pasáselo a tus amigos para que entren.</p>
-    <div class="multi-lista">${js.map(([id, p]) => `<div class="multi-jug">${caritaSkin(p.pj, p.skin)}<span><b>${esc(p.nombre||'?')}</b><small>${esc((PERSONAJES.find(x=>x.id===p.pj)||{}).nombre||'')}${MP.info && MP.info.host===id ? ' · anfitrión' : ''}</small></span></div>`).join('')}</div>
+    <div class="multi-lista">${js.map(([id, p]) => `<div class="multi-jug">${caritaSkin(p.pj, p.skin)}<span><b>${esc(p.nombre||'?')}</b><small>${esc((PERSONAJES.find(x=>x.id===p.pj)||{}).nombre||'')}${MP.info && MP.info.host===id ? ' · anfitrión' : ''}${estadoConexion(id) ? ` · <i class="${estadoConexion(id)==='directa'?'cx-ok':'cx-lenta'}">${estadoConexion(id)==='directa' ? 'conexión directa' : 'conectando…'}</i>` : ''}</small></span></div>`).join('')}</div>
     <p class="sub" style="margin:8px 0">Tu personaje:</p>
     <div class="multi-pjs">${PERSONAJES.map(p => `<button class="${p.id===pjSel?'sel':''}" data-pj="${p.id}">${caritaSkin(p.id, datos.skinSel[p.id]||'normal')}<small>${esc(p.nombre)}</small></button>`).join('')}</div>
     ${soyHost ? `<button class="btn" id="btnArrancar" ${js.length<2?'disabled':''}>${js.length<2 ? 'Esperando amigos…' : '¡Arrancar la cursada!'}</button>` : '<p class="sub" style="margin-top:10px">Esperando que el anfitrión arranque…</p>'}
