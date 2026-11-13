@@ -28,19 +28,78 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .oculto{display:none!important}
 .contenido{max-width:780px;margin:0 auto}
 /* 4. Componentes */
+/* menú principal */
+#menu{padding:0;background:#0d1a12;overflow-y:auto}
+#menuFondo{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.menu-velo{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 35% 45%,rgba(13,26,18,.15) 0%,rgba(13,26,18,.6) 55%,rgba(8,14,10,.92) 100%),linear-gradient(90deg,rgba(8,14,10,.25),rgba(8,14,10,.1) 50%,rgba(8,14,10,.75))}
+.menu-lay{position:relative;z-index:1;min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,320px);gap:clamp(10px,2.5vw,28px);align-items:center;max-width:1180px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) clamp(10px,3vw,32px) 14px}
+.menu-izq{display:flex;flex-direction:column;align-items:center;min-width:0}
+.logo{text-align:center;animation:logoEntra .7s cubic-bezier(.2,1.6,.4,1) both;margin-bottom:4px}
+.logo-uade{font-size:clamp(20px,4vw,40px);font-weight:700;letter-spacing:.35em;color:var(--tiza);text-shadow:2px 2px 0 #0b140e;margin-bottom:-.15em;padding-left:.35em}
+.logo-surv{font-size:clamp(40px,8.5vw,92px);font-weight:700;line-height:.95;color:var(--amarillo);letter-spacing:.04em;
+  text-shadow:0 -2px 0 #fff3a6,3px 0 0 #3b2a07,-3px 0 0 #3b2a07,0 3px 0 #3b2a07,0 -3px 0 #3b2a07,3px 3px 0 #3b2a07,-3px 3px 0 #3b2a07,3px -3px 0 #3b2a07,-3px -3px 0 #3b2a07,0 7px 0 #b04a2c,4px 9px 0 #3b2a07,0 12px 14px rgba(0,0,0,.55);
+  animation:logoFlota 3.2s ease-in-out infinite}
+.logo-sub{margin-top:clamp(8px,1.5vw,16px);font-size:clamp(11px,1.6vw,15px);color:var(--tiza);opacity:.85;text-shadow:1px 1px 0 #000}
+@keyframes logoEntra{from{transform:scale(.4) translateY(-30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes logoFlota{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-4px) rotate(1deg)}}
+.heroe{display:flex;align-items:center;gap:clamp(8px,2vw,22px);margin:clamp(4px,1.5vh,14px) 0 4px;min-height:0}
+.heroe-esc{position:relative;width:clamp(96px,16vw,170px);aspect-ratio:96/112;flex:none}
+.heroe-esc canvas{position:relative;z-index:1;width:100%;height:100%}
+.heroe-luz{position:absolute;left:8%;right:8%;bottom:-2%;height:18%;background:radial-gradient(ellipse,rgba(245,213,71,.55),rgba(245,213,71,0) 70%);animation:pulsoLuz 1.6s ease-in-out infinite}
+@keyframes pulsoLuz{50%{opacity:.55;transform:scaleX(.85)}}
+.heroe-info{background:rgba(10,18,13,.78);border:3px solid rgba(245,213,71,.55);box-shadow:var(--sombra);padding:10px 14px;max-width:340px;min-width:0}
+.heroe-info .n{font-size:clamp(20px,3vw,30px);font-weight:700;color:var(--amarillo);text-shadow:2px 2px 0 #000;line-height:1}
+.heroe-info .real{font-size:12px;color:var(--tiza-2);margin:2px 0 8px}
+.heroe-info .lin{font-size:13px;margin-top:4px;display:flex;gap:6px;align-items:center}
+.heroe-info .bonus{color:var(--verde);font-weight:700}.heroe-info .hab{color:var(--violeta);font-weight:700}.heroe-info .rec{color:var(--amarillo);font-size:12px}
+.barras{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center;font-size:11px;color:var(--tiza-2);margin:6px 0 2px}
+.barras i{display:block;height:7px;background:rgba(255,255,255,.12);position:relative}.barras i b{position:absolute;inset:0 auto 0 0;background:var(--verde)}
+.grilla-pj{display:flex;gap:8px;justify-content:center;margin-top:6px}
+.pj{position:relative;width:clamp(58px,8vw,78px);background:rgba(10,18,13,.8);border:3px solid var(--borde);box-shadow:var(--sombra);padding:4px 2px 3px;text-align:center;transition:transform .12s}
+.pj:hover{transform:translateY(-3px)}
+.pj.sel{border-color:var(--amarillo);background:rgba(66,56,14,.9);transform:translateY(-5px);box-shadow:0 0 0 2px #3b2a07,0 0 18px rgba(245,213,71,.5),var(--sombra)}
+.pj canvas{width:100%;aspect-ratio:1;display:block}
+.pj .n{font-size:11px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.desc-pj{text-align:center;color:var(--tiza);opacity:.85;font-size:13px;margin-top:8px;line-height:1.35;max-width:560px;text-shadow:1px 1px 0 #000}
+.menu-der{display:flex;flex-direction:column;gap:8px;background:rgba(10,18,13,.72);border:3px solid rgba(242,239,230,.18);box-shadow:var(--sombra);padding:12px;backdrop-filter:blur(2px)}
+.menu-chips{display:flex;gap:6px}.menu-chips .chip{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 8px;font-size:16px}
+.menu-chips .pxic{width:20px;height:20px}.menu-chips small{font-size:11px;color:var(--tiza-2);font-weight:400}
+.menu-nombre{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--tiza-2);margin:0}
+.menu-nombre input{width:100%!important;font-size:17px!important;min-height:40px!important;padding:6px 10px!important}
+.btn.jugar{margin:4px 0 0;font-size:clamp(22px,2.6vw,28px);padding:clamp(10px,2vh,16px);letter-spacing:.06em;position:relative;overflow:hidden;animation:latido 1.4s ease-in-out infinite}
+.btn.jugar::after{content:"";position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:brillo 2.6s ease-in-out infinite}
+@keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes brillo{0%,55%{left:-40%}100%{left:130%}}
+.btn.multi{background:var(--violeta);color:#1e1430;box-shadow:0 4px 0 #6a4b94,4px 6px 0 rgba(0,0,0,.4);font-size:16px;padding:10px}
+.menu-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:7px 2px;font-size:12px;font-weight:700;box-shadow:3px 3px 0 rgba(0,0,0,.4);transition:transform .1s,border-color .1s}
+.tile:hover{transform:translateY(-2px);border-color:var(--amarillo)}.tile:active{transform:translateY(2px)}
+.tile i{font-style:normal;font-size:20px;line-height:24px}.tile .pxic{width:24px;height:24px}
+#btnCampo{border-color:rgba(126,212,146,.6)}
+.menu-mini{display:grid;grid-template-columns:1fr auto auto;gap:6px}
+.mini{background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:6px 10px;font-size:13px;font-weight:700;min-width:44px}
+@media (max-height:460px) and (orientation:landscape){
+  .menu-lay{grid-template-columns:minmax(0,1fr) 270px;padding-top:8px;padding-bottom:8px;gap:12px}
+  .logo-uade{font-size:16px}.logo-surv{font-size:42px}.logo-sub{display:none}
+  .heroe{margin:4px 0 0}.heroe-esc{width:84px}.heroe-info{padding:6px 10px}.heroe-info .real{margin-bottom:4px}.barras{display:none}
+  .desc-pj{display:none}.pj{width:54px}.pj .n{font-size:10px}
+  .menu-der{padding:8px;gap:6px}.btn.jugar{font-size:20px;padding:8px}.btn.multi{padding:7px;font-size:14px}
+  .tile{padding:3px 2px;font-size:10px;gap:1px}.tile i{font-size:15px;line-height:17px}.tile .pxic{width:16px;height:16px}
+  .menu-chips .chip{padding:3px 6px;font-size:14px}.mini{padding:3px 8px}.menu-tiles{gap:4px}
+  .menu-nombre span{display:none}.menu-nombre input{min-height:34px!important;font-size:15px!important}
+}
+@media (max-width:700px) and (orientation:portrait){
+  .menu-lay{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.logo-surv,.btn.jugar,.btn.jugar::after,.heroe-luz{animation:none}}
+
 .titulo{text-align:center;margin:8px 0 2px;font-size:clamp(32px,9vw,56px);font-weight:700;letter-spacing:1px;color:var(--tiza);text-shadow:3px 3px 0 #0c1810}
 .titulo span{color:var(--amarillo)}
 .sub{text-align:center;color:var(--tiza-2);margin-bottom:16px;font-size:15px}
 .barra-creditos{display:flex;justify-content:center;gap:8px;margin-bottom:14px}
 .chip{background:rgba(0,0,0,.3);border:3px solid rgba(0,0,0,.4);padding:6px 14px;font-weight:700;font-variant-numeric:tabular-nums}
 .chip b{color:var(--amarillo)}
-.grilla-pj{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(min-width:660px){.grilla-pj{grid-template-columns:repeat(4,1fr)}}
-.pj{background:rgba(0,0,0,.25);border:3px solid var(--borde);padding:10px 8px 12px;text-align:center;box-shadow:var(--sombra)}
 .pj:active{transform:translate(2px,2px)}
-.pj.sel{border-color:var(--amarillo);background:rgba(245,213,71,.08)}
-.pj canvas{width:96px;height:112px;display:block;margin:0 auto 4px}
-.pj .n{font-weight:700;font-size:18px}
 .pj .real{font-size:12px;color:var(--tiza-2);margin-bottom:6px}
 .pj .bonus{font-size:12px;color:var(--verde);font-weight:700}
 .pj .arma{font-size:12px;color:var(--tiza-2);margin-top:3px}
@@ -51,8 +110,6 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .btn.sec{background:rgba(0,0,0,.3);color:var(--tiza);box-shadow:var(--sombra);border:3px solid var(--borde);font-size:15px;padding:11px}
 .btn[disabled]{opacity:.4}
 .fila-btn{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-.jugar{margin-top:16px}
-.desc-pj{text-align:center;color:var(--tiza-2);font-size:14px;margin-top:12px;min-height:40px;line-height:1.4}
 
 .modal{position:fixed;inset:0;background:rgba(10,20,14,.8);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20;touch-action:pan-y}
 .caja{background:var(--pizarra);border:3px solid var(--borde);box-shadow:var(--sombra);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:18px}
@@ -289,25 +346,35 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   </div>
 </section>
 <section class="pantalla" id="menu">
-  <div class="contenido">
-    <h1 class="titulo">UADE<span>SURVIVOR</span></h1>
-    <p class="sub">Sobreviví a la carrera. Los profes no perdonan.</p>
-    <div class="barra-creditos"><span class="chip">Créditos: <b id="menuCreditos">0</b></span></div>
-    <label class="menu-nombre">Jugador: <input id="menuNombre" maxlength="14" placeholder="Poné tu nombre"></label>
-    <div class="grilla-pj" id="grillaPj"></div>
-    <p class="desc-pj" id="descPj"></p>
-    <button class="btn jugar" id="btnJugar">A cursar</button>
-    <div class="fila-btn">
-      <button class="btn sec" id="btnKiosco"><img class="pxic" data-ic="sanguche" alt=""> Kiosco</button>
-      <button class="btn sec" id="btnCampo" style="grid-column:1/-1;border-color:#7ed492">🌾 Mi campo</button>
-      <button class="btn sec" id="btnCantina"><img class="pxic" data-ic="ticket" alt=""> Cantina</button>
-      <button class="btn sec" id="btnLogros">🏅 Logros</button>
-      <button class="btn sec" id="btnRanking">🏆 Ranking</button>
-      <button class="btn sec" id="btnAyuda">❓ Cómo se juega</button>
-      <button class="btn sec" id="btnBackup">💾 Backup</button>
-      <button class="btn sec" id="btnMulti" style="grid-column:1/-1;border-color:var(--violeta)">👥 Jugar con amigos (online)</button>
-      <button class="btn sec" id="btnFull">⛶ Pantalla completa</button>
-      <button class="btn sec" id="btnSonido">🔊 Sonido: sí</button>
+  <canvas id="menuFondo"></canvas><div class="menu-velo"></div>
+  <div class="menu-lay">
+    <div class="menu-izq">
+      <header class="logo"><div class="logo-uade">UADE</div><div class="logo-surv">SURVIVOR</div><p class="logo-sub">Sobreviví a la carrera. Los profes no perdonan.</p></header>
+      <div class="heroe">
+        <div class="heroe-esc"><canvas id="heroeCv" width="96" height="112"></canvas><i class="heroe-luz"></i></div>
+        <div class="heroe-info" id="heroeInfo"></div>
+      </div>
+      <div class="grilla-pj" id="grillaPj"></div>
+      <p class="desc-pj" id="descPj"></p>
+    </div>
+    <div class="menu-der">
+      <div class="menu-chips"><span class="chip"><small>Créditos</small> <b id="menuCreditos">0</b></span><span class="chip"><img class="pxic" data-ic="ticket" alt=""> <b id="menuTickets">0</b></span></div>
+      <label class="menu-nombre"><span>Jugador</span><input id="menuNombre" maxlength="14" placeholder="Poné tu nombre"></label>
+      <button class="btn jugar" id="btnJugar">▶ A CURSAR</button>
+      <button class="btn multi" id="btnMulti">👥 Jugar con amigos</button>
+      <div class="menu-tiles">
+        <button class="tile" id="btnKiosco"><img class="pxic" data-ic="sanguche" alt=""><span>Kiosco</span></button>
+        <button class="tile" id="btnCampo"><i>🌾</i><span>Mi campo</span></button>
+        <button class="tile" id="btnCantina"><img class="pxic" data-ic="ticket" alt=""><span>Cantina</span></button>
+        <button class="tile" id="btnLogros"><i>🏅</i><span>Logros</span></button>
+        <button class="tile" id="btnRanking"><i>🏆</i><span>Ranking</span></button>
+        <button class="tile" id="btnAyuda"><i>❓</i><span>Cómo se juega</span></button>
+      </div>
+      <div class="menu-mini">
+        <button class="mini" id="btnBackup" title="Backup">💾 Backup</button>
+        <button class="mini" id="btnSonido" title="Sonido">🔊</button>
+        <button class="mini" id="btnFull" title="Pantalla completa">⛶</button>
+      </div>
     </div>
   </div>
 </section>
@@ -414,7 +481,7 @@ const STORAGE_KEY = 'facusurvivor';
 const TEMPORADA = 'temporada-1';
 // Base de datos online (Firebase Realtime Database). Vacío = sin online.
 const DB_URL = 'https://uadesurvivor-default-rtdb.firebaseio.com';
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 const ESCENARIOS = {
   facu:  { nombre:'Pasillos de la facu', desde:0,   desc:'Primer año: pasillos abiertos.' },
   aula:  { nombre:'Aula 305',            desde:240, desc:'Filas de bancos. Los tiros de los profes se frenan en los bancos.' },
@@ -627,11 +694,6 @@ const CONSUMIBLES = {
 };
 const SKINS = {
   normal:    { nombre:'Original',     rareza:'' },
-  sepia:     { nombre:'Foto vieja',   rareza:'común' },
-  noche:     { nombre:'Turno noche',  rareza:'común' },
-  gb:        { nombre:'Game Boy',     rareza:'rara' },
-  invertido: { nombre:'Negativo',     rareza:'rara' },
-  dorado:    { nombre:'Dorado',       rareza:'legendaria' },
   // trajes dibujados: cambian la ropa del personaje
   ruso_gamer:    { nombre:'Pro gamer',        rareza:'rara',       pj:'ruso', traje:true },
   ruso_vicio:    { nombre:'Noche de vicio',   rareza:'rara',       pj:'ruso', traje:true },
@@ -711,6 +773,18 @@ function migrarA5(d){
   if (typeof d.campo.ult !== 'number') d.campo.ult = Date.now();
   return d;
 }
+// v10: se sacaron los aspectos de filtro (foto vieja, turno noche, game boy, negativo, dorado). Cada uno se devuelve como un ticket.
+const SKINS_VIEJAS = ['sepia','noche','gb','invertido','dorado'];
+function migrarA10(d){
+  let n = 0;
+  if (d.skins && typeof d.skins === 'object') for (const pj in d.skins) if (Array.isArray(d.skins[pj])){
+    const antes = d.skins[pj].length; d.skins[pj] = d.skins[pj].filter(k => !SKINS_VIEJAS.includes(k)); n += antes - d.skins[pj].length;
+  }
+  if (d.skinSel && typeof d.skinSel === 'object') for (const pj in d.skinSel) if (SKINS_VIEJAS.includes(d.skinSel[pj])) d.skinSel[pj] = 'normal';
+  d.tickets = (typeof d.tickets === 'number' && isFinite(d.tickets) ? d.tickets : 0) + n;
+  if (n) d.avisoSkins = n;
+  return d;
+}
 function migrarA9(d){ if (typeof d.temporada !== 'string') d.temporada = ''; if (!Array.isArray(d.pendOnline)) d.pendOnline = []; return d; }
 function migrarA8(d){ if (typeof d.jugador !== 'string') d.jugador = ''; return d; }
 function migrarA7(d){ d.mejoras = Object.assign({}, d.mejoras); if (typeof d.mejoras.entreno !== 'number') d.mejoras.entreno = 0; return d; }
@@ -732,6 +806,8 @@ function completar(d){
   if (!Array.isArray(out.partidas)) out.partidas = [];
   migrarA4(out); migrarA5(out); migrarA6(out); migrarA8(out); migrarA9(out);
   if (!ESCENARIOS[out.escenario]) out.escenario = 'facu';
+  for (const pj in out.skinSel) if (!SKINS[out.skinSel[pj]]) out.skinSel[pj] = 'normal';
+  for (const pj in out.skins) if (Array.isArray(out.skins[pj])) out.skins[pj] = out.skins[pj].filter(k => SKINS[k]);
   return out;
 }
 function migrar(d){
@@ -746,6 +822,7 @@ function migrar(d){
   if (v < 7) out = migrarA7(out);
   if (v < 8) out = migrarA8(out);
   if (v < 9) out = migrarA9(out);
+  if (v < 10) out = migrarA10(out);
   out = completar(out);
   out.version = SCHEMA_VERSION;
   return out;
@@ -775,6 +852,7 @@ if (datos.temporada !== TEMPORADA){
   guardar();
   if (tuvo) setTimeout(() => toast('¡Nueva temporada! Todos arrancan de cero.'), 800);
 }
+if (datos.avisoSkins){ const n = datos.avisoSkins; delete datos.avisoSkins; guardar(); setTimeout(() => toast(`Sacamos los aspectos viejos (foto vieja, negativo, dorado…). Te devolvimos ${n} ticket${n>1?'s':''}.`), 1600); }
 
 /* =========================================================
    4. UTILIDADES
@@ -952,6 +1030,7 @@ function cargarHojas(FUENTE, DEST){
 const skinCache = new WeakMap();
 function aplicarSkin(c, skin){
   if (!skin || skin==='normal' || (SKINS[skin] && SKINS[skin].traje)) return c;
+  if (skin !== 'dorado') return c;
   let m = skinCache.get(c); if (!m){ m = {}; skinCache.set(c, m); }
   if (m[skin]) return m[skin];
   const o = document.createElement('canvas'); o.width = c.width; o.height = c.height;
@@ -1423,14 +1502,14 @@ function obsLocal(esc, cx, cy){
     if (tema===0){ pon('f_buffet',8,6); pon('f_mesas',56,62); pon('f_tacho',2,80); }
     else if (tema===1){ pon('f_lockers',6,4); pon('f_tacho',100,34); pon('f_banco',30,96); }
     else if (tema===2){ pon('f_estudio',3,34); pon('f_planta',4,4); }
-    else if (tema===3){ pon('f_fotoc',6,8); pon('f_cartelera',50,10); pon('f_expend',96,2); }
+    else if (tema===3){ pon('f_fotoc',6,8); pon('f_tacho',58,30); pon('f_expend',96,2); }
     else if (tema===4){ pon('f_columna',10,2); pon('f_columna',98,2); pon('f_planta',52,72); pon('f_banco',36,40); }
     else if (tema===5){ pon('f_escalera',8,4); pon('f_planta',60,8); pon('f_tacho',100,90); }
     else if (tema===6){ pon('f_expend',6,4); pon('f_expend',42,4); pon('f_banco',62,92); }
   } else if (esc==='aula'){
     const frente = h % 4 === 0;
     if (frente){ if (bit(5)) { pon('a_pizarron',-3,0); pon('a_escritorio',44,64); } else { pon('a_pantalla',36,2); pon('a_escritorio',8,62); pon('a_estante',96,50); } }
-    else if (h % 9 === 5){ pon('a_ventana',22,0); pon('a_perchero',4,58); pon('a_tacho',104,90); }
+    else if (h % 9 === 5){ pon('a_estante',10,4); pon('a_perchero',60,40); pon('a_tacho',104,90); }
     else for (const [fila, y] of [[0,8],[1,66]])
       for (const [col, x] of [[0,4],[1,45],[2,86]]){
         const r = (h >>> (fila*3+col+3)) % 9;
@@ -1730,7 +1809,7 @@ function setSonido(v){
   datos.sonido = v; guardar();
   if (AU.master) AU.master.gain.value = v ? 0.55 : 0;
   const tx = v ? '♪' : '✕'; const b = $('#sonBtn'); if (b) b.textContent = tx;
-  const m = $('#btnSonido'); if (m) m.textContent = v ? '🔊 Sonido: sí' : '🔇 Sonido: no';
+  const m = $('#btnSonido'); if (m){ m.textContent = v ? '🔊' : '🔇'; m.title = v ? 'Sonido: sí' : 'Sonido: no'; }
 }
 document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (document.hidden) AU.ctx.suspend(); else AU.ctx.resume(); });
 
@@ -3323,12 +3402,11 @@ function tirada(){
   let pj = elegir(pjs);
   let skin;
   const conTraje = pjs.filter(p => trajesDe(p, true).length);
-  if (r >= 0.86 && r < 0.98 && conTraje.length){
+  if (r >= 0.80 && conTraje.length){
     pj = elegir(conTraje); const ts = trajesDe(pj, true);
     const raros = ts.filter(k => SKINS[k].rareza!=='legendaria'), leg = ts.filter(k => SKINS[k].rareza==='legendaria');
     skin = (leg.length && Math.random() < 0.2) ? elegir(leg) : elegir(raros.length ? raros : ts);
-  } else if (r < 0.98){ const q = Math.random(); skin = q<0.4 ? 'sepia' : q<0.8 ? 'noche' : q<0.9 ? 'gb' : 'invertido'; }
-  else skin = 'dorado';
+  } else { datos.creditos += 30; return { txt:'+30 créditos', ic:'ticket', rar:'' }; }
   const lista = datos.skins[pj] = datos.skins[pj] || [];
   const nom = PERSONAJES.find(p=>p.id===pj).nombre;
   if (lista.includes(skin)){ datos.creditos += 30; return { txt:`${nom} ${SKINS[skin].nombre} (repetido): +30 créditos`, ic:'@pizza', rar:SKINS[skin].rareza==='común'?'':SKINS[skin].rareza }; }
@@ -4277,29 +4355,69 @@ function cerrarModales(){ document.querySelectorAll('.modal').forEach(m => m.cla
 /* ---------- menú ---------- */
 let pjSel = datos.ultimoPj || 'ruso';
 function renderNombreMenu(){ const i = $('#menuNombre'); if (i && document.activeElement !== i) i.value = datos.jugador || ''; }
+function caraPJ(id){ const h = hojaPJ(id); return h ? aplicarSkin(h.abajo[0], datos.skinSel[id]) : spritePersona('pj-'+id, PERSONAJES.find(p=>p.id===id).look, false).a; }
 function renderMenu(){
-  $('#menuCreditos').textContent = datos.creditos; renderNombreMenu();
+  $('#menuCreditos').textContent = datos.creditos; $('#menuTickets').textContent = datos.tickets || 0; renderNombreMenu();
   renderEscenarios();
   const g = $('#grillaPj');
-  g.innerHTML = PERSONAJES.map(p => {
-    const r = datos.records[p.id];
-    const rec = r ? (r.gano ? '🎓 Recibido en ' + fmtT(r.tiempo) : 'Récord: ' + fmtT(r.tiempo)) : 'Sin partidas';
-    const hb = HABILIDADES[p.hab];
-    return `<button class="pj ${p.id===pjSel?'sel':''}" data-id="${p.id}"><canvas width="96" height="112"></canvas>
-      <div class="n">${esc(p.nombre)}</div><div class="real">${esc(p.real)}</div>
-      <div class="bonus">${esc(p.bonus)}</div><div class="arma" style="color:var(--amarillo)">Fuerte en ataques ${p.stats.fis>p.stats.esp?'físicos':'especiales'}</div><div class="arma">${icArma(p.arma)} ${esc(ARMAS[p.arma].nombre)}</div>
-      <div class="hab">${icHab(p.hab)} ${esc(hb.nombre)}</div>
-      <div class="rec">${esc(rec)}</div></button>`;
-  }).join('');
+  g.innerHTML = PERSONAJES.map(p => `<button class="pj ${p.id===pjSel?'sel':''}" data-id="${p.id}"><canvas width="32" height="32"></canvas><div class="n">${esc(p.nombre)}</div></button>`).join('');
   g.querySelectorAll('.pj').forEach(b => {
-    const p = PERSONAJES.find(p => p.id===b.dataset.id), c = b.querySelector('canvas').getContext('2d');
+    const p = PERSONAJES.find(p => p.id===b.dataset.id), c = b.querySelector('canvas').getContext('2d'), img = caraPJ(p.id);
     c.imageSmoothingEnabled = false;
-    const img = hojaPJ(p.id) ? aplicarSkin(hojaPJ(p.id).abajo[0], datos.skinSel[p.id]) : spritePersona('pj-'+p.id, p.look, false).a, S = Math.max(1, Math.floor(Math.min(92/img.width, 110/img.height)));
-    c.drawImage(img, Math.round((96-img.width*S)/2), 112-img.height*S-2, img.width*S, img.height*S);
-    b.onclick = () => { pjSel = p.id; renderMenu(); };
+    // la cara: la parte de arriba del dibujo, centrada
+    const lado = Math.min(img.width, Math.round(img.height*0.62)), sx = Math.round((img.width-lado)/2);
+    c.drawImage(img, sx, 0, lado, lado, 0, 0, 32, 32);
+    b.onclick = () => { if (pjSel !== p.id){ pjSel = p.id; renderMenu(); } };
   });
-  const p = PERSONAJES.find(p => p.id===pjSel);
-  $('#descPj').innerHTML = p ? esc(p.desc) + '<br><span style="color:var(--violeta)">' + esc(HABILIDADES[p.hab].nombre) + ':</span> ' + esc(HABILIDADES[p.hab].desc) : '';
+  const p = PERSONAJES.find(p => p.id===pjSel); if (!p) return;
+  const r = datos.records[p.id], hb = HABILIDADES[p.hab];
+  const rec = r ? (r.gano ? '🎓 Recibido en ' + fmtT(r.tiempo) : 'Récord: ' + fmtT(r.tiempo)) : 'Sin partidas todavía';
+  const st = p.stats || {}, barra = (n, v, max) => `<span>${n}</span><i><b style="width:${Math.round(Math.min(1, v/max)*100)}%"></b></i>`;
+  $('#heroeInfo').innerHTML = `<div class="n">${esc(p.nombre)}</div><div class="real">${esc(p.real)}</div>
+    <div class="lin bonus">${esc(p.bonus)}</div>
+    <div class="lin">${icArma(p.arma)} ${esc(ARMAS[p.arma].nombre)} <small style="color:var(--tiza-2)">· fuerte en ${st.fis>st.esp?'físicos':'especiales'}</small></div>
+    <div class="lin hab">${icHab(p.hab)} ${esc(hb.nombre)}</div>
+    ${st.fis!==undefined ? `<div class="barras">${barra('Físico', st.fis, 1.4)}${barra('Especial', st.esp, 1.4)}</div>` : ''}
+    <div class="lin rec">${esc(rec)}</div>`;
+  $('#descPj').innerHTML = esc(p.desc) + ' <span style="color:var(--violeta)">' + esc(hb.nombre) + ':</span> ' + esc(hb.desc);
+  menuAn.pj = p.id;
+}
+/* ---------- fondo animado del menú: el mapa de la partida pasando de costado + el personaje elegido caminando ---------- */
+const menuAn = { t:0, pj:null, esc:0, cache:new Map() };
+const MENU_ESCS = ['facu','aula','campo'];
+function animarMenu(dt){
+  if ($('#menu').classList.contains('oculto') || (G && !G.fin)) return;
+  menuAn.t += dt;
+  const cv = $('#menuFondo'), W = Math.ceil(innerWidth/3), H = Math.ceil(innerHeight/3);
+  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  const ciclo = 14, n = Math.floor(menuAn.t / ciclo), esc = MENU_ESCS[n % 3], f = (menuAn.t % ciclo) / ciclo;
+  const camX = menuAn.t*14, camY = Math.sin(menuAn.t*0.12)*40 - H/2;
+  const cx0 = Math.floor(camX/CH), cx1 = Math.floor((camX+W)/CH), cy0 = Math.floor(camY/CH), cy1 = Math.floor((camY+H)/CH);
+  const objs = [];
+  for (let cy=cy0; cy<=cy1+1; cy++) for (let cx=cx0-1; cx<=cx1; cx++){
+    const k = esc+cx+','+cy; let c = menuAn.cache.get(k);
+    if (!c){ c = renderEscenario(esc, cx, cy); menuAn.cache.set(k, c); if (menuAn.cache.size > 90) menuAn.cache.delete(menuAn.cache.keys().next().value); }
+    if (cy <= cy1) g.drawImage(c, Math.round(cx*CH - camX), Math.round(cy*CH - camY));
+    for (const o of obsLocal(esc, cx, cy)){ const d = IMG_MAPA[o.k]; if (d) objs.push({ k:o.k, x:cx*CH + o.x - camX, y:cy*CH + o.y - camY, pie:cy*CH + o.y + d.h, fase:(o.x*7+o.y*3)%10/3 }); }
+  }
+  objs.sort((a, b) => a.pie - b.pie);
+  for (const o of objs){
+    const a = ANIM_MAPA[o.k], fr = a ? Math.floor(menuAn.t*a[1] + o.fase) % a[0] : 0;
+    const im = imgMapa(fr ? o.k+'#'+fr : o.k) || imgMapa(o.k); if (im) g.drawImage(im, Math.round(o.x), Math.round(o.y));
+  }
+  // fundido a negro al cambiar de mapa
+  const fun = Math.max(0, 1 - Math.min(f, 1-f)*14);
+  if (fun > 0){ g.fillStyle = `rgba(8,14,10,${fun})`; g.fillRect(0, 0, W, H); }
+  // el personaje elegido, caminando en el lugar
+  const hc = $('#heroeCv'); if (!hc || !menuAn.pj) return;
+  const hg = hc.getContext('2d'); hg.imageSmoothingEnabled = false; hg.clearRect(0, 0, hc.width, hc.height);
+  const h = hojaPJ(menuAn.pj), skin = datos.skinSel[menuAn.pj];
+  const fr = h && h.abajo ? h.abajo[Math.floor(menuAn.t*6) % h.abajo.length] : null;
+  const img = fr ? aplicarSkin(fr, skin) : caraPJ(menuAn.pj);
+  const S = Math.max(1, Math.floor(Math.min(92/img.width, 106/img.height)));
+  hg.fillStyle = 'rgba(0,0,0,.35)'; hg.fillRect(Math.round(48 - img.width*S*0.3), 108, Math.round(img.width*S*0.6), 3);
+  hg.drawImage(img, Math.round((96-img.width*S)/2), 110-img.height*S, img.width*S, img.height*S);
 }
 function renderKiosco(){
   $('#kioscoCred').textContent = datos.creditos;
@@ -4434,7 +4552,7 @@ function alternarPantallaCompleta(){
 }
 function marcarPantallaCompleta(){
   const on = enPantallaCompleta();
-  $('#btnFull').textContent = on ? '⛶ Salir de pantalla completa' : '⛶ Pantalla completa';
+  $('#btnFull').title = on ? 'Salir de pantalla completa' : 'Pantalla completa';
   setTimeout(ajustar, 60);
 }
 document.addEventListener('fullscreenchange', marcarPantallaCompleta);
@@ -4482,6 +4600,7 @@ function loop(ts){
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, ((ts - ultimo)/1000) || 0); ultimo = ts;
   animarTitulo(dt);
+  animarMenu(dt);
   dibujarCampo(dt);
   leerPad();
   if (!G) return;
