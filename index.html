@@ -1741,7 +1741,9 @@ addEventListener('resize', ajustar); ajustar();
    ========================================================= */
 const teclas = {};
 const MAPA = {ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d'};
+const escribiendo = e => { const t = e.target; return !!t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.isContentEditable); };
 addEventListener('keydown', e => {
+  if (escribiendo(e)) return;                       // si estás escribiendo un nombre o un código, las teclas son para eso
   if (MAPA[e.code]){ teclas[MAPA[e.code]] = true; e.preventDefault(); }
   if (!G || G.fin) return;
   const num = /^(Digit|Numpad)([1-9])$/.exec(e.code), n = num ? +num[2] : 0;
@@ -1765,6 +1767,7 @@ addEventListener('keydown', e => {
   if (e.code==='KeyG') alternarPantallaCompleta();
 });
 addEventListener('keyup', e => { if (MAPA[e.code]) teclas[MAPA[e.code]] = false; });
+addEventListener('focusin', e => { if (escribiendo(e)) for (const k in teclas) teclas[k] = false; });
 let joy = null;
 cv.addEventListener('pointerdown', e => { if (!G || G.pausa) return; joy = {id:e.pointerId, ox:e.clientX, oy:e.clientY, x:e.clientX, y:e.clientY}; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
 cv.addEventListener('pointermove', e => { if (joy && e.pointerId===joy.id){ joy.x=e.clientX; joy.y=e.clientY; } });
