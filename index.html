@@ -595,6 +595,12 @@ const SEMI_DEF = {
   cardinali: { nombre:'Cardinali', tipoEn:'gente',
     look:{piel:'#f0c9a8', pelo:'#3a2a1a', ropa:'#7a8c3a', pantalon:'#4a4a3a', flaco:true, pinchudo:true, loco:true},
     frases:['¿Y si el pasto es verde de los nervios?','Las vacas votan, eh','Yo inventé el alambre','La soja escucha cumbia','El lunes es un martes con ganas','¿Vieron que el agua moja?','Mi primo es una cosechadora','En el sur de Argentina comen carne de burro'] },
+  diego: { nombre:'Diego', tipoEn:'gente', pesado:true,
+    look:{piel:'#e8b98f', pelo:'#2a1d12', ropa:'#3a6a3a', pantalon:'#2a2d36', gorra:'#1b1b22'},
+    frases:['Holaaa','¿Por qué no me contestás?','Te mandé un audio de seis minutos','Te vi en línea, eh','¿Me clavaste el visto?','Era un chiste','¿Estás enojada?','Contestame'] },
+  pato:  { nombre:'Pato', tipoEn:'gente', pesado:true,
+    look:{piel:'#f1c9a5', pelo:'#b08a5a', ropa:'#7a3a5a', pantalon:'#3a3a52', bigote:'#7a5a3a'},
+    frases:['Te sigo en Instagram','Te likeé todas las fotos','¿Hola?','Te escribí por todos lados','Te paso a buscar','No me bloquees','Dale, contestá','¿Te llegó mi mensaje?'] },
   padrillo:  { nombre:'El Padrillo', tipoEn:'campo',
     look:{piel:'#d9a47a', pelo:'#2a1d12', ropa:'#6a5a44', pantalon:'#3a3a52', boina:'#1b1b22', panuelo:true, bigote:'#2a1d12'},
     frases:['Yo soy de campo, chamigo','Esto se arregla a lo gaucho','Cero códigos, hermano','Te pasé el TP… mentira','Eso es mío ahora','Por la espalda, como corresponde'] },
@@ -776,6 +782,7 @@ const LOGROS = [
   { id:'carino',    nombre:'Con cariño, eh',             desc:'Ganale a Gustavo.',                              ok:s => s.legs && s.legs.gustavo },
   { id:'consejo',   nombre:'Pasó por el consejo',        desc:'Ganale a Claudio.',                              ok:s => s.legs && s.legs.claudio },
   { id:'mariano',   nombre:'¿Mariano existe?',           desc:'Ganale a Mariano.',                              ok:s => s.legs && s.legs.mariano },
+  { id:'bloqueados',nombre:'Bloqueados',                 desc:'Con Pili, bloqueá a Diego y a Pato.',            ok:s => s.bloqueados },
   { id:'integrador',nombre:'Leyenda',                    desc:'Llegá al minuto 30 con Tato persiguiéndote.',            ok:s => s.integrador },
   { id:'promo',     nombre:'Promoción completa',         desc:'Recibite con los cuatro.',                       ok:s => s.ganoPj && ['ruso','feo','conejo','pili'].every(k => s.ganoPj[k]) },
   { id:'arca',      nombre:'ARCA te fundió',             desc:'Que ARCA te cobre 200 créditos en total.',       ok:s => (s.arca||0)>=200 },
@@ -2396,7 +2403,7 @@ function spawns(dt){
   // legendarios: se abre una grieta
   if (!G.dim && !G.grieta && G.proxLeg < JEFES.length && G.t >= G.grietaT){
     const a = Math.random()*Math.PI*2, def = defLeg(G.proxLeg);
-    G.grieta = { x:G.jug.x+Math.cos(a)*300, y:G.jug.y+Math.sin(a)*300, def, vida:75 };
+    G.grieta = { x:G.jug.x+Math.cos(a)*300, y:G.jug.y+Math.sin(a)*300, def, vida:90 };
     mostrarBanner('¡Se abrió una grieta! ' + def.nombre.split(',')[0] + ' te espera'); sfx('grieta');
   }
   if (G.grieta){
@@ -2407,6 +2414,15 @@ function spawns(dt){
   // pseudojefes
   const sj = SEMIJEFES[G.proxSemi];
   if (sj && G.t >= sj.t && !G.enemigos.some(e=>e.semi)){ crearSemi(sj); G.proxSemi++; }
+  // cofres: aparecen lejos de vez en cuando (la flecha te dice dónde)
+  G.cofreT = (G.cofreT ?? 60) - dt;
+  if (G.cofreT <= 0){ G.cofreT = rnd(70, 110);
+    if (G.items.filter(i => i.tipo==='cofre').length < 2){ const a = Math.random()*Math.PI*2, r = rnd(520, 820); G.items.push({ x:G.jug.x + Math.cos(a)*r, y:G.jug.y + Math.sin(a)*r, tipo:'cofre', id:'c'+Math.floor(G.t) }); mostrarBanner('¡Apareció un cofre! Seguí la flecha amarilla'); } }
+  // los pesados de Pili
+  if (hayPili()){
+    G.pesadosT = (G.pesadosT ?? 170) - dt;
+    if (G.pesadosT <= 0 && !G.enemigos.some(e => e.pesado)){ G.pesadosT = 330; traerPesados(); }
+  }
   // plaga de langostas
   G.plagaT -= dt;
   if (G.plagaT<=0){
@@ -2518,11 +2534,29 @@ function crearSemi(sj){
   G.enemigos.push(e);
   mostrarBanner('¡Apareció ' + def.nombre + '!');
 }
+function hayPili(){ return G.pj.id==='pili' || (G.coop && todosLosJugadores().some(p => (p.pjId || G.pj.id)==='pili')); }
+function laPili(){ return G.coop ? jugadoresVivos().find(p => (p.pjId || G.pj.id)==='pili') : (G.pj.id==='pili' ? G.jug : null); }
+function traerPesados(){
+  const p = posBorde(), f = 1 + G.t/400;
+  ['diego','pato'].forEach((id, i) => { crearSemi({ id, t:0, hp:Math.round(650*f), vel:108 + i*6, r:15 }); const e = G.enemigos[G.enemigos.length-1]; e.pesado = true; e.x = p.x + i*40; e.y = p.y; e.orb = i*Math.PI; });
+  mostrarBanner('¡Llegaron Diego y Pato! No la dejan en paz a Pili'); sfx('grieta');
+}
+function actualizarPesado(e, dt){
+  // van atrás de Pili, dan vueltas alrededor y le llenan el celular de mensajes
+  const j = laPili() || G.jug, dx = j.x-e.x, dy = j.y-e.y, d = Math.hypot(dx,dy)||1, v = e.vel * (e.lento>0 ? 0.6 : 1);
+  e.orb = (e.orb||0) + dt*1.4;
+  const rr = d > 200 ? 0 : 75, tx = j.x + Math.cos(e.orb)*rr, ty = j.y + Math.sin(e.orb)*rr, ddx = tx-e.x, ddy = ty-e.y, dd = Math.hypot(ddx,ddy)||1;
+  e.x += ddx/dd*v*dt; e.y += ddy/dd*v*dt; e.mira = dx>=0 ? 1 : -1; e.paso += dt*10;
+  if (e.t1<=0){ e.t1 = 2.4; const a = Math.atan2(dy,dx); for (let k=-1;k<=1;k++) disparoG(e.x, e.y-20, a+k*0.22, 210, 9, 'globo', e.id, 8); }
+  if (e.t2<=0){ e.t2 = 7; anillo(e, 10, 160, 9, 'globo', Math.random()); hablar(e, 'Te mandé un audio', 1.4); }
+  if (d > Math.hypot(VW,VH)/2 + 350){ const p = posBorde(); e.x = p.x; e.y = p.y; }
+}
 function actualizarSemi(e, dt, dx, dy, d){
   const j = G.jug;
   e.t1 -= dt; e.t2 -= dt; e.fraseCd -= dt; if (e.fraseT>0) e.fraseT -= dt;
-  if (e.fraseCd<=0){ hablar(e, elegir(e.def.frases), 2.4); e.fraseCd = e.id==='cardinali' ? 3.8 : 6; }
+  if (e.fraseCd<=0){ hablar(e, elegir(e.def.frases), 2.4); e.fraseCd = e.id==='cardinali' ? 3.8 : e.pesado ? 3.2 : 6; }
   const v = e.vel * (e.lento>0 ? 0.6 : 1);
+  if (e.pesado){ actualizarPesado(e, dt); return; }
   if (e.id==='cardinali'){
     e.cambio -= dt;
     if (e.cambio<=0){ e.cambio = rnd(0.35,0.8); e.dirA = Math.atan2(dy,dx) + (d > 260 ? rnd(-0.5,0.5) : rnd(-1.6,1.6)); }
@@ -2581,7 +2615,7 @@ function salirArena(gano){
     G.proxLeg++;
     if (G.proxLeg < JEFES.length){ G.grietaT = G.t + rnd(95,145); if (defLeg(G.proxLeg).final) G.grietaT = Math.max(G.grietaT, 1290); }
     if (G.cons.length<2) G.cons.push(elegir(Object.keys(CONSUMIBLES))); renderCons();
-    if (G.coop){ revivirTodos(1); G.legsCoop = (G.legsCoop||0) + 1; G.vinGuardado = (G.vinGuardado||0) + 1; for (const p of todosLosJugadores()) p.hp = p.maxHp; mostrarBanner('¡Le ganaron a ' + def.nombre.split(',')[0] + '! Cada uno tiene un vínculo'); if (def.final) empezarIntegrador(); return; }
+    if (G.coop){ revivirTodos(1); G.legsCoop = (G.legsCoop||0) + 1; G.vinGuardado = (G.vinGuardado||0) + 1; for (const p of todosLosJugadores()) p.hp = p.maxHp; mostrarBanner('¡Le ganaron a ' + def.nombre.split(',')[0] + '! Cada uno tiene un vínculo'); if (def.final) empezarDios(); return; }
     if (def.final){ empezarDios(); return; }
     mostrarVinculo(def);
   } else {
@@ -2805,7 +2839,8 @@ function morirEnemigo(e){
     G.sacudon = 0.3; sfx('explosion'); animar('explo', e.x, e.y-15, 0.6, 2); G.extra = (G.extra||0) + 15;
     for (let i=0;i<8;i++) G.gemas.push({ x:e.x+rnd(-40,40), y:e.y+rnd(-40,40), v:3 });
     G.items.push({ x:e.x, y:e.y, tipo:'cofre' }); G.items.push({ x:e.x+24, y:e.y, tipo:'cons', id:elegir(Object.keys(CONSUMIBLES)) });
-    mostrarBanner('¡Le ganaste a ' + e.def.nombre + '!');
+    if (e.pesado){ G.st.bloqueados = (G.st.bloqueados||0) + 1; mostrarBanner('¡Bloqueado: ' + e.def.nombre + '!'); texto(e.x, e.y-40, 'BLOQUEADO', '#e8604c'); }
+    else mostrarBanner('¡Le ganaste a ' + e.def.nombre + '!');
     return;
   }
   const mult = (!G.dim && (G.clima==='apagon' || G.clima==='paro') ? 1.4 : 1) * bonusCampo().xp;
@@ -2827,6 +2862,7 @@ function morirEnemigo(e){
 function dañarJugador(dmg, de){
   const j = G.jug; if (j.inv>0 || G.fin || j.muerto) return;
   if (de==='sebas' && (j.pjId || G.pj.id)==='feo') dmg *= 1.5;           // Sebas lo odia al Feo
+  if ((de==='diego' || de==='pato') && (j.pjId || G.pj.id)==='pili') dmg *= 1.5;   // y estos dos, a Pili
   dmg *= (j.st && j.st.def) || 1;
   j.hp -= dmg; j.inv = 0.5;
   if (!G.coop || j===G.jugLocal){ G.sacudon = 0.15; sfx('danio'); }
@@ -2835,7 +2871,7 @@ function dañarJugador(dmg, de){
     return;
   }
   if (j.hp<=0){
-    if (G.dim){ salirArena(false); return; }
+    if (G.dim && G.dim.id!=='tato'){ salirArena(false); return; }
     if (datos.mejoras.revivir>0 && !G.revivio){
       G.revivio = true; j.hp = j.maxHp*0.6; j.inv = 2.5;
       for (const e of G.enemigos) if (!e.jefe && dist2(e,j.x,j.y) < 260*260) e.hp = 0;
@@ -3013,14 +3049,18 @@ function centrado(img,cx,cy){ bctx.drawImage(img, cx-(img.width>>1), cy-(img.hei
 function sombraPies(cx,pie,w){ pElipse(cx, pie, Math.max(2,Math.round(w*0.33)), 1, 'rgba(0,0,0,.3)'); }
 function texto8(s, x, y, color, borde, izq){ const c = txtImg(s,color,borde); bctx.drawImage(c, izq ? x : x-(c.width>>1), y); }
 function lineaPix(x0,y0,a,n,g){ const cx = Math.cos(a), cy = Math.sin(a); for (let i=0;i<n;i++) bctx.fillRect(Math.round(x0+cx*i-g/2), Math.round(y0+cy*i-g/2), g, g); }
-function flecha(tx, ty, color){
-  if (tx>=0 && tx<=BW && ty>=0 && ty<=BH) return;
-  const a = Math.atan2(ty-BH/2, tx-BW/2), m = 8;
-  const px_ = Math.max(m, Math.min(BW-m, Math.round(BW/2 + Math.cos(a)*BW))), py_ = Math.max(m+30, Math.min(BH-m-34, Math.round(BH/2 + Math.sin(a)*BH)));
-  for (const capa of [0,1]) for (let i=4;i>=0;i--){
-    const s = Math.round(7-i*1.4), x = Math.round(px_ - Math.cos(a)*i*1.6 - s/2), y = Math.round(py_ - Math.sin(a)*i*1.6 - s/2);
-    if (capa===0) rect(x-1,y-1,s+2,s+2,'#15151c'); else rect(x,y,s,s,color);
-  }
+function flecha(tx, ty, color, cartel){
+  const m = 12, top = 30, bot = 36;
+  if (tx>=m && tx<=BW-m && ty>=top && ty<=BH-bot) return;
+  // dónde corta la línea centro→objetivo el borde de la pantalla
+  const cx = BW/2, cy = BH/2, dx = tx-cx, dy = ty-cy, a = Math.atan2(dy, dx);
+  const kx = dx ? ((dx>0 ? BW-m : m) - cx)/dx : Infinity, ky = dy ? ((dy>0 ? BH-bot : top) - cy)/dy : Infinity, k = Math.min(kx, ky);
+  const late = Math.sin(G.t*6)*1.5, x = cx + dx*k - Math.cos(a)*late, y = cy + dy*k - Math.sin(a)*late, b = bctx;
+  b.save(); b.translate(Math.round(x), Math.round(y)); b.rotate(a);
+  b.fillStyle = '#15151c'; b.beginPath(); b.moveTo(8,0); b.lineTo(-6,-7); b.lineTo(-3,0); b.lineTo(-6,7); b.closePath(); b.fill();
+  b.fillStyle = color; b.beginPath(); b.moveTo(6,0); b.lineTo(-4,-5); b.lineTo(-1.5,0); b.lineTo(-4,5); b.closePath(); b.fill();
+  b.restore();
+  if (cartel){ const lx = Math.round(x - Math.cos(a)*16), ly = Math.round(y - Math.sin(a)*14) - 3; texto8(cartel, Math.max(20, Math.min(BW-20, lx)), Math.max(top-6, Math.min(BH-bot, ly)), color, '#15151c'); }
 }
 // los profes dibujados (hoja de sprites) van a tamaño real; si no cargaron, quedan los de antes agrandados
 const dibujoProfe = e => SPR_EN['j_' + (e.leg ? e.def.id : e.id)];
@@ -3288,9 +3328,12 @@ function dibujar(){
   for (const e of G.enemigos) if (e.jefe && e.fraseT>0 && !e.invisible && enPantalla(e, 10)) globo(e);
   for (const f of G.efectos) if (f.tipo==='flash') rect(0,0,BW,BH,`rgba(255,250,220,${f.vida/f.t*0.7})`);
 
-  if (G.jefe) flecha(bx_(G.jefe.x), by_(G.jefe.y), '#e8604c');
-  if (G.grieta) flecha(bx_(G.grieta.x), by_(G.grieta.y), '#b48ce0');
-  for (const e of G.enemigos) if (e.semi) flecha(bx_(e.x), by_(e.y), '#f5a35a');
+  if (G.jefe) flecha(bx_(G.jefe.x), by_(G.jefe.y), '#e8604c', G.jefe.def.nombre.split(',')[0].split(' ')[0].toUpperCase());
+  for (const e of G.enemigos) if (e.eco) flecha(bx_(e.x), by_(e.y), '#e8604c', e.def.nombre.split(',')[0].split(' ').pop().toUpperCase());
+  if (G.grieta) flecha(bx_(G.grieta.x), by_(G.grieta.y), '#b48ce0', 'GRIETA ' + Math.max(0, Math.ceil(G.grieta.vida)));
+  for (const e of G.enemigos) if (e.semi) flecha(bx_(e.x), by_(e.y), '#f5a35a', e.def.nombre.split(' ').pop().toUpperCase());
+  for (const it of G.items) if (it.tipo==='cofre') flecha(bx_(it.x), by_(it.y), '#f5d547', 'COFRE');
+  if (G.coop) for (const p of otrosVisibles()) if (p && !p.fuera) flecha(bx_(p.x), by_(p.y), p.muerto ? '#e8604c' : '#7ed492', normTxt(p.nombre || 'COMPA').slice(0,10).toUpperCase() + (p.muerto ? ' !' : ''));
   if (joy){
     const dx = joy.x-joy.ox, dy = joy.y-joy.oy, l = Math.hypot(dx,dy), k = l>45 ? 45/l : 1;
     pAnillo(Math.round(joy.ox/P), Math.round(joy.oy/P), Math.round(48/P), 'rgba(20,20,28,.55)', 2);
@@ -3590,6 +3633,7 @@ function terminar(gano){
   S.legs = Object.assign(S.legs||{}, G.st.legs);
   if (G.st.sebasConFeo) S.sebasConFeo = true;
   if (G.st.integrador) S.integrador = true;
+  if ((G.st.bloqueados||0) >= 2 && G.pj.id==='pili') S.bloqueados = true;
   if (G.st.apagon5) S.apagon5 = true;
   S.partidasPj = S.partidasPj||{}; S.partidasPj[G.pj.id] = (S.partidasPj[G.pj.id]||0)+1;
   if (gano){ S.ganoPj = S.ganoPj||{}; S.ganoPj[G.pj.id] = true; }
@@ -4142,7 +4186,7 @@ const r1 = v => Math.round(v);
 /* ---------- jugadores en la partida (anfitrión) ---------- */
 function todosLosJugadores(){ return G.otros ? [G.jugLocal].concat(G.otros.filter(o => !o.fuera).map(o => o.jug)) : [G.jug]; }
 function jugadoresVivos(){ return todosLosJugadores().filter(p => !p.muerto); }
-function objetivoDe(e){ let m = null, md = Infinity; for (const p of jugadoresVivos()){ const d = dist2(e, p.x, p.y); if (d < md){ md = d; m = p; } } return m; }
+function objetivoDe(e){ if (e.pesado){ const p = laPili(); if (p) return p; } let m = null, md = Infinity; for (const p of jugadoresVivos()){ const d = dist2(e, p.x, p.y); if (d < md){ md = d; m = p; } } return m; }
 const HAB_KEYS = ['habCd','buff','carga','cargaMax','auto','cebada','subida'];
 function conJugador(o, fn){
   const j0 = G.jug, pj0 = G.pj, cx = cam.x, cy = cam.y, guardado = {};
@@ -4206,7 +4250,7 @@ function actualizarOtros(dt){
     if (p.reviveT >= 3){ p.muerto = false; p.reviveT = 0; p.hp = Math.round(p.maxHp*0.4); p.inv = 2; mostrarBanner('¡' + (p.nombre||'Alguien') + ' volvió a la cursada!'); animar('brillo', p.x, p.y-20, 0.6, 2); }
   }
   if (!vivos.length){
-    if (G.dim){ salirArena(false); for (const p of todosLosJugadores()){ p.muerto = false; p.hp = Math.round(p.maxHp*0.3); p.inv = 2; } }
+    if (G.dim && G.dim.id!=='tato'){ salirArena(false); for (const p of todosLosJugadores()){ p.muerto = false; p.hp = Math.round(p.maxHp*0.3); p.inv = 2; } }
     else terminar(G.dios || G.st.legs.mariano ? true : false);
   }
 }
@@ -4306,6 +4350,7 @@ function aplicarSnapshot(S){
   // dimensión de los legendarios
   const dim = S.dim ? defJefe(S.dim) : null;
   if (dim && !G.dim){ G.mapaPos = { x:j.x, y:j.y }; j.x = rnd(-60,60); j.y = 180; G.dim = dim; chunks.clear(); tocarTema(temaDeDimension(dim)); $('#jefeBarra').classList.remove('oculto'); }
+  else if (dim && G.dim && dim !== G.dim){ G.dim = dim; j.x = rnd(-60,60); j.y = rnd(-60,60); j.inv = 2; chunks.clear(); tocarTema(temaDeDimension(dim)); }
   else if (!dim && G.dim){ G.dim = null; if (G.mapaPos){ j.x = G.mapaPos.x; j.y = G.mapaPos.y; } chunks.clear(); tocarTema('mapa'); $('#jefeBarra').classList.add('oculto'); j.inv = 2; }
   if (S.jefe){ $('#jefeNom').textContent = S.jefe.n; $('#jefeHp').style.width = (S.jefe.p*100) + '%'; $('#jefeBarra').classList.remove('oculto'); }
   else if (!G.dim) $('#jefeBarra').classList.add('oculto');
