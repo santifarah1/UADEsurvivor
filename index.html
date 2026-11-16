@@ -1025,7 +1025,8 @@ if (datos.temporada !== TEMPORADA){
   // se quedan los trajes (y lo elegido) y las opciones; todo lo demás arranca de cero
   const objs = v => v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : {};
   datos.skins = objs(viejo.skins); datos.skinSel = objs(viejo.skinSel);
-  for (const k of ['volMus','volFx','sacudida','destellos','numeros','calidad','tutoListo']) if (viejo[k] !== undefined) datos[k] = viejo[k];
+  for (const k of ['volMus','volFx','sacudida','destellos','numeros','calidad','tutoListo']) if (viejo[k] !== undefined && viejo[k] !== null) datos[k] = viejo[k];
+  datos.volMus = (typeof datos.volMus==='number' && isFinite(datos.volMus)) ? datos.volMus : 0.6; datos.volFx = (typeof datos.volFx==='number' && isFinite(datos.volFx)) ? datos.volFx : 0.8;
   guardar();
   if (tuvo) setTimeout(() => toast('¡Temporada 2! Campo, tiempos y ranking de cero. Los trajes los conservás.'), 800);
 }
@@ -1926,19 +1927,39 @@ function chunk(cx, cy, tema){
    ========================================================= */
 const AU = { ctx:null, master:null, mus:null, fx:null, ruido:null, tema:null, paso:0, prox:0, timer:null, gemaP:0, gemaT:0, ult:{} };
 function n2f(n){ const m = /^([A-G])(#?)(\d)$/.exec(n); if (!m) return 0; const b = {C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]] + (m[2]?1:0); return 440*Math.pow(2, ((+m[3]+1)*12 + b - 69)/12); }
+const volOk = (v, def) => (typeof v === 'number' && isFinite(v)) ? Math.max(0, Math.min(1, v)) : def;
 function audioInit(){
-  if (AU.ctx){ if (AU.ctx.state==='suspended') AU.ctx.resume(); return; }
+  datos.volMus = volOk(datos.volMus, 0.6); datos.volFx = volOk(datos.volFx, 0.8);
+  // en iPhone, que suene aunque el teléfono esté en silencio (como un juego, no como un timbre)
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch(_){}
+  if (AU.ctx){
+    if (AU.ctx.state !== 'running' && AU.ctx.state !== 'closed'){ try { const p = AU.ctx.resume(); if (p && p.catch) p.catch(()=>{}); } catch(_){} }
+    desbloquearAudio(); return;
+  }
   try {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     const c = AU.ctx = new AC();
     AU.master = c.createGain(); AU.master.gain.value = datos.sonido ? 0.55 : 0; AU.master.connect(c.destination);
     AU.mus = c.createGain(); AU.mus.gain.value = 0.53*datos.volMus; AU.mus.connect(AU.master);
     AU.fx = c.createGain(); AU.fx.gain.value = 0.62*datos.volFx; AU.fx.connect(AU.master);
+    if (c.state !== 'running'){ const p = c.resume(); if (p && p.catch) p.catch(()=>{}); }
+    desbloquearAudio();
     const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0);
     for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
     AU.ruido = b;
   } catch(e){ AU.ctx = null; }
 }
+// Safari/iOS solo "destraba" el audio si suena algo dentro de un toque de verdad (touchend/click, no pointerdown)
+function desbloquearAudio(){
+  const c = AU.ctx; if (!c || AU.destrabado) return;
+  try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0); } catch(_){}
+  if (c.state === 'running') AU.destrabado = true;
+}
+['touchend','click','keydown','pointerup'].forEach(ev => addEventListener(ev, () => {
+  if (!AU.ctx || AU.ctx.state !== 'running' || !AU.destrabado) audioInit();
+}, { capture:true, passive:true }));
+// al volver a la pestaña (o después de una llamada en el celu) el navegador lo deja pausado
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AU.ctx && AU.ctx.state !== 'running'){ try { AU.ctx.resume(); } catch(_){} } });
 function osc(dest, tipo, f, t, dur, vol, fFin){
   const c = AU.ctx, o = c.createOscillator(), g = c.createGain();
   o.type = tipo; o.frequency.setValueAtTime(f, t);
@@ -2023,6 +2044,7 @@ function pararTema(){ AU.tema = null; }
 function programarMusica(){
   if (!AU.tema || !AU.ctx || AU.ctx.state!=='running') return;
   const T = TEMAS_C[AU.tema];
+  if (AU.prox < AU.ctx.currentTime - 0.25) AU.prox = AU.ctx.currentTime + 0.05; // no tirar de golpe las notas atrasadas
   while (AU.prox < AU.ctx.currentTime + 0.12){
     const t = AU.prox;
     for (const e of T.ev[AU.paso % T.largo]){
@@ -5283,7 +5305,7 @@ function procesarImport(texto){
 $('#menuNombre').oninput = e => { datos.jugador = e.target.value.trim().slice(0,14); guardar(); };
 $('#btnJugar').onclick = () => {
   if (online() && !datos.jugador){ toast('Poné tu nombre arriba para entrar al ranking'); $('#menuNombre').focus(); return; }
-  acostarPantalla(); nuevaPartida(pjSel); };
+  audioInit(); acostarPantalla(); nuevaPartida(pjSel); };
 setTimeout(enviarPendientes, 3000);
 $('#sonBtn').onclick = () => { audioInit(); setSonido(!datos.sonido); };
 function enPantallaCompleta(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
@@ -5317,8 +5339,8 @@ $('#btnOpc').onclick = abrirOpc;
 $('#btnDificil').onclick = () => { datos.dificil = !datos.dificil; guardar(); renderMenu(); };
 document.addEventListener('click', ev => { if (ev.target && ev.target.id==='btnOpcPausa') abrirOpc(); });
 $('#btnOpcOk').onclick = () => { $('#mOpc').classList.add('oculto'); guardar(); };
-$('#opMus').oninput = e => { datos.volMus = e.target.value/100; if (AU.mus) AU.mus.gain.value = 0.53*datos.volMus; };
-$('#opFx').oninput = e => { datos.volFx = e.target.value/100; if (AU.fx) AU.fx.gain.value = 0.62*datos.volFx; };
+$('#opMus').oninput = e => { audioInit(); datos.volMus = volOk(+e.target.value/100, 0.6); if (AU.mus) AU.mus.gain.value = 0.53*datos.volMus; };
+$('#opFx').oninput = e => { audioInit(); datos.volFx = volOk(+e.target.value/100, 0.8); if (AU.fx) AU.fx.gain.value = 0.62*datos.volFx; };
 $('#opMus').onchange = $('#opFx').onchange = () => { guardar(); sfx('nivel'); };
 $('#opSac').onclick = () => { datos.sacudida = !datos.sacudida; guardar(); pintarOpc(); };
 $('#opDest').onclick = () => { datos.destellos = !datos.destellos; guardar(); pintarOpc(); };
