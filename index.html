@@ -894,13 +894,13 @@ const LOGROS = [
   { id:'mil',       nombre:'Mil bajas',                  desc:'Bajá 10.000 enemigos en total.',                 ok:s => (s.kills||0)>=10000 },
 ];
 const KIOSCO = [
-  { id:'vida',    nombre:'Sanguche de milanesa', ic:'i:sanguche', desc:'+10 de vida máxima',                    max:5, costo:l=>40+l*40 },
-  { id:'danio',   nombre:'Resaltador fluo',      ic:'i:marcador', desc:'+5% de daño',                           max:5, costo:l=>50+l*50 },
-  { id:'vel',     nombre:'Zapatillas',           ic:'👟', desc:'+4% de velocidad',                      max:5, costo:l=>40+l*45 },
-  { id:'iman',    nombre:'Grupo de estudio',     ic:'i:grupo', desc:'+15% de alcance para juntar',           max:5, costo:l=>30+l*35 },
-  { id:'hab',     nombre:'Termo nuevo',          ic:'i:mate', desc:'La habilidad se recarga 8% más rápido', max:5, costo:l=>45+l*45 },
-  { id:'entreno', nombre:'Entrenamiento',        ic:'i:puno',    desc:'Las mejoras de stats se pueden subir un nivel más (de ×5 hasta ×8)', max:3, costo:l=>120+l*120 },
-  { id:'revivir', nombre:'Recursada',            ic:'i:revivir', desc:'Una vida extra por partida',            max:1, costo:()=>300 },
+  { id:'vida',    nombre:'Sanguche de milanesa', ic:'i:sanguche', desc:'+10 de vida máxima',                    max:5, costo:l=>70+l*70 },
+  { id:'danio',   nombre:'Resaltador fluo',      ic:'i:marcador', desc:'+5% de daño',                           max:5, costo:l=>90+l*90 },
+  { id:'vel',     nombre:'Zapatillas',           ic:'👟', desc:'+4% de velocidad',                      max:5, costo:l=>70+l*80 },
+  { id:'iman',    nombre:'Grupo de estudio',     ic:'i:grupo', desc:'+15% de alcance para juntar',           max:5, costo:l=>50+l*60 },
+  { id:'hab',     nombre:'Termo nuevo',          ic:'i:mate', desc:'La habilidad se recarga 8% más rápido', max:5, costo:l=>80+l*80 },
+  { id:'entreno', nombre:'Entrenamiento',        ic:'i:puno',    desc:'Las mejoras de stats se pueden subir un nivel más (de ×5 hasta ×8)', max:3, costo:l=>300+l*300 },
+  { id:'revivir', nombre:'Recursada',            ic:'i:revivir', desc:'Una vida extra por partida',            max:1, costo:()=>600 },
 ];
 
 /* =========================================================
@@ -1042,7 +1042,7 @@ const rnd = (a,b) => a + Math.random()*(b-a);
 const elegir = arr => arr[Math.floor(Math.random()*arr.length)];
 const dist2 = (o,x,y) => (o.x-x)*(o.x-x) + (o.y-y)*(o.y-y);
 const xpPara = n => Math.floor(4 + n*3 + n*n*0.5);
-const creditosGanados = (t,kills,jefes,gano) => Math.floor(kills/8) + Math.floor(t/20) + jefes*40 + (gano?100:0);
+const creditosGanados = (t,kills,jefes,gano) => Math.floor(kills/20) + Math.floor(t/30) + jefes*25 + (gano?80:0);
 function hashT(x,y){ let h = (x*374761393 + y*668265263) | 0; h = Math.imul(h ^ (h>>>13), 1274126177); return (h ^ (h>>>16)) >>> 0; }
 function sombra(hex, f){
   const n = parseInt(hex.slice(1),16); let r = n>>16, g = (n>>8)&255, b = n&255;
@@ -2157,7 +2157,7 @@ function hayModalAbierto(){ return !$('#mLevel').classList.contains('oculto') ||
 const PREMIOS_COFRE = [
   { id:'mejora',  p:34, ic:'⬆️', n:'Mejora extra', ap:() => { G.pendientes++; } },
   { id:'vida',    p:18, ic:'❤️', n:'Vida llena',   ap:() => { G.jug.hp = G.jug.maxHp; } },
-  { id:'plata',   p:16, ic:'🪙', n:'+40 créditos', ap:() => { G.extra = (G.extra||0) + 40; } },
+  { id:'plata',   p:16, ic:'🪙', n:'+25 créditos', ap:() => { G.extra = (G.extra||0) + 25; } },
   { id:'iman',    p:12, ic:'🧲', n:'Imán',          ap:() => { G.imanT = 4; } },
   { id:'cons',    p:12, ic:'🎒', n:'Consumible',   ap:() => { if (G.cons.length < 2){ G.cons.push(elegir(Object.keys(CONSUMIBLES))); renderCons(); } else G.extra = (G.extra||0) + 25; } },
   { id:'ticket',  p:8,  ic:'🎟️', n:'Ticket',        ap:() => { G.st.tickets++; }, raro:true },
@@ -2924,7 +2924,7 @@ function traerEco(){
 }
 function actualizarDios(dt){
   if (!G.dios || G.fin) return;
-  if (!G.dios.paso && G.t >= G.dios.fin){ G.dios.paso = true; G.st.integrador = true; G.extra = (G.extra||0) + 300; G.st.tickets += 5; sfx('nivel'); mostrarBanner('¡Llegaste al ' + fmtT(G.t) + '! Sos leyenda. Ahora aguantá todo lo que puedas'); }
+  if (!G.dios.paso && G.t >= G.dios.fin){ G.dios.paso = true; G.st.integrador = true; G.extra = (G.extra||0) + 150; G.st.tickets += 3; sfx('nivel'); mostrarBanner('¡Llegaste al ' + fmtT(G.t) + '! Sos leyenda. Ahora aguantá todo lo que puedas'); }
   G.dios.ecoT -= dt;
   if (G.dios.ecoT <= 0){ G.dios.ecoT = Math.max(12, 24 - G.dios.n*1.5); traerEco(); }
 }
@@ -3135,7 +3135,7 @@ function morirEnemigo(e){
   G.gemas.push({ x:e.x, y:e.y, v:Math.max(1, Math.round(e.xp*mult)) });
   if (e.tipo==='vaca') G.st.vacas++;
   if (e.shiny){
-    G.st.shinies++; G.st.tickets += 2; G.extra = (G.extra||0) + 40; sfx('cofre'); animar('brillo', e.x, e.y-10, 0.6, 2);
+    G.st.shinies++; G.st.tickets += 1; G.extra = (G.extra||0) + 20; sfx('cofre'); animar('brillo', e.x, e.y-10, 0.6, 2);
     for (let i=0;i<6;i++) G.gemas.push({ x:e.x+rnd(-30,30), y:e.y+rnd(-30,30), v:6 });
     texto(e.x, e.y-30, '¡DORADO! +40', '#f5d547');
   }
@@ -3961,7 +3961,7 @@ function terminar(gano){
   subirPartida(Object.assign({}, run, { puntaje:puntaje(run), skin:datos.skinSel[G.pj.id]||'normal' }));
   datos.ultimoPj = G.pj.id;
   // tickets y estadísticas
-  const tickets = Math.floor(G.t/180) + G.st.tickets + (gano?3:0);
+  const tickets = Math.floor(G.t/300) + G.st.tickets + (gano?2:0);
   datos.tickets += tickets;
   const S = datos.stats;
   S.partidas = (S.partidas||0)+1; S.kills = (S.kills||0)+G.kills; S.maxT = Math.max(S.maxT||0, G.t);
@@ -3987,7 +3987,7 @@ function terminar(gano){
   ].map(([k,v]) => `<div class="stat"><b>${esc(v)}</b><small>${k}</small></div>`).join('') +
     (nuevoRec ? '<div class="stat" style="grid-column:1/-1;color:var(--amarillo)"><b>¡Nuevo récord!</b><small>'+esc(G.pj.nombre)+(rec ? ' · antes ' + fmtT(rec.tiempo) : '')+'</small></div>' : (rec ? '<div class="stat" style="grid-column:1/-1"><b>Tu mejor: '+fmtT(rec.tiempo)+'</b><small>te faltaron '+fmtT(Math.max(0, rec.tiempo - Math.floor(G.t)))+' para superarlo</small></div>' : '')) +
     `<div class="stat" style="grid-column:1/-1"><b>${icHTML('ticket')} +${tickets}</b><small>tickets para la cantina</small></div>` +
-    nuevos.map(l => `<div class="stat" style="grid-column:1/-1;color:var(--amarillo)"><b>🏅 ${esc(l.nombre)}</b><small>Logro nuevo · +50 créditos</small></div>`).join('') + resumenPartida();
+    nuevos.map(l => `<div class="stat" style="grid-column:1/-1;color:var(--amarillo)"><b>🏅 ${esc(l.nombre)}</b><small>Logro nuevo · +25 créditos</small></div>`).join('') + resumenPartida();
   $('#jefeBarra').classList.add('oculto');
   $('#mPausa').classList.add('oculto'); $('#mLevel').classList.add('oculto'); $('#mVinculo').classList.add('oculto'); $('#consejo').classList.add('oculto'); $('#mCofre').classList.add('oculto'); $('#cartelMapa').classList.add('oculto');
   setTimeout(()=>$('#mFin').classList.remove('oculto'), gano ? 200 : 500);
@@ -3996,23 +3996,23 @@ function revisarLogros(){
   const S = datos.stats; S.tiradas = S.tiradas||0;
   S.nSkins = Object.values(datos.skins).reduce((n,a) => n + a.length, 0);
   const nuevos = [];
-  for (const l of LOGROS) if (!datos.logros[l.id] && l.ok(S)){ datos.logros[l.id] = new Date().toISOString().slice(0,10); datos.creditos += 50; nuevos.push(l); }
+  for (const l of LOGROS) if (!datos.logros[l.id] && l.ok(S)){ datos.logros[l.id] = new Date().toISOString().slice(0,10); datos.creditos += 25; nuevos.push(l); }
   return nuevos;
 }
 function renderLogros(){
   const n = LOGROS.filter(l => datos.logros[l.id]).length;
-  $('#logrosSub').textContent = `${n} de ${LOGROS.length} desbloqueados · cada uno da 50 créditos`;
+  $('#logrosSub').textContent = `${n} de ${LOGROS.length} desbloqueados · cada uno da 25 créditos`;
   $('#logrosLista').innerHTML = LOGROS.map(l => `<div class="logro ${datos.logros[l.id]?'':'no'}"><span style="font-size:24px">${datos.logros[l.id]?'🏅':'🔒'}</span><div><b>${esc(l.nombre)}</b><small>${esc(l.desc)}</small></div></div>`).join('');
 }
 /* ---------- máquina de la cantina ---------- */
 function tirada(){
   datos.stats.tiradas = (datos.stats.tiradas||0) + 1;
   const r = Math.random(), pjs = PERSONAJES.map(p=>p.id);
-  if (r < 0.50){ const c = 20 + Math.floor(Math.random()*60); datos.creditos += c; return { txt:`+${c} créditos`, ic:'ticket', rar:'' }; }
+  if (r < 0.50){ const c = 15 + Math.floor(Math.random()*30); datos.creditos += c; return { txt:`+${c} créditos`, ic:'ticket', rar:'' }; }
   if (r < 0.72){
     const id = elegir(Object.keys(CONSUMIBLES));
     if (datos.inicio.length < 2){ datos.inicio.push(id); return { txt:`${CONSUMIBLES[id].nombre} para la próxima partida`, ic:CONSUMIBLES[id].icon, rar:'' }; }
-    datos.creditos += 30; return { txt:'+30 créditos (ya tenés 2 consumibles guardados)', ic:'ticket', rar:'' };
+    datos.creditos += 20; return { txt:'+20 créditos (ya tenés 2 consumibles guardados)', ic:'ticket', rar:'' };
   }
   let pj = elegir(pjs);
   let skin;
@@ -4021,10 +4021,10 @@ function tirada(){
     pj = elegir(conTraje); const ts = trajesDe(pj, true);
     const raros = ts.filter(k => SKINS[k].rareza!=='legendaria'), leg = ts.filter(k => SKINS[k].rareza==='legendaria');
     skin = (leg.length && Math.random() < 0.2) ? elegir(leg) : elegir(raros.length ? raros : ts);
-  } else { datos.creditos += 30; return { txt:'+30 créditos', ic:'ticket', rar:'' }; }
+  } else { datos.creditos += 20; return { txt:'+20 créditos', ic:'ticket', rar:'' }; }
   const lista = datos.skins[pj] = datos.skins[pj] || [];
   const nom = PERSONAJES.find(p=>p.id===pj).nombre;
-  if (lista.includes(skin)){ datos.creditos += 30; return { txt:`${nom} ${SKINS[skin].nombre} (repetido): +30 créditos`, ic:'@pizza', rar:SKINS[skin].rareza==='común'?'':SKINS[skin].rareza }; }
+  if (lista.includes(skin)){ datos.creditos += 20; return { txt:`${nom} ${SKINS[skin].nombre} (repetido): +20 créditos`, ic:'@pizza', rar:SKINS[skin].rareza==='común'?'':SKINS[skin].rareza }; }
   lista.push(skin);
   return { txt:`¡Aspecto nuevo! ${nom} · ${SKINS[skin].nombre}`, pj, skin, rar:SKINS[skin].rareza==='común'?'':SKINS[skin].rareza };
 }
@@ -4133,7 +4133,7 @@ function avanzarEncargo(tipo, cat, n){
   if (def.tipo !== tipo) return; if (def.cat && def.cat !== cat && !(def.cat==='grano' && cat && CAMPO_CULTIVOS[cat])) return;
   e.prog = Math.min(def.n, e.prog + n); if (e.prog >= def.n){ e.hecho = true; toast('¡Encargo listo! Cobralo arriba.'); }
 }
-function cobrarEncargo(){ const e = datos.campo.enc; if (!e || !e.hecho || e.cobrado) return; e.cobrado = true; datos.creditos += 150; datos.tickets = (datos.tickets||0) + 2; guardar(); renderCampo(); toast('Encargo cobrado: +150 créditos y 2 tickets'); }
+function cobrarEncargo(){ const e = datos.campo.enc; if (!e || !e.hecho || e.cobrado) return; e.cobrado = true; datos.creditos += 100; datos.tickets = (datos.tickets||0) + 1; guardar(); renderCampo(); toast('Encargo cobrado: +100 créditos y 1 ticket'); }
 function visitantePJ(){ return pjSel || datos.ultimoPj || 'ruso'; }
 function avanceLote(l){ if (!l) return 0; return Math.min(1, (Date.now() - l.t0)/3600000 / horasCultivo(l.c)); }
 function fmtHoras(h){ if (h<=0) return 'listo'; const m = Math.ceil(h*60); return m>=60 ? Math.floor(m/60)+' h '+(m%60)+' min' : m+' min'; }
@@ -4164,7 +4164,7 @@ function renderCampo(){
   { const cl = climaCampo(); $('#campoProd').insertAdjacentHTML('beforeend', `<div class="campo-clima">${cl.ic} Hoy: ${esc(cl.nombre)}${cl.desc ? ' — ' + esc(cl.desc) : ''} · ${esc(NIVELES_CAMPO[c.nivel||0].nombre)}</div>`); }
   { const e = c.enc, box = $('#campoEnc'); box.innerHTML = '';
     if (e && !e.cobrado){ const def = ENCARGOS[e.i], pj = visitantePJ(), P = PERSONAJES.find(p => p.id===pj) || PERSONAJES[0];
-      box.innerHTML = `<div class="enc"><canvas width="32" height="32"></canvas><div class="tx"><b>${esc(P.nombre)} pasó por la estancia:</b> “${esc(def.txt[pj] || def.txt.ruso)}”<small>${e.prog}/${def.n} · premio: 150 créditos y 2 tickets</small></div><button class="btn" ${e.hecho?'':'disabled'}>${e.hecho?'Cobrar':'En eso'}</button></div>`;
+      box.innerHTML = `<div class="enc"><canvas width="32" height="32"></canvas><div class="tx"><b>${esc(P.nombre)} pasó por la estancia:</b> “${esc(def.txt[pj] || def.txt.ruso)}”<small>${e.prog}/${def.n} · premio: 100 créditos y 1 ticket</small></div><button class="btn" ${e.hecho?'':'disabled'}>${e.hecho?'Cobrar':'En eso'}</button></div>`;
       const cv = box.querySelector('canvas'), g = cv.getContext('2d'), img = caraPJ(pj); g.imageSmoothingEnabled = false; const lado = Math.min(img.width, Math.round(img.height*0.62)); g.drawImage(img, (img.width-lado)>>1, 0, lado, lado, 0, 0, 32, 32);
       box.querySelector('button').onclick = cobrarEncargo; }
     else if (e && e.cobrado) box.innerHTML = '<p class="sub" style="margin:0 0 8px">Encargo de hoy cumplido. Mañana viene otro.</p>'; }
