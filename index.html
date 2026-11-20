@@ -2143,11 +2143,14 @@ function pintarTerreno(g, esc, cx, cy, c){
       if (cm) g.drawImage(cm, Math.round(m.x + m.rx - 8), Math.round(m.y - m.ry - cm.height + 6));
     }
     if (esc==='facu' && esPasilloFacu(cx, cy) && !esLugar(cx, cy)){
-      // línea guía de los pasillos principales
-      const v = ((cx%6)+6)%6===0, hz = ((cy%6)+6)%6===0;
-      g.fillStyle = 'rgba(216,184,74,.55)';
-      if (v) for (let y = 0; y < CH; y += 6) g.fillRect(62, y, 4, 4);
-      if (hz) for (let x = 0; x < CH; x += 6) g.fillRect(x, 62, 4, 4);
+      // pasillos principales: una franja de piso más oscura con guardas a los costados (se lee como pasillo, no como estacionamiento)
+      const v = ((cx%6)+6)%6===0, hz = ((cy%6)+6)%6===0, A = 42, B = 86;
+      g.fillStyle = 'rgba(48,58,82,.17)';
+      if (v) g.fillRect(A, 0, B-A, CH);
+      if (hz){ if (v){ g.fillRect(0, A, A, B-A); g.fillRect(B, A, CH-B, B-A); } else g.fillRect(0, A, CH, B-A); }
+      const guarda = (x, y, w, h) => { g.fillStyle = 'rgba(255,250,235,.30)'; g.fillRect(x, y, w, h); g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(x + (w>h?0:1), y + (w>h?1:0), w, h); };
+      if (v){ for (const x of [A, B-2]){ if (hz){ guarda(x, 0, 1, A); guarda(x, B, 1, CH-B); } else guarda(x, 0, 1, CH); } }
+      if (hz){ for (const y of [A, B-2]){ if (v){ guarda(0, y, A, 1); guarda(B, y, CH-B, 1); } else guarda(0, y, CH, 1); } }
     }
   }
 }
@@ -3693,6 +3696,12 @@ function actualizar(dt){
   if (G.dim) limitarArena(j, j.r);
   chocar(j, j.r*0.8);
   if (j.mov && !G.dim) esquivarEsquina(j, px0, py0, vel*dt);
+  // polvo (o salpicadura) a los pies al caminar
+  if (G.polvo){ for (const q of G.polvo) q.vida -= dt; G.polvo = G.polvo.filter(q => q.vida > 0); }
+  if (j.mov && !j.muerto && !G.dim && datos.calidad!=='baja' && (G.polvoT = (G.polvoT||0) - dt) <= 0){
+    const t = terreno(G.escenario, j.x, j.y + 14); G.polvoT = t==='agua' || t==='mojado' ? 0.16 : 0.24; G.polvo = G.polvo || [];
+    if (G.polvo.length < 20) G.polvo.push({ x:j.x - j.dir.x*8 + rnd(-3,3), y:j.y + 14 + rnd(-1,1), vida:0.45, t:0.45, tipo:t || G.escenario });
+  }
   if (G.grieta) chocar(G.grieta, 26);
   for (const it of G.items) chocar(it, 10);
   if (j.inv>0) j.inv -= dt;
@@ -3823,6 +3832,7 @@ function spriteDeEnemigo(e){
 }
 
 // tono de cada mapa + viñeta suave en los bordes; se arma una vez por tamaño de pantalla
+const POLVO_COL = { facu:'#e9e6dc', aula:'#d8b88a', campo:'#d9d6a8', camino:'#c9a36a', barro:'#6e4f30', agua:'#d8f0ff', mojado:'#d8f0ff', puente:'#b58a5a' };
 const AMBIENTE = { facu:['rgba(120,150,205,.06)', 'rgba(14,18,32,.40)'], aula:['rgba(255,186,110,.07)', 'rgba(34,18,8,.40)'], campo:['rgba(255,226,140,.06)', 'rgba(12,22,8,.32)'] };
 let capaAmb = null;
 function capaAmbiente(esc){
@@ -3972,6 +3982,8 @@ function dibujar(){
   if (!G.dim && G.escenario!=='campo') for (const o of obsV){ if (o.pasa) continue;
     const rx = Math.round(o.w/K/2) + 2; pElipse(bx_(o.x + o.w/2), by_(o.sy + o.sh) - 1, rx, Math.max(2, Math.round(rx*0.22)), 'rgba(0,0,0,.20)'); }
   for (const o of obsV) orden.push({ y:o.y + o.h*0.5, obj:o });
+  if (G.polvo) for (const q of G.polvo){ const p = q.vida/q.t, r = Math.round(1 + (1-p)*4), col = POLVO_COL[q.tipo] || POLVO_COL.facu;
+    b.globalAlpha = p*0.55; if (q.tipo==='agua' || q.tipo==='mojado') pAnillo(bx_(q.x), by_(q.y), r+1, col, 1, Math.max(1, Math.round((r+1)*0.45))); else pElipse(bx_(q.x), by_(q.y) - Math.round((1-p)*2), r, Math.max(1, Math.round(r*0.55)), col); b.globalAlpha = 1; }
   for (const p of otrosVisibles()) orden.push({ y:p.y, otro:p });
   orden.sort((a,c) => a.y-c.y);
   for (const o of orden){
@@ -4101,7 +4113,7 @@ function dibujar(){
     } else if (G.clima==='calor'){
       rect(0,0,BW,BH,'rgba(255,140,40,.10)');
     } else if (G.clima==='apagon'){
-      const px_ = bx_(j.x), py_ = by_(j.y), R = 62 + Math.sin(G.t*9)*1.5;
+      const px_ = bx_(j.x), py_ = by_(j.y), R = 78 + Math.sin(G.t*9)*1.5;
       b.fillStyle = 'rgba(4,4,12,.86)'; b.beginPath(); b.rect(0,0,BW,BH); b.arc(px_, py_, R, 0, Math.PI*2, true); b.fill();
       b.fillStyle = 'rgba(4,4,12,.35)'; b.beginPath(); b.arc(px_, py_, R, 0, Math.PI*2); b.arc(px_, py_, R*0.7, 0, Math.PI*2, true); b.fill();
     }
