@@ -800,6 +800,11 @@ const JEFES = [
     frases:['¿Mariano? Nunca lo vi','Estoy en una reunión','Mandame un mail','…'] },
 ];
 const ARENA_R = 380;
+// en la fase 2 cada legendario llama a los suyos: [tipo de enemigo, cuántos]
+const REFUERZOS = { sebas:['vaca',4], laura:['vaca',4], gustavo:['parcial',6], claudio:['formulario',8], herrera:['delegado',3], moltoni:['dron',4], noela:['toro',3], mariano:['final',3] };
+// el borde de cada arena: color del cerco y de los postes
+const BORDE_ARENA = { angola:['#c99b52','#6b4423'], corral:['#9a6a3a','#5a3a1e'], aula:['#8a3a2a','#4a1e16'], oficina:['#6a7a9a','#2a3348'],
+  pasillo:['#b8b4a8','#5a5a5a'], pista:['#e8e8e8','#7a7a7a'], feedlot:['#9a6a3a','#5a3a1e'], vacio:['#b48ce0','#4a2a6a'] };
 const FINAL_R = 1500;            // el mapa final de Tato: grande, pero cerrado
 const radioArena = () => G && G.dim && G.dim.id==='tato' ? FINAL_R : ARENA_R;
 // deja algo adentro de la arena: redonda en los legendarios, cuadrada (con muros) en el santuario de Tato
@@ -3273,7 +3278,8 @@ function entrarGrieta(){
   G.enemigos = []; G.gemas = []; G.items = []; G.charcos = []; G.ebalas = []; G.balas = []; G.avisos = [];
   G.grieta = null; G.dim = def;
   j.x = 0; j.y = 180; j.inv = 1.5; joy = null;
-  const hpL = (HP_ORDEN[G.proxLeg] || def.hp) * (G.dificil ? 1.5 : 1);
+  // la vida crece con tu nivel: si llegás muy fuerte, la pelea igual dura
+  const hpL = Math.round((HP_ORDEN[G.proxLeg] || def.hp) * (G.dificil ? 1.5 : 1) * (1 + 0.03*Math.max(0, j.nivel - 1)));
   G.bombas = []; G.nubes = []; G.pasadas = []; G.juicios = [];
   const e = { jefe:true, leg:true, def, x:0, y:-160, r:def.r, hp:hpL, maxHp:hpL, vel:def.vel, dmg:18, xp:0, t3:6, atk:0,
     kx:0, ky:0, lento:0, flash:0, t1:2.5, t2:4, frase:'', fraseT:0, fraseCd:1, dash:0, pre:0,
@@ -3382,6 +3388,9 @@ function actualizarJefe(e, dt, dx, dy, d){
     G.efectos.push({ tipo:'anillo', x:e.x, y:e.y, r:10, max:180, t:0.5, vida:0.5, color:'232,96,76' });
     hablar(e, elegir(['¡Ahora sí me enojé!','Se terminó la clase tranquila','Esto va a la libreta','¡No me hagan perder la paciencia!']), 2.4);
     mostrarBanner(def.nombre.split(',')[0] + ' se enojó: ¡fase 2!'); anilloAvisado(e, 16, 170, 11, 'sello', 0.6);
+    const rf = REFUERZOS[def.id]; if (rf && G.dim){ const a0 = Math.random()*Math.PI*2;
+      for (let k=0; k<rf[1]; k++){ const a = a0 + k*Math.PI*2/rf[1]; crearMinion(rf[0], Math.cos(a)*(ARENA_R-50), Math.sin(a)*(ARENA_R-50)); }
+      G.efectos.push({ tipo:'anillo', x:0, y:0, r:ARENA_R-60, max:ARENA_R-20, t:0.6, vida:0.6, color:'232,96,76' }); }
   }
   // si sale tarde trae un ataque de más: lluvia de sellos donde estás parado
   if (e.tarde && def.id!=='tato'){ e.t4 = (e.t4 ?? 7) - dt*ritmo;
@@ -3910,7 +3919,7 @@ function dibujar(){
   } }
   else { // borde de la dimensión: afuera es oscuridad
     const ccx = -OX, ccy = -OY, R = Math.round(radioArena()/K);
-    b.fillStyle = '#0b0712';
+    b.fillStyle = tema==='santuario' ? '#0b0712' : 'rgba(11,7,18,.8)';
     if (tema!=='santuario') for (let y=0;y<BH;y++){
       const dy = y-ccy;
       if (Math.abs(dy)>=R){ b.fillRect(0,y,BW,1); continue; }
@@ -3931,7 +3940,13 @@ function dibujar(){
         for (let y = y0 - col.height; y < Math.min(BH, y1); y += h){
           if (x0 > -col.width && x0 < BW + col.width) b.drawImage(col, x0 - col.width + 4, y);
           if (x1 > -col.width && x1 < BW + col.width) b.drawImage(col, x1 - 4, y); } }
-    } else { pAnillo(ccx, ccy, R, '#b48ce0', 2); pAnillo(ccx, ccy, R+2, 'rgba(180,140,224,.4)', 1); }
+    } else {
+      const [cl, os] = BORDE_ARENA[tema] || ['#b48ce0','#4a2a6a'];
+      pAnillo(ccx, ccy, R+3, 'rgba(0,0,0,.45)', 2); pAnillo(ccx, ccy, R, os, 2); pAnillo(ccx, ccy, R-3, cl, 1); pAnillo(ccx, ccy, R-6, cl, 1);
+      if (tema === 'vacio') pAnillo(ccx, ccy, R+2, 'rgba(180,140,224,.4)', 1);
+      else { const n = Math.round(R*2*Math.PI/14); for (let k=0; k<n; k++){ const a = k/n*Math.PI*2, x = Math.round(ccx + Math.cos(a)*(R-3)), y = Math.round(ccy + Math.sin(a)*(R-3));
+        if (x < -4 || x > BW+4 || y < -10 || y > BH+4) continue; rect(x-1, y-7, 3, 8, os); rect(x-1, y-7, 1, 8, cl); } }
+    }
   }
   const j = G.jug, VA = visualesArmas(), VH = visualesHab();
 
