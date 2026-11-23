@@ -124,6 +124,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .menu-nombre{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--tiza-2);margin:0}
 .menu-nombre input{width:100%!important;font-size:17px!important;min-height:40px!important;padding:6px 10px!important}
 .btn.jugar{margin:4px 0 0;font-size:clamp(22px,2.6vw,28px);padding:clamp(10px,2vh,16px);letter-spacing:.06em;position:relative;overflow:hidden;animation:latido 1.4s ease-in-out infinite}
+.btn.jugar small{display:block;font-size:12px;letter-spacing:.04em;opacity:.75;margin-top:1px}
 .btn.jugar::after{content:"";position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:brillo 2.6s ease-in-out infinite}
 @keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 @keyframes brillo{0%,55%{left:-40%}100%{left:130%}}
@@ -6213,6 +6214,7 @@ function renderMenu(){
   $('#descPj').innerHTML = esc(p.desc) + ' <span style="color:var(--violeta)">' + esc(hb.nombre) + ':</span> ' + esc(hb.desc);
   menuAn.pj = p.id;
   avisosMenu();
+  $('#btnJugar').innerHTML = `▶ A CURSAR<small>con ${esc(p.nombre)}</small>`;
   const bd = $('#btnDificil'); bd.classList.toggle('oculto', !dificilDesbloqueado()); bd.textContent = datos.dificil ? '🔥 Modo difícil: SÍ (+50% créditos)' : 'Modo difícil: no';
   bd.style.borderColor = datos.dificil ? '#e8604c' : ''; bd.style.color = datos.dificil ? '#ff9a7a' : '';
 }
