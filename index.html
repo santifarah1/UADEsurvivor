@@ -139,6 +139,9 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .menu-nombre{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--tiza-2);margin:0}
 .menu-nombre input{width:100%!important;font-size:17px!important;min-height:40px!important;padding:6px 10px!important}
 .btn.jugar{margin:4px 0 0;font-size:clamp(22px,2.6vw,28px);padding:clamp(10px,2vh,16px);letter-spacing:.06em;position:relative;overflow:hidden;animation:latido 1.4s ease-in-out infinite}
+.desafio{display:block;width:100%;text-align:left;background:rgba(0,0,0,.35);border:3px solid #e8964a;padding:5px 9px;font-size:13px;color:var(--tiza);box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+.desafio b{color:#e8964a}.desafio small{display:block;font-size:11px;color:var(--tiza-2)}.desafio:hover{border-color:var(--amarillo)}
+.desafio.hecho{border-color:var(--borde);opacity:.7}.desafio.hecho b{color:var(--verde)}
 .btn.jugar small{display:block;font-size:12px;letter-spacing:.04em;opacity:.75;margin-top:1px}
 .btn.jugar::after{content:"";position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:brillo 2.6s ease-in-out infinite}
 @keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
@@ -162,7 +165,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   .tile{padding:3px 2px;font-size:10px;gap:1px}.tile i{font-size:15px;line-height:17px}.tile .pxic{width:16px;height:16px}
   .menu-chips .chip{padding:3px 6px;font-size:14px}.mini{padding:3px 8px}.menu-tiles{gap:4px}
   .menu-nombre span{display:none}.menu-nombre input{min-height:30px!important;font-size:15px!important}
-  .btn.jugar small{display:inline;font-size:11px;margin-left:8px}.menu-der{gap:5px}.menu-nombre{margin:0!important}.btn.jugar{margin-top:0}.menu-lay{padding-top:4px;padding-bottom:4px}
+  .btn.jugar small{display:inline;font-size:11px;margin-left:8px}.menu-der{gap:5px}.desafio{padding:2px 8px;font-size:11px}.desafio small{display:none}.btn.jugar{padding:5px 8px}.btn.multi{padding:4px 7px}.menu-chips .chip{padding:1px 6px}.menu-nombre input{min-height:26px!important}.tile{padding:2px}.menu-nombre{margin:0!important}.btn.jugar{margin-top:0}.menu-lay{padding-top:4px;padding-bottom:4px}
   .logo-img:not(.tit){width:min(200px,calc(25vh * 1.89))}
 }
 @media (max-width:700px) and (orientation:portrait){
@@ -511,6 +514,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
       <label class="menu-nombre"><span>Jugador</span><input id="menuNombre" maxlength="14" placeholder="Poné tu nombre"></label>
       <button class="btn jugar" id="btnJugar">▶ A CURSAR</button>
       <button class="btn sec oculto" id="btnDificil" style="margin:0;padding:6px;font-size:13px"></button>
+      <button class="desafio" id="btnDesafio"></button>
       <button class="btn multi" id="btnMulti"><img class="pxic uic" data-ic="ui:amigos" alt=""> Jugar con amigos</button>
       <div class="menu-tiles">
         <button class="tile" id="btnKiosco"><img class="pxic uic nona-ic" data-ic="ui:nonaIc0" alt=""><span>La Nona</span></button>
@@ -2638,7 +2642,8 @@ function nuevaPartida(pjId){
               slots:[], activo:0, pasivas:{}, buffs:{}, st:null, paso:0, mov:false } };
   G.jug.slots.push([nuevaArma(pj.arma)]);
   cambiarEscenario('facu', true);
-  G.clima = elegir(['normal','normal','lluvia','apagon','calor','paro']);
+  G.clima = nuevaPartida.desafio ? desafioHoy().clima : elegir(['normal','normal','lluvia','apagon','calor','paro']);
+  G.desafio = !!nuevaPartida.desafio; nuevaPartida.desafio = false;
   G.cons = datos.inicio.slice(0,2); datos.inicio = []; guardar();
   if (datos.campo.edificios.galpon && G.cons.length<2) G.cons.push(elegir(Object.keys(CONSUMIBLES)));
   G.st = { arca:0, vacas:0, pizzas:0, autos:0, shinies:0, legs:{}, vinculos:0, tickets:0 };
@@ -3854,7 +3859,7 @@ function actualizar(dt){
   if (G.salidaT>0){ G.salidaT -= dt; if (G.salidaT<=0){ salirArena(true); return; } }
   if (G.grieta && (G.coop ? jugadoresVivos() : [j]).some(p => dist2(G.grieta, p.x, p.y) < 26*26)){ entrarGrieta(); return; }
 
-  spawns(dt);
+  spawns(dt); revisarDesafio();
   actualizarFinal(dt);
   actualizarArmas(dt);
   actualizarBalas(dt);
@@ -6425,6 +6430,23 @@ function proximoDesbloqueo(id){
 }
 function caraPJ(id){ const h = hojaPJ(id); return h ? aplicarSkin(h.abajo[0], datos.skinSel[id]) : spritePersona('pj-'+id, PERSONAJES.find(p=>p.id===id).look, false).a; }
 // globitos en los botones del menú: dicen que hay algo para hacer ahí
+// desafío del día: personaje y clima fijos para todos ese día; aguantar 5 minutos da 3 tickets (una vez por día)
+const DESAFIO_T = 300;
+function desafioHoy(){ const d = Math.floor(Date.now()/86400000), h = hashT(d*31 + 7, 1999);
+  const climas = ['lluvia','apagon','calor','paro']; return { dia:d, pj:PERSONAJES[h % PERSONAJES.length].id, clima:climas[(h >>> 8) % climas.length] }; }
+function renderDesafio(){
+  const d = desafioHoy(), P = PERSONAJES.find(p => p.id === d.pj), hecho = datos.desafioDia === d.dia, b = $('#btnDesafio'); if (!b) return;
+  b.classList.toggle('hecho', hecho);
+  b.innerHTML = `📅 <b>Desafío del día</b> · ${esc(P.nombre)} con ${esc(CLIMAS[d.clima].nombre.toLowerCase())}<small>${hecho ? '¡Cumplido! Mañana hay otro' : 'Aguantá ' + fmtT(DESAFIO_T) + ' y ganás 3 tickets'}</small>`;
+}
+function jugarDesafio(){
+  if (online() && !datos.jugador){ toast('Poné tu nombre arriba para entrar al ranking'); $('#menuNombre').focus(); return; }
+  const d = desafioHoy(); pjSel = d.pj; nuevaPartida.desafio = true; audioInit(); acostarPantalla(); nuevaPartida(d.pj);
+}
+function revisarDesafio(){
+  if (!G || !G.desafio || G.desafioOk || G.t < DESAFIO_T) return; const d = desafioHoy(); G.desafioOk = true;
+  if (datos.desafioDia === d.dia) return; datos.desafioDia = d.dia; G.st.tickets += 3; guardar(); mostrarBanner('📅 ¡Desafío del día cumplido! +3 tickets'); sfx('nivel');
+}
 function avisosMenu(){
   const pon = (id, txt, titulo) => { const b = document.getElementById(id); if (!b) return; let i = b.querySelector('.aviso');
     if (!txt){ if (i) i.remove(); b.removeAttribute('title'); return; }
@@ -6473,7 +6495,7 @@ function renderMenu(){
     <div class="lin rec">${esc(rec)}</div>${proximoDesbloqueo(p.id)}`;
   $('#descPj').innerHTML = esc(p.desc) + ' <span style="color:var(--violeta)">' + esc(hb.nombre) + ':</span> ' + esc(hb.desc);
   menuAn.pj = p.id;
-  avisosMenu();
+  avisosMenu(); renderDesafio();
   $('#btnJugar').innerHTML = `▶ A CURSAR<small>con ${esc(p.nombre)}</small>`;
   const bd = $('#btnDificil'); bd.classList.toggle('oculto', !dificilDesbloqueado()); bd.textContent = datos.dificil ? '🔥 Modo difícil: SÍ (+50% créditos)' : 'Modo difícil: no';
   bd.style.borderColor = datos.dificil ? '#e8604c' : ''; bd.style.color = datos.dificil ? '#ff9a7a' : '';
@@ -6724,6 +6746,7 @@ $('#btnJuntar').onclick = () => juntarCampo(false);
   cvC.addEventListener('click', ev => { tocarCampo(...aCampo(ev)); });
   cvC.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse') cvC.classList.toggle('tocable', !!queHay(...aCampo(ev))); }); }
 $('#btnVisitar').onclick = abrirEstancias;
+$('#btnDesafio').onclick = jugarDesafio;
 $('#btnEstCerrar').onclick = () => $('#mEstancias').classList.add('oculto');
 $('#campoNombre').addEventListener('change', e => { datos.campo.nombre = (e.target.value || 'LA ESTANCIA').toUpperCase().slice(0,22); guardar(); });
 document.querySelectorAll('#campoTabs button').forEach(b => b.onclick = () => { campoTab = b.dataset.t; renderCampo(); });
