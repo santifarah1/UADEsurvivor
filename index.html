@@ -665,7 +665,7 @@ const PERSONAJES = [
   { id:'conejo', nombre:'El Conejo', real:'Joaquín Goicoechea', arma:'neumatico', hab:'clasico', bonus:'+15% de velocidad', stats:{vel:1.15, fis:1.2, esp:0.9},
     look:{piel:'#f0c6a0', pelo:'#7a5230', ropa:'#3f8f5a', orejas:true},
     desc:'Fierrero: fanático del automovilismo y los autos clásicos. Tira neumáticos que se llevan puesto todo.' },
-  { id:'pili',   nombre:'Pili',      real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar', stats:{iman:1.4, fis:0.9, esp:1.2},
+  { id:'pili',   nombre:'Pili',      real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar · +15 de vida', stats:{iman:1.4, vida:15, fis:0.9, esp:1.2},
     look:{piel:'#f3cfb0', pelo:'#8a4b2a', ropa:'#8e5bb5', largo:true},
     desc:'La única del grupo que estudia posta, y enamorada de Italia. Sus apuntes van solos al enemigo más cercano.' },
 ];
@@ -680,7 +680,7 @@ const HABILIDADES = {
 };
 
 const ARMAS = {
-  apuntes:     { nombre:'Apuntes',       ic:'📄', desc:'Hojas que van al enemigo más cercano.',       evo:'resumen', pasiva:'fotocopiadora' },
+  apuntes:     { nombre:'Apuntes',       ic:'📄', desc:'Hojas que van al enemigo más cercano. Desde el nivel 3 atraviesan a uno.', evo:'resumen', pasiva:'fotocopiadora' },
   termo:       { nombre:'Termo de mate', ic:'🧉', desc:'Mates que giran a tu alrededor.',              evo:'ronda',   pasiva:'yerba' },
   jueguito:    { nombre:'Jueguito',      ic:'🎮', desc:'Ráfagas de pixeles al enemigo más cercano.',   evo:'vicio',   pasiva:'cafe' },
   pava:        { nombre:'Pava a 80°',    ic:'♨️', desc:'Tarda, pero deja charcos de agua caliente.',   evo:'mateada', pasiva:'vianda' },
@@ -2810,12 +2810,12 @@ function dispararArma(w, dt, st, rapido, cebador){
     const n = E?5:1+Math.floor(L/2);
     const objs = masCercanos(n, j.x, j.y, 520*520);
     if (!objs.length){ w.t = 0.15; return; }
-    w.t = (E?0.55:1.0-0.05*L) * st.cd;
+    w.t = (E?0.5:0.8-0.04*L) * st.cd;
     for (let i=0;i<n;i++){
       const e = objs[i%objs.length];
       const a = Math.atan2(e.y-j.y, e.x-j.x) + (i>=objs.length ? rnd(-.35,.35) : 0);
       G.balas.push({ id:sigId++, tipo:'hoja', x:j.x, y:j.y, vx:Math.cos(a)*420, vy:Math.sin(a)*420, r:7*st.area,
-        dmg:(E?28:11+4*L)*st.danio, pierce:E?3:0, vida:1.6, homing:E, golpeados:new Set(), rot:a });
+        dmg:(E?32:14+5*L)*st.danio, pierce:E?3:(L>=3?1:0), vida:1.6, homing:E, golpeados:new Set(), rot:a });
     }
   } else if (w.id==='termo'){
     const n = (E?6:(L<3?2:L<5?3:4)) + (cebador&&!E?1:0);
@@ -4619,7 +4619,48 @@ function prepararCampo(){
     IMG_C[k] = lista.map(src => { const i = new Image(); i.src = src; return i; });
   }
 }
-const imgC = (k, i) => { const l = IMG_C[k]; if (!l) return null; const im = l[Math.min(i||0, l.length-1)]; return im && im.complete && im.naturalWidth ? im : null; };
+// dibujo del corral de engorde (feedlot), en la misma perspectiva que los lotes del campo
+function spriteFeedlot(nov){
+  const W = 104, H = 60, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  const P = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), w, h); };
+  const L = [4,36], T = [56,10], B = [46,56];                                  // esquinas: izquierda, arriba, abajo
+  const iso = (u, v, alto) => [L[0] + u*(T[0]-L[0]) + v*(B[0]-L[0]), L[1] + u*(T[1]-L[1]) + v*(B[1]-L[1]) - (alto||0)];
+  const poly = (pts, col) => { g.fillStyle = col; g.beginPath(); g.moveTo(...pts[0]); for (const q of pts.slice(1)) g.lineTo(...q); g.closePath(); g.fill(); };
+  const linea = (a, b, col) => { const n = Math.max(Math.abs(b[0]-a[0]), Math.abs(b[1]-a[1])) | 0; for (let i=0;i<=n;i++) P(a[0] + (b[0]-a[0])*i/n, a[1] + (b[1]-a[1])*i/n, 1, 1, col); };
+  // piso de tierra pisoteada
+  poly([iso(0,0), iso(1,0), iso(1,1), iso(0,1)], '#8b6a45');
+  for (let i=0;i<70;i++){ const [x, y] = iso(((i*37)%97)/97, ((i*53)%89)/89); P(x, y, 2, 1, i%3 ? '#7a5b3a' : '#9c7c55'); }
+  // sombra de la media sombra en el piso
+  poly([iso(.12,.08), iso(.88,.08), iso(.88,.5), iso(.12,.5)], 'rgba(40,28,16,.45)');
+  // alambrado de atrás y de los costados (adelante va el comedero)
+  const cerca = (u0, v0, u1, v1) => { const a = iso(u0, v0), b = iso(u1, v1), n = Math.round(Math.hypot(b[0]-a[0], b[1]-a[1]) / 9);
+    linea(iso(u0, v0, 5), iso(u1, v1, 5), '#9a6a3a'); linea(iso(u0, v0, 3), iso(u1, v1, 3), '#7a4a26');
+    for (let i=0;i<=n;i++){ const f = i/n, [x, y] = iso(u0 + (u1-u0)*f, v0 + (v1-v0)*f); P(x, y-7, 2, 8, '#5a3a1e'); P(x, y-7, 1, 8, '#7a5230'); } };
+  cerca(0, 0, 1, 0); cerca(0, 0, 0, 1);
+  // novillos comiendo, de espaldas al alambrado
+  if (nov){ for (const [u, v, f] of [[.46,.74,true]]){ const [x, y] = iso(u, v); g.save(); if (f){ g.translate(Math.round(x + nov.width/2), 0); g.scale(-1, 1); g.drawImage(nov, 0, Math.round(y - nov.height)); } else g.drawImage(nov, Math.round(x - nov.width/2), Math.round(y - nov.height)); g.restore(); } }
+  // bebedero en la esquina
+  { const [x, y] = iso(.9, .22); P(x-6, y-5, 12, 5, '#7a8a96'); P(x-5, y-5, 10, 2, '#5a9fd6'); P(x-4, y-5, 3, 1, '#bfe3ff'); }
+  // media sombra: tela negra sobre cuatro postes
+  const top = [iso(.12,.08,17), iso(.88,.08,17), iso(.88,.5,17), iso(.12,.5,17)];
+  for (const [u, v] of [[.12,.08],[.88,.08],[.88,.5],[.12,.5]]){ const [x, y] = iso(u, v); P(x, y-17, 1, 17, '#9aa0a8'); }
+  poly(top, 'rgba(28,30,34,.86)');
+  for (let k=1;k<6;k++){ linea(iso(.12 + k*.127, .08, 17), iso(.12 + k*.127, .5, 17), 'rgba(90,96,104,.7)'); }
+  linea(top[0], top[1], '#3a3d44'); linea(top[3], top[2], '#4a4e56');
+  // alambrado del costado derecho
+  cerca(1, 0, 1, 1);
+  // comedero lineal de cemento, adelante, con ración
+  const c0 = iso(.04, .93), c1 = iso(.96, .93);
+  for (let i=0;i<=Math.round(c1[0]-c0[0]);i++){ const x = c0[0] + i, y = c0[1] + (c1[1]-c0[1]) * i/(c1[0]-c0[0]);
+    P(x, y-4, 1, 5, '#b9b5ab'); P(x, y-4, 1, 1, '#dcd8ce'); P(x, y-3, 1, 1, i%4 ? '#c9b04a' : '#8fa83a'); P(x, y+1, 1, 1, '#7d7a72'); }
+  return c;
+}
+// el corral de engorde no tiene dibujo propio en la hoja: se arma por código (con un novillo comiendo) la primera vez que se pide
+let feedlotC = null;
+const imgC = (k, i) => {
+  if (k === 'feedlot'){ if (!feedlotC){ const nov = imgC('novillo', 2); if (!nov) return null; feedlotC = spriteFeedlot(nov); } return feedlotC; }
+  const l = IMG_C[k]; if (!l) return null; const im = l[Math.min(i||0, l.length-1)]; return im && im.complete && im.naturalWidth ? im : null; };
 function bonusCampo(){
   const c = datos.campo, e = c.edificios, cab = Math.min(3, c.animales.caballo||0);
   return { vel:(e.camioneta?1.05:1) * (1 + 0.02*cab), habCd:e.tractor?0.9:1, xp:e.molino?1.05:1 };
@@ -4792,7 +4833,7 @@ function renderCampo(){
     else panel.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:-4px 0 8px">Sos una ${NIVELES_CAMPO[c.nivel].nombre}. No hay más campo para arrendar.</p>`);
     for (const k in CAMPO_EDIFICIOS){
       const e = CAMPO_EDIFICIOS[k], tiene = !!c.edificios[k], falta = e.req && !c.edificios[e.req];
-      const spr = k==='feedlot' ? 'corral' : k==='mixer' ? 'tractor' : k==='tambo' ? 'tanque' : k;
+      const spr = k==='mixer' ? 'tractor' : k==='tambo' ? 'tanque' : k;
       item(spr, 0, e.nombre, esc(e.desc) + (falta ? ` <i>(primero el ${CAMPO_EDIFICIOS[e.req].nombre.toLowerCase()})</i>` : ''),
         tiene && MOVIBLES[k] !== undefined ? [{ txt:'Mover de lugar', fn:() => empezarColocar(k) }] : [{ txt: tiene ? 'Ya lo tenés' : `Comprar ${e.precio}`, off: tiene || falta || datos.creditos<e.precio, fn:() => comprarEdificio(k) }]);
     }
@@ -4910,7 +4951,7 @@ function dibujarCampo(dt){
   // construcciones y animales, ordenados por dónde pisan
   const cosas = [];
   const edif = (k, spr, fr) => { if (!e[k]) return; const [x, y] = posEdif(c, k); cosas.push({ y, f:() => { dibAncla(spr||k, fr||0, x, y); hitAncla(spr||k, fr||0, x, y, 'edif', k); } }); };
-  edif('galpon'); edif('silos'); edif('cosechadora'); edif('tractor'); edif('camioneta'); edif('corral'); edif('feedlot', 'corral'); edif('mixer', 'tractor');
+  edif('galpon'); edif('silos'); edif('cosechadora'); edif('tractor'); edif('camioneta'); edif('corral'); edif('feedlot'); edif('mixer', 'tractor');
   edif('molino', 'molino', Math.floor(campoT*7) % 4);
   if (e.tanque){ const [x, y] = posEdif(c, 'tanque'); cosas.push({ y, f:() => {
     dibAncla('tanque', 0, x, y); hitAncla('tanque', 0, x, y, 'edif', 'tanque'); const im = imgC('tanque'); if (!im) return;
@@ -4973,11 +5014,11 @@ setInterval(() => { if (!$('#campo').classList.contains('oculto')){ procesarCamp
    día y noche, clima, langostas, Expo Rural y se pueden visitar las estancias de los demás
    ========================================================= */
 // lugares de tierra del dibujo donde puede ir una obra: pie del dibujo (x, y) y el ancho que entra
-const SITIOS = [[410,80,120],[680,177,90],[606,217,110],[686,273,84],[406,266,110],[546,332,110],[312,340,110],[44,188,110]];
+const SITIOS = [[410,80,120],[680,177,90],[606,217,110],[686,273,84],[406,266,110],[546,332,110],[312,340,110],[54,190,110]];
 // obras que se pueden mover y su lugar de siempre
 const MOVIBLES = { galpon:0, silos:1, cosechadora:2, mixer:3, molino:4, feedlot:7 };
-const ANCHO_OBRA = { galpon:79, silos:51, cosechadora:74, mixer:50, molino:70, feedlot:101 };
-const SPR_OBRA = { feedlot:'corral', mixer:'tractor' };
+const ANCHO_OBRA = { galpon:79, silos:51, cosechadora:74, mixer:50, molino:70, feedlot:104 };
+const SPR_OBRA = { mixer:'tractor' };
 const entraEn = (k, i) => !!SITIOS[i] && (ANCHO_OBRA[k] || 80) <= SITIOS[i][2];
 function normPos(c){
   c.pos = c.pos && typeof c.pos === 'object' ? c.pos : {};
