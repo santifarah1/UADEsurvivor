@@ -80,6 +80,16 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .cofre-luz{position:absolute;left:50%;bottom:30%;width:0;height:0;transform:translateX(-50%);background:radial-gradient(ellipse at bottom,rgba(255,236,140,.95),rgba(245,213,71,0) 70%);transition:width .4s,height .4s}
 .cofre-esc.abierto .cofre-luz{width:180px;height:220px}
 .cofre-premios{display:flex;gap:8px;justify-content:center;min-height:86px;margin:8px 0}
+#cantinaRes{position:relative}
+.tr-maquina{display:flex;justify-content:center;gap:8px;margin:4px 0 10px}
+.tr-rod{width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#0c1810;border:3px solid #000;box-shadow:inset 0 6px 0 rgba(255,255,255,.06),inset 0 -6px 0 rgba(0,0,0,.4);overflow:hidden}
+.tr-rod .pxic,.tr-rod img{width:38px;height:38px;image-rendering:pixelated}
+.tr-rod.para{animation:trPara .25s cubic-bezier(.2,1.8,.4,1);border-color:var(--amarillo)}@keyframes trPara{from{transform:translateY(-8px)}to{transform:none}}
+.tr-lista{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.tr-sale{animation:premioSale .35s cubic-bezier(.2,1.8,.4,1)}
+#mCantina .caja.tr-rara{box-shadow:0 0 0 3px #7ab8f0,0 0 40px rgba(122,184,240,.55)}#mCantina .caja.tr-legendaria{box-shadow:0 0 0 3px #f5d547,0 0 60px rgba(245,213,71,.7);animation:trLeg 1s ease-in-out 2}
+@keyframes trLeg{50%{box-shadow:0 0 0 5px #fff6c8,0 0 90px rgba(245,213,71,.95)}}
+.tr-confeti{position:absolute;top:0;width:6px;height:9px;pointer-events:none;animation:trCae 1.4s cubic-bezier(.2,.6,.4,1) forwards}
+@keyframes trCae{from{transform:translate(0,-10px) rotate(0)}to{transform:translate(var(--dx),220px) rotate(540deg);opacity:0}}
 .premio{width:92px;background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700}
 .premio .ic{font-size:26px;line-height:30px;height:30px;display:flex;align-items:center}.premio .ic .pxic{width:30px;height:30px}
 .premio.gira .ic{animation:ruleta .08s steps(1) infinite}@keyframes ruleta{50%{transform:translateY(-4px);opacity:.6}}
@@ -4621,16 +4631,49 @@ function tirar(n){
   datos.tickets -= n; sfx('cofre');
   const res = Array.from({length:n}, tirada);
   const nuevos = revisarLogros(); guardar();
-  $('#cantinaRes').innerHTML = res.map(x => {
-    let ic = x.ic ? icHTML(x.ic) : '';
-    if (x.pj && SPR_PJ[x.pj]){ const base = SKINS[x.skin].traje ? SPR_SKIN[x.skin] : SPR_PJ[x.pj]; const c = aplicarSkin((base||SPR_PJ[x.pj]).abajo[0], x.skin); ic = `<img class="pxic" src="${c.toDataURL()}" alt="">`; }
-    return `<div class="premio ${x.rar}">${ic}<span>${esc(x.txt)}</span></div>`;
-  }).join('') + nuevos.map(l => `<div class="premio legendaria">🏅 <span>Logro: ${esc(l.nombre)}</span></div>`).join('');
+  const icono = x => { if (x.pj && SPR_PJ[x.pj]){ const base = SKINS[x.skin].traje ? SPR_SKIN[x.skin] : SPR_PJ[x.pj]; const c = aplicarSkin((base||SPR_PJ[x.pj]).abajo[0], x.skin); return `<img class="pxic" src="${c.toDataURL()}" alt="">`; } return x.ic ? icHTML(x.ic) : ''; };
+  const filas = res.map(x => `<div class="premio ${x.rar}">${icono(x)}<span>${esc(x.txt)}</span></div>`)
+    .concat(nuevos.map(l => `<div class="premio legendaria">🏅 <span>Logro: ${esc(l.nombre)}</span></div>`));
+  // la mejor rareza de la tirada decide cómo festeja la máquina
+  const mejor = res.some(x => x.rar === 'legendaria') ? 'legendaria' : res.some(x => x.rar === 'rara') ? 'rara' : '';
+  const destacado = res.find(x => x.rar === mejor) || res[0];
+  animarTirada(filas, mejor, icono(destacado));
   renderCantina(); renderMenu();
+}
+// la máquina gira: tres rodillos que frenan de a uno, y después salen los premios
+let tiradaEnCurso = false;
+function animarTirada(filas, mejor, icFinal){
+  const box = $('#cantinaRes'), caja = $('#mCantina .caja');
+  const pool = ['ticket','@pizza','@mate','cafe','certificado','@hoja'].map(k => icHTML(k)).concat(['🎁','⭐','🍀']);
+  box.innerHTML = '<div class="tr-maquina"><div class="tr-rod"></div><div class="tr-rod"></div><div class="tr-rod"></div></div><div class="tr-lista"></div>';
+  const rods = [...box.querySelectorAll('.tr-rod')], lista = box.querySelector('.tr-lista');
+  tiradaEnCurso = true; $('#btnTirar1').disabled = $('#btnTirar10').disabled = true;
+  caja.classList.remove('tr-rara','tr-legendaria');
+  let t = 0; const paradas = [700, 1000, 1300], hechos = [false,false,false];
+  const iv = setInterval(() => {
+    t += 60;
+    rods.forEach((r, i) => {
+      if (hechos[i]) return;
+      if (t >= paradas[i]){ hechos[i] = true; r.innerHTML = icFinal || pool[0]; r.classList.add('para'); sfx('golpe'); return; }
+      r.innerHTML = pool[(Math.random()*pool.length) | 0];
+    });
+    if (hechos.every(Boolean)){
+      clearInterval(iv);
+      if (mejor){ caja.classList.add('tr-' + mejor); confeti(box, mejor === 'legendaria' ? 40 : 18, mejor); sfx(mejor === 'legendaria' ? 'nivel' : 'cofre'); }
+      filas.forEach((f, k) => setTimeout(() => { lista.insertAdjacentHTML('beforeend', f); const el = lista.lastElementChild; if (el) el.classList.add('tr-sale'); }, 120*k));
+      setTimeout(() => { tiradaEnCurso = false; renderCantina(); }, 120*filas.length + 100);
+    }
+  }, 60);
+}
+function confeti(cont, n, tipo){
+  const cols = tipo === 'legendaria' ? ['#f5d547','#fff6c8','#e8964a','#ffffff'] : ['#7ab8f0','#bfe3ff','#b48ce0','#ffffff'];
+  for (let i=0; i<n; i++){ const c = document.createElement('i'); c.className = 'tr-confeti';
+    c.style.left = (Math.random()*100) + '%'; c.style.background = cols[i % cols.length]; c.style.animationDelay = (Math.random()*0.25) + 's';
+    c.style.setProperty('--dx', (Math.random()*80 - 40) + 'px'); cont.appendChild(c); setTimeout(() => c.remove(), 1600); }
 }
 function renderCantina(){
   $('#cantinaTickets').innerHTML = `${icHTML('ticket')} <b style="color:var(--amarillo)">${datos.tickets}</b> tickets`;
-  $('#btnTirar1').disabled = datos.tickets < 1; $('#btnTirar10').disabled = datos.tickets < 10;
+  $('#btnTirar1').disabled = tiradaEnCurso || datos.tickets < 1; $('#btnTirar10').disabled = tiradaEnCurso || datos.tickets < 10;
   $('#cantinaInicio').textContent = datos.inicio.length ? 'Guardado para la próxima partida: ' + datos.inicio.map(id => CONSUMIBLES[id].nombre).join(', ') : '';
   $('#cantinaSkins').innerHTML = PERSONAJES.map(p => {
     const lista = ['normal'].concat(datos.skins[p.id]||[]), sel = datos.skinSel[p.id] || 'normal';
