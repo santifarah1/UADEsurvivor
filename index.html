@@ -520,6 +520,11 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   <button class="btn sec oculto" id="btnVinGuardar" style="margin-top:8px">Guardarlo para después</button>
 </div></div>
 
+<div class="modal oculto" id="mNombre"><div class="caja"><h2>¿Cómo te llamás?</h2>
+  <p class="sub">Con tu nombre aparecés en el ranking y los demás pueden visitar tu estancia. Lo podés cambiar cuando quieras.</p>
+  <input id="nombreNuevo" maxlength="14" placeholder="Tu nombre o apodo" autocomplete="off" style="width:100%;min-height:46px;font:inherit;font-size:20px;text-align:center;background:#0c1810;color:var(--tiza);border:3px solid var(--amarillo);padding:6px 10px;margin:8px 0 12px">
+  <button class="btn" id="btnNombreOk">Listo</button><button class="btn sec" id="btnNombreDespues" style="margin-top:8px">Más tarde</button></div></div>
+
 <div class="modal oculto" id="mEstancias"><div class="caja"><h2>🔭 Estancias de la facu</h2><p class="sub" id="estSub">Mirá cómo armaron su campo los demás y cebales un mate.</p>
   <div id="estLista"></div><button class="btn sec" id="btnEstCerrar" style="margin-top:10px">Cerrar</button></div></div>
 
@@ -5471,6 +5476,15 @@ function cerrarTitulo(){
   if (!tit.listo || tit.cerrado) return;
   tit.cerrado = true; audioInit(); sfx('nivel');
   $('#titulo').classList.add('chau'); setTimeout(() => $('#titulo').classList.add('oculto'), 500);
+  // la primera vez, sin nombre: se lo pedimos (una sola vez; si dice "más tarde" no insistimos)
+  if (!datos.jugador && !datos.nombrePedido) setTimeout(pedirNombre, 650);
+}
+function pedirNombre(){ if (G) return; $('#mNombre').classList.remove('oculto'); const i = $('#nombreNuevo'); i.value = ''; setTimeout(() => i.focus(), 50); }
+function cerrarPedirNombre(guardarlo){
+  const v = $('#nombreNuevo').value.trim().slice(0, 14);
+  if (guardarlo && !v){ toast('Escribí un nombre, o tocá "Más tarde"'); return; }
+  if (guardarlo){ datos.jugador = v; toast(`¡Hola, ${v}!`); }
+  datos.nombrePedido = true; guardar(); $('#mNombre').classList.add('oculto'); renderNombreMenu();
 }
 function tituloAbierto(){ return !tit.cerrado; }
 function animarTitulo(dt){
@@ -6372,6 +6386,9 @@ function procesarImport(texto){
    6. EVENTOS
    ========================================================= */
 $('#menuNombre').oninput = e => { datos.jugador = e.target.value.trim().slice(0,14); guardar(); };
+$('#btnNombreOk').onclick = () => cerrarPedirNombre(true);
+$('#btnNombreDespues').onclick = () => cerrarPedirNombre(false);
+$('#nombreNuevo').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') cerrarPedirNombre(true); if (e.key === 'Escape') cerrarPedirNombre(false); });
 $('#btnJugar').onclick = () => {
   if (online() && !datos.jugador){ toast('Poné tu nombre arriba para entrar al ranking'); $('#menuNombre').focus(); return; }
   audioInit(); acostarPantalla(); nuevaPartida(pjSel); };
