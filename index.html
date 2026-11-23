@@ -339,14 +339,32 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 #consBtns button[disabled]{display:none}
 #consBtns .k{position:absolute;left:3px;top:1px;font-size:9px;color:var(--tiza-2)}
 #consBtns .pxic{width:28px;height:28px}
-.campo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.campo-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px}
+.campo-top .chip.salta{animation:saltaChip .5s}@keyframes saltaChip{30%{transform:scale(1.18);color:var(--amarillo)}}
 .campo-nombre input{width:100%;min-height:48px;text-align:center;font:inherit;font-size:24px;font-weight:700;color:var(--amarillo);background:transparent;border:0;border-bottom:2px dashed var(--borde);padding:4px;text-transform:uppercase}
 #campo{overflow-x:hidden}
-#cvCampo{width:min(100vw,calc(80vh * 2.022));max-width:none;height:auto;display:block;margin:6px 0 8px 50%;transform:translateX(-50%);border:0;border-block:3px solid #000;box-shadow:var(--sombra);image-rendering:pixelated}
+#campoEscena{position:relative;width:min(100vw,calc(80vh * 2.022));margin:6px 0 8px 50%;transform:translateX(-50%)}
+#cvCampo{width:100%;max-width:none;height:auto;display:block;border:0;border-block:3px solid #000;box-shadow:var(--sombra);image-rendering:pixelated;touch-action:manipulation}
+#cvCampo.tocable{cursor:pointer}
+.campo-pop{position:absolute;z-index:5;min-width:170px;max-width:min(260px,70%);background:#1b2a1f;border:3px solid var(--amarillo);box-shadow:4px 4px 0 rgba(0,0,0,.5);padding:8px 10px;font-size:13px;line-height:1.35}
+.campo-pop b{display:block;color:var(--amarillo);font-size:14px;margin-bottom:2px;padding-right:18px}.campo-pop small{display:block;color:var(--tiza-2);font-size:12px}
+.campo-pop .x{position:absolute;top:2px;right:4px;width:auto;padding:0 6px;background:none;border:0;color:var(--tiza-2);font-size:16px;box-shadow:none}
+.campo-pop .acc{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.campo-pop .acc button{width:auto;flex:1 1 auto;background:var(--amarillo);color:#2a2a1a;font-weight:700;padding:6px 8px;font-size:12px;box-shadow:0 3px 0 #8a7417;white-space:nowrap}
+.campo-pop .acc button[disabled]{opacity:.35}.campo-pop .barra-crec{margin-top:4px}
+.campo-aviso{position:absolute;z-index:4;left:50%;top:8px;transform:translateX(-50%);max-width:92%;display:flex;gap:8px;align-items:center;background:rgba(12,20,14,.88);border:3px solid var(--amarillo);padding:6px 10px;font-size:13px;box-shadow:3px 3px 0 rgba(0,0,0,.45)}
+.campo-aviso button{width:auto;padding:5px 9px;font-size:12px;background:var(--amarillo);color:#2a2a1a;font-weight:700;box-shadow:0 3px 0 #8a7417;white-space:nowrap}
+.campo-aviso button.sec{background:rgba(0,0,0,.35);color:var(--tiza);box-shadow:none;border:2px solid var(--borde)}
+#campo.visitando .campo-juntar,#campo.visitando #campoEnc,#campo.visitando .campo-tabs,#campo.visitando #campoPanel,#campo.visitando .campo-nombre{display:none}
+.est-item{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:8px;margin-bottom:6px;text-align:left}
+.est-item .tx{flex:1;font-size:13px}.est-item .tx b{display:block;color:var(--amarillo)}.est-item .tx small{color:var(--tiza-2);font-size:12px}
+.est-item.top{border-color:var(--amarillo)}.est-item button{width:auto;padding:6px 10px;font-size:12px}
+#estLista{max-height:55vh;overflow:auto}
+@media (max-height:500px){.campo-aviso{top:4px;padding:3px 6px;font-size:11px;gap:5px}.campo-aviso button{padding:3px 6px;font-size:11px}.campo-pop{font-size:12px;padding:6px 8px}.campo-pop .acc button{padding:4px 6px}}
 .campo-juntar{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .campo-juntar #campoProd{flex:1;font-size:13px;color:var(--tiza-2);line-height:1.4}
 .campo-juntar .btn{width:auto;padding:10px 16px}
-.campo-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.campo-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px}
 .campo-tabs button{padding:8px 4px;background:rgba(0,0,0,.3);border:3px solid var(--borde);font-size:13px}
 .campo-tabs button.sel{border-color:var(--amarillo);color:var(--amarillo)}
 .campo-item{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:8px;margin-bottom:6px}
@@ -440,13 +458,15 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 <section class="pantalla oculto" id="campo">
   <div class="contenido">
     <div class="campo-top"><button class="btn sec" id="btnCampoVolver" style="width:auto;padding:8px 12px">← Volver</button>
+      <button class="btn sec" id="btnVisitar" style="width:auto;padding:8px 12px">🔭 Visitar estancias</button>
       <span class="chip">Créditos: <b id="campoCred">0</b></span></div>
     <div class="campo-nombre"><input id="campoNombre" maxlength="22" aria-label="Nombre de la estancia"></div>
-    <canvas id="cvCampo" width="728" height="360"></canvas>
+    <div class="campo-escena" id="campoEscena"><canvas id="cvCampo" width="728" height="360"></canvas>
+      <div class="campo-aviso oculto" id="campoAviso"></div><div class="campo-pop oculto" id="campoPop"></div></div>
     <div class="campo-juntar"><div id="campoProd"></div><button class="btn" id="btnJuntar">Juntar</button></div>
     <div id="campoEnc"></div>
     <div class="campo-tabs" id="campoTabs">
-      <button data-t="animales" class="sel">🐄 Hacienda</button><button data-t="cultivos">🌾 Lotes</button><button data-t="mercado">📈 Mercado</button><button data-t="edificios">🏠 Obras</button>
+      <button data-t="animales" class="sel">🐄 Hacienda</button><button data-t="cultivos">🌾 Lotes</button><button data-t="mercado">📈 Mercado</button><button data-t="edificios">🏠 Obras</button><button data-t="deco">🌸 Deco</button>
     </div>
     <div id="campoPanel"></div>
   </div>
@@ -496,6 +516,9 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   <button class="btn" id="btnFusionar" style="margin-top:14px" disabled>Fusionar</button>
   <button class="btn sec oculto" id="btnVinGuardar" style="margin-top:8px">Guardarlo para después</button>
 </div></div>
+
+<div class="modal oculto" id="mEstancias"><div class="caja"><h2>🔭 Estancias de la facu</h2><p class="sub" id="estSub">Mirá cómo armaron su campo los demás y cebales un mate.</p>
+  <div id="estLista"></div><button class="btn sec" id="btnEstCerrar" style="margin-top:10px">Cerrar</button></div></div>
 
 <div class="modal oculto" id="mPausa"><div class="caja"><h2>Pausa</h2><p class="sub">Andá a cebar un mate, acá te esperamos.</p>
   <div id="pausaArmas" class="ayuda"></div>
@@ -842,7 +865,7 @@ const CAMPO_ANIMALES = {
   chancho: { nombre:'Chancho',       precio:60,  prod:5,  desc:'5 créditos por hora.' },
   gallina: { nombre:'Gallina',       precio:25,  prod:2,  desc:'Huevos: 2 créditos por hora.' },
   caballo: { nombre:'Caballo criollo', precio:140, prod:3, desc:'3 créditos por hora y +2% de velocidad en las partidas (hasta 3).' },
-  perro:   { nombre:'Perro ovejero', precio:120, prod:0,  desc:'Cuida el campo: +10% a toda la producción. Uno solo.', max:1 },
+  perro:   { nombre:'Perro ovejero', precio:120, prod:0,  desc:'Cuida el campo: +10% a toda la producción, y te acompaña en las partidas ladrándole a los que se acercan. Uno solo.', max:1 },
   novillo: { nombre:'Novillo',       precio:0,   prod:0,  desc:'Ternero que ya creció. Se engorda para vender.', noCompra:true, spr:'novillo' },
 };
 const CAMPO_CULTIVOS = {
@@ -986,6 +1009,8 @@ function normCampo(c){
   if (!c.enc || typeof c.enc !== 'object') c.enc = null;
   if (typeof c.vendidos !== 'number') c.vendidos = 0;
   if (typeof c.nacidos !== 'number') c.nacidos = 0;
+  if (!c.deco || typeof c.deco !== 'object') c.deco = {};
+  if (typeof c.semillas !== 'number' || !isFinite(c.semillas) || c.semillas < 0) c.semillas = 0;
   return c;
 }
 // v10: se sacaron los aspectos de filtro (foto vieja, turno noche, game boy, negativo, dorado). Cada uno se devuelve como un ticket.
@@ -3639,6 +3664,7 @@ function actualizarGemas(dt){
     const quien = vivos.find(q => dist2(it,q.x,q.y) < (q.r+14)*(q.r+14));
     if (quien){
       if (it.tipo==='puerta'){ it.tomado = true; cruzarPuerta(it.id); continue; }
+      if (it.tipo==='regalo'){ if (quien!==j) continue; it.tomado = true; recibirRegalo(it.id, it.x, it.y); continue; }
       if (it.tipo==='cons' && quien!==j) continue;
       if (quien!==j && (it.tipo==='bizcochito' || it.tipo==='cofre')){ it.tomado = true; quien.hp = Math.min(quien.maxHp, quien.hp + (it.tipo==='cofre' ? 40 : 30)); if (it.tipo==='cofre') G.pendientes++; texto(quien.x, quien.y-30, it.tipo==='cofre' ? '¡COFRE!' : '+30', '#7ed492'); continue; }
       it.tomado = true;
@@ -3713,6 +3739,8 @@ function actualizar(dt){
   if (G.pops) { for (const q of G.pops) q.t -= dt; G.pops = G.pops.filter(q => q.t > 0); }
   for (const e of G.enemigos){ if (e.tembT>0) e.tembT -= dt; }
   if (!j.muerto) tickHabilidades(dt);
+  if (!G.coop && datos.campo && datos.campo.animales && datos.campo.animales.perro > 0 && !j.muerto) actualizarPerro(dt);
+  if (!G.dim) revisarRegaloCampo();
   if (G.otros){ actualizarOtros(dt); if (G.fin) return; }
   if (G.marcas){ for (const m of G.marcas) m.vida -= dt; if (G.marcas.length && G.marcas[0].vida<=0) G.marcas = G.marcas.filter(m => m.vida>0); }
   if (G.manchas){ for (const m of G.manchas) m.vida -= dt; G.manchas = G.manchas.filter(m => m.vida>0); }
@@ -3943,6 +3971,7 @@ function dibujar(){
       continue; }
     if (it.tipo==='cofre'){ const ci = imgMapa(Math.floor(G.t*3 + it.x)%6===0 ? 'cofre#1' : 'cofre') || fx('cofre',0,SPR.cofre); centrado(ci, bx_(it.x), by_(it.y) - 3); if (Math.floor(G.t*4)%3===0) rect(bx_(it.x)+8, by_(it.y)-12, 1, 1, '#ffffff'); }
     else if (it.tipo==='puerta') dibujarPuerta(it);
+    else if (it.tipo==='regalo') dibujarRegalo(it);
     else centrado(fx('biz',0,SPR.biz), bx_(it.x), by_(it.y));
   }
   for (const g of G.gemas){
@@ -3985,10 +4014,12 @@ function dibujar(){
   if (G.polvo) for (const q of G.polvo){ const p = q.vida/q.t, r = Math.round(1 + (1-p)*4), col = POLVO_COL[q.tipo] || POLVO_COL.facu;
     b.globalAlpha = p*0.55; if (q.tipo==='agua' || q.tipo==='mojado') pAnillo(bx_(q.x), by_(q.y), r+1, col, 1, Math.max(1, Math.round((r+1)*0.45))); else pElipse(bx_(q.x), by_(q.y) - Math.round((1-p)*2), r, Math.max(1, Math.round(r*0.55)), col); b.globalAlpha = 1; }
   for (const p of otrosVisibles()) orden.push({ y:p.y, otro:p });
+  if (G.perro && !G.coop) orden.push({ y:G.perro.y, perro:true });
   orden.sort((a,c) => a.y-c.y);
   for (const o of orden){
     if (o.obj){ const im = imgMapa(cuadroMapa(o.obj.k, o.obj.fase)) || imgMapa(o.obj.k); if (im) b.drawImage(o.obj.esp ? espejoImg(im) : im, bx_(o.obj.sx), by_(o.obj.sy)); continue; }
     if (o.otro){ dibujarCompanero(o.otro); continue; }
+    if (o.perro){ dibujarPerroC(); continue; }
     if (o.jug){
       const x = bx_(j.x), pie = by_(j.y+15) + (!j.mov && !j.muerto && Math.sin(G.t*3.2) > 0.55 ? 1 : 0);
       const sp = spritePersona('pj-'+G.pj.id, G.pj.look, false), fr = j.mov ? Math.floor(j.paso)%2 : 0;
@@ -4156,6 +4187,7 @@ function dibujar(){
   for (const e of G.enemigos) if (e.semi) flecha(bx_(e.x), by_(e.y), '#f5a35a', e.def.nombre.split(' ').pop().toUpperCase());
   for (const it of G.items) if (it.tipo==='cofre') flecha(bx_(it.x), by_(it.y), '#f5d547', 'COFRE');
   for (const it of G.items) if (it.tipo==='puerta') flecha(bx_(it.x), by_(it.y), '#f2efe6', 'PUERTA');
+  for (const it of G.items) if (it.tipo==='regalo') flecha(bx_(it.x), by_(it.y), '#7ed492', it.id==='ternero' ? 'TERNERO' : 'SEMILLA');
   { const L = lugarProximo(); if (L) flecha(bx_(L.x), by_(L.y), '#7ed4c0', L.nom); }
   if (G.coop) for (const p of otrosVisibles()) if (p && !p.fuera) flecha(bx_(p.x), by_(p.y), p.muerto ? '#e8604c' : '#7ed492', normTxt(p.nombre || 'COMPA').slice(0,10).toUpperCase() + (p.muerto ? ' !' : ''));
   if (joy){
@@ -4584,6 +4616,7 @@ function totalAnimales(){ return Object.values(datos.campo.animales).reduce((s,n
 function produccionHora(){
   const c = datos.campo; let p = 0;
   for (const k in c.animales) p += (CAMPO_ANIMALES[k] ? CAMPO_ANIMALES[k].prod : 0) * c.animales[k] * (k==='holando' && c.edificios.tambo ? 1.6 : 1);
+  if (c.deco && c.deco.colmenas) p += 3;
   let m = 1; if (c.animales.perro) m += 0.10; if (c.edificios.corral) m += 0.25; if (c.edificios.tanque) m += 0.10; if (c.rollos > 0) m += 0.20;
   const cl = climaCampo(); if (cl.id==='sequia' && !c.edificios.tanque) m -= 0.25;
   return p*m;
@@ -4658,9 +4691,10 @@ function abrirCampo(){
   normCampo(datos.campo); procesarCampo(); guardar();
   $('#menu').classList.add('oculto'); $('#campo').classList.remove('oculto');
   $('#campoNombre').value = datos.campo.nombre;
-  armarAnimalesCampo(); renderCampo();
+  normPos(datos.campo); campoVisita = null; campoColocar = null; $('#campo').classList.remove('visitando'); cerrarPop(); avisoCampo(null);
+  armarAnimalesCampo(); renderCampo(); revisarLangostas(); revisarMates(); publicarEstancia();
 }
-function cerrarCampo(){ $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
+function cerrarCampo(){ if (campoVisita) volverDeVisita(); campoColocar = null; cerrarPop(); avisoCampo(null); publicarEstancia(); $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
 function miniCanvas(k, i, max){
   const im = imgC(k, i); const c = document.createElement('canvas');
   if (!im){ c.width = c.height = 1; return c; }
@@ -4709,6 +4743,7 @@ function renderCampo(){
       item(a.spr || k, 0, `${a.nombre}${n?' ×'+n:''}`, esc(a.desc), acc, extra);
     }
   } else if (campoTab==='cultivos'){
+    if (c.semillas > 0) panel.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:4px 0 8px">🌱 Tenés ${c.semillas} bolsa${c.semillas>1?'s':''} de semilla criolla (las encontrás en el Campo experimental): el próximo lote que siembres rinde 50% más.</p>`);
     c.lotes.forEach((l, i) => {
       if (!l){
         const acc = Object.entries(CAMPO_CULTIVOS).map(([k,cu]) => { const r = rotacion(i,k); return { txt:`${cu.nombre} ${cu.precio}${r>1?' ▲':r<1?' ▼':''}`, off:datos.creditos<cu.precio, fn:() => sembrar(i,k) }; });
@@ -4731,6 +4766,13 @@ function renderCampo(){
       const n = c.silo[k]||0, cu = CAMPO_CULTIVOS[k];
       item(k, 4, `${cu.nombre} ${precioGrano(k)}`, `${flecha_(k)} precio de hoy por lote${n ? ` · en el silo: ${n} lote${n===1?'':'s'}` : ''}`, n ? [{ txt:`Vender silo +${Math.round(precioGrano(k)*n)}`, fn:() => venderSilo(k) }] : []);
     }
+  } else if (campoTab==='deco'){
+    panel.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:-4px 0 8px">Cosas para que la estancia sea tuya. Tocá cualquier cosa del dibujo para ver qué es, y las obras se pueden cambiar de lugar.</p>`);
+    for (const k in CAMPO_DECO){ const d = CAMPO_DECO[k], tiene = !!(c.deco && c.deco[k]);
+      const cv = document.createElement('canvas'); cv.width = d.w + 8; cv.height = d.h + 8; const g2 = cv.getContext('2d'); g2.imageSmoothingEnabled = false; DIB_DECO[k](g2, d.w/2 + 4, d.h + 4, 0.6);
+      const it = document.createElement('div'); it.className = 'campo-item'; const esc2 = Math.max(1, Math.floor(44/Math.max(cv.width, cv.height))); cv.style.width = cv.width*esc2 + 'px'; cv.style.height = cv.height*esc2 + 'px'; it.appendChild(cv);
+      it.insertAdjacentHTML('beforeend', `<div class="tx"><b>${esc(d.nombre)}</b><small>${esc(d.desc)}</small></div><div class="acc"><button ${tiene || datos.creditos < d.precio ? 'disabled' : ''}>${tiene ? 'Ya la tenés' : 'Comprar ' + d.precio}</button></div>`);
+      it.querySelector('button').onclick = () => comprarDeco(k); panel.appendChild(it); }
   } else {
     const sig = NIVELES_CAMPO[(c.nivel||0)+1];
     if (sig) item('cartel', 0, `Ampliar: ${sig.nombre}`, `Arrendás el campo de al lado: ${sig.lotes} lotes y ${sig.potrero} lugares más en el potrero.`, [{ txt:`Comprar ${sig.precio}`, off:datos.creditos<sig.precio, fn:ampliarCampo }]);
@@ -4739,15 +4781,15 @@ function renderCampo(){
       const e = CAMPO_EDIFICIOS[k], tiene = !!c.edificios[k], falta = e.req && !c.edificios[e.req];
       const spr = k==='feedlot' ? 'corral' : k==='mixer' ? 'tractor' : k==='tambo' ? 'tanque' : k;
       item(spr, 0, e.nombre, esc(e.desc) + (falta ? ` <i>(primero el ${CAMPO_EDIFICIOS[e.req].nombre.toLowerCase()})</i>` : ''),
-        [{ txt: tiene ? 'Ya lo tenés' : `Comprar ${e.precio}`, off: tiene || falta || datos.creditos<e.precio, fn:() => comprarEdificio(k) }]);
+        tiene && MOVIBLES[k] !== undefined ? [{ txt:'Mover de lugar', fn:() => empezarColocar(k) }] : [{ txt: tiene ? 'Ya lo tenés' : `Comprar ${e.precio}`, off: tiene || falta || datos.creditos<e.precio, fn:() => comprarEdificio(k) }]);
     }
   }
 }
 function gastar(n){ if (datos.creditos < n) return false; datos.creditos -= n; return true; }
 function comprarAnimal(k){ const a = CAMPO_ANIMALES[k]; if (!gastar(a.precio)) return; juntarCampo(true); datos.campo.animales[k] = (datos.campo.animales[k]||0)+1; if (k==='ternero') datos.campo.crias.push(Date.now()); guardar(); armarAnimalesCampo(); renderCampo(); toast(`${a.nombre} al potrero`); }
 function rotacion(i, k){ const p = datos.campo.previos[i]; if (!p) return 1; if (p === k) return 0.8; if (LEGUMINOSAS.includes(p) && GRAMINEAS.includes(k)) return 1.25; return 1; }
-function sembrar(i,k){ const cu = CAMPO_CULTIVOS[k]; if (!gastar(cu.precio)) return; datos.campo.lotes[i] = { c:k, t0:Date.now(), r:rotacion(i,k) }; guardar(); renderCampo(); toast(`Sembraste ${cu.nombre.toLowerCase()}`); }
-function rindeLote(l){ return (l.r || 1) * (datos.campo.edificios.silos ? 1.5 : 1); }
+function sembrar(i,k){ const cu = CAMPO_CULTIVOS[k]; if (!gastar(cu.precio)) return; const sem = (datos.campo.semillas||0) > 0; if (sem) datos.campo.semillas--; datos.campo.lotes[i] = { c:k, t0:Date.now(), r:rotacion(i,k) }; if (sem) datos.campo.lotes[i].s = 1.5; guardar(); renderCampo(); if (sem) toast('Sembraste con semilla criolla: rinde 50% más'); else toast(`Sembraste ${cu.nombre.toLowerCase()}`); }
+function rindeLote(l){ return (l.r || 1) * (l.s || 1) * (datos.campo.edificios.silos ? 1.5 : 1); }
 function cosechar(i, modo){
   const c = datos.campo, l = c.lotes[i]; if (!l || avanceLote(l)<1) return;
   const S = datos.stats; S.cosechas = (S.cosechas||0)+1; if ((l.r||1) > 1) S.rotaciones = (S.rotaciones||0)+1;
@@ -4765,7 +4807,7 @@ function venderAnimal(k){
   revisarLogros(); guardar(); armarAnimalesCampo(); renderCampo(); toast(`Vendiste: ${CAMPO_ANIMALES[k].nombre} +${v}`);
 }
 function ampliarCampo(){ const c = datos.campo, sig = NIVELES_CAMPO[(c.nivel||0)+1]; if (!sig || !gastar(sig.precio)) return; juntarCampo(true); c.nivel++; normCampo(c); guardar(); renderCampo(); toast(`¡Ahora sos ${sig.nombre}! +lotes y +potrero`); }
-function comprarEdificio(k){ const e = CAMPO_EDIFICIOS[k]; if (datos.campo.edificios[k] || !gastar(e.precio)) return; juntarCampo(true); datos.campo.edificios[k] = true; guardar(); renderCampo(); toast(`¡${e.nombre} nuevo!`); }
+function comprarEdificio(k){ const e = CAMPO_EDIFICIOS[k]; if (datos.campo.edificios[k] || !gastar(e.precio)) return; juntarCampo(true); datos.campo.edificios[k] = true; normPos(datos.campo); guardar(); renderCampo(); toast(`¡${e.nombre} nuevo!`); if (MOVIBLES[k] !== undefined) empezarColocar(k); }
 function juntarCampo(silencioso){
   const ac = acumulado();
   if (ac.creditos>0){ datos.creditos += ac.creditos; if (!silencioso) toast(`Juntaste ${ac.creditos} créditos del campo`); }
@@ -4810,11 +4852,11 @@ function lugarAnimal(k){
   for (let n=0; n<60; n++){ const x = rnd(POT.x0, POT.x1), y = rnd(POT.y0, POT.y1); if (dentroPoly(POT_P, x, y) && !(Math.abs(x-236)<34 && y>270 && y<310)) return [x, y]; }
   return [90, 260];
 }
-function armarAnimalesCampo(){
-  campoAnim = [];
-  for (const k in datos.campo.animales) for (let i=0;i<datos.campo.animales[k];i++){
+function armarAnimalesCampo(c){
+  c = c || datos.campo; campoAnim = [];
+  for (const k in c.animales) for (let i=0;i<c.animales[k];i++){
     const [x, y] = lugarAnimal(k);
-    campoAnim.push({ k, x, y, dir:Math.random()<0.5?1:-1, dy:0, t:rnd(0,3), come:false, paso:Math.random()*2 });
+    campoAnim.push({ k, i, x, y, dir:Math.random()<0.5?1:-1, dy:0, t:rnd(0,3), come:false, paso:Math.random()*2 });
   }
 }
 function dibAncla(k, i, cx, piso, flip){ const im = imgC(k, i); if (im) dibC(k, cx - (im.width>>1), piso, i, flip, true); }
@@ -4827,7 +4869,9 @@ function cartelCampo(g, cx, piso, nombre){
 function dibujarCampo(dt){
   if ($('#campo').classList.contains('oculto')) return;
   campoT += dt;
-  const c = datos.campo, e = c.edificios, g = cxC; g.imageSmoothingEnabled = false;
+  const c = campoDatos(), e = c.edificios, g = cxC; g.imageSmoothingEnabled = false;
+  campoHits = []; campoBurb = []; if (!campoVisita) normPos(c);
+  const noche = nocheDe(horaCampo()), duermen = noche > 0.7;
   const fondo = imgC('fondo');
   if (fondo) g.drawImage(fondo, 0, 0); else { g.fillStyle = '#6f9a3a'; g.fillRect(0, 0, CAMPO_W, CAMPO_H); }
   // el arroyo brilla y corre
@@ -4842,7 +4886,7 @@ function dibujarCampo(dt){
   // cultivos
   c.lotes.forEach((l, i) => {
     if (!LOTES[i]) return; const L = LOTES[i]; if (!l) return;
-    const av = avanceLote(l), etapa = Math.min(4, Math.floor(av*4.999)), im = imgC(l.c, etapa);
+    const av = l.av != null ? l.av : avanceLote(l), etapa = Math.min(4, Math.floor(av*4.999)), im = imgC(l.c, etapa);
     const ux = L.t[0]-L.l[0], uy = L.t[1]-L.l[1], vx = L.b[0]-L.l[0], vy = L.b[1]-L.l[1];
     const pts = []; for (let bb=0; bb<3; bb++) for (let aa=0; aa<5; aa++){ const fa = 0.14 + aa*0.18, fb = 0.28 + bb*0.3; pts.push([L.l[0] + ux*fa + vx*fb, L.l[1] + uy*fa + vy*fb + 3, aa, bb]); }
     pts.sort((p, q) => p[1] - q[1]);
@@ -4852,18 +4896,21 @@ function dibujarCampo(dt){
   });
   // construcciones y animales, ordenados por dónde pisan
   const cosas = [];
-  const edif = (k, spr, fr) => { if (!e[k]) return; const [x, y] = LUGAR[k]; cosas.push({ y, f:() => dibAncla(spr||k, fr||0, x, y) }); };
+  const edif = (k, spr, fr) => { if (!e[k]) return; const [x, y] = posEdif(c, k); cosas.push({ y, f:() => { dibAncla(spr||k, fr||0, x, y); hitAncla(spr||k, fr||0, x, y, 'edif', k); } }); };
   edif('galpon'); edif('silos'); edif('cosechadora'); edif('tractor'); edif('camioneta'); edif('corral'); edif('feedlot', 'corral'); edif('mixer', 'tractor');
   edif('molino', 'molino', Math.floor(campoT*7) % 4);
-  if (e.tanque){ const [x, y] = LUGAR.tanque; cosas.push({ y, f:() => {
-    dibAncla('tanque', 0, x, y); const im = imgC('tanque'); if (!im) return;
+  if (e.tanque){ const [x, y] = posEdif(c, 'tanque'); cosas.push({ y, f:() => {
+    dibAncla('tanque', 0, x, y); hitAncla('tanque', 0, x, y, 'edif', 'tanque'); const im = imgC('tanque'); if (!im) return;
     for (let k=0; k<2; k++){ const a = campoT*1.3 + k*3; g.fillStyle = 'rgba(235,250,255,.9)'; g.fillRect(Math.round(x - 5 + Math.cos(a)*5), Math.round(y - im.height + 4 + Math.sin(a)*1.5), 3, 1); }
   } }); }
-  if (!campoAnim) armarAnimalesCampo();
+  if (!campoAnim) armarAnimalesCampo(c);
+  for (const k in c.deco || {}){ const d = CAMPO_DECO[k]; if (!c.deco[k] || !d) continue;
+    cosas.push({ y:d.y, f:() => { DIB_DECO[k](g, d.x, d.y, campoT); campoHits.push({ x0:d.x - d.w/2, y0:d.y - d.h, x1:d.x + d.w/2, y1:d.y + 2, tipo:'deco', ref:k, cx:d.x, cy:d.y - d.h }); } }); }
   for (const a of campoAnim){
     const zona = a.k==='gallina' ? PATIO : POT, vel = a.k==='gallina' ? 9 : a.k==='perro' ? 16 : 7;
     a.t -= dt;
-    if (a.t <= 0){ a.t = rnd(1.5, 4); a.come = Math.random() < (a.k==='perro' ? 0.3 : 0.45); if (!a.come){ a.dir = Math.random()<0.5?1:-1; a.dy = rnd(-0.35, 0.35); } }
+    if (duermen){ a.come = true; a.t = Math.max(a.t, 0.5); }
+    else if (a.t <= 0){ a.t = rnd(1.5, 4); a.come = Math.random() < (a.k==='perro' ? 0.3 : 0.45); if (!a.come){ a.dir = Math.random()<0.5?1:-1; a.dy = rnd(-0.35, 0.35); } }
     if (!a.come){
       const nx = a.x + a.dir*vel*dt, ny = a.y + a.dy*vel*dt;
       if (a.k==='gallina' || !enCorral(nx, ny)){ a.x = nx; a.y = ny; } else { a.dir = -a.dir; a.dy = -a.dy; }
@@ -4871,21 +4918,470 @@ function dibujarCampo(dt){
       if (a.k==='gallina'){ if (a.x < zona.x0){ a.x = zona.x0; a.dir = 1; } if (a.x > zona.x1){ a.x = zona.x1; a.dir = -1; }
         if (a.y < zona.y0){ a.y = zona.y0; a.dy = Math.abs(a.dy); } if (a.y > zona.y1){ a.y = zona.y1; a.dy = -Math.abs(a.dy); } }
     }
-    const fr = a.come ? 2 + (Math.floor(campoT*1.5 + a.paso) % 2) : Math.floor(a.paso) % 2;
-    cosas.push({ y:a.y, f:() => dibAncla(CAMPO_ANIMALES[a.k] && CAMPO_ANIMALES[a.k].spr || a.k, fr, a.x, a.y, a.dir < 0) });
+    const fr = duermen ? 2 : a.come ? 2 + (Math.floor(campoT*1.5 + a.paso) % 2) : Math.floor(a.paso) % 2, spr = CAMPO_ANIMALES[a.k] && CAMPO_ANIMALES[a.k].spr || a.k;
+    cosas.push({ y:a.y, f:() => { dibAncla(spr, fr, a.x, a.y, a.dir < 0); hitAncla(spr, fr, a.x, a.y, 'animal', a); } });
   }
-  cosas.push({ y:206, f:() => cartelCampo(g, 300, 206, normTxt(c.nombre).slice(0,16)) });
+  cosas.push({ y:206, f:() => { cartelCampo(g, 300, 206, normTxt(c.nombre).slice(0,16)); campoHits.push({ x0:276, y0:166, x1:324, y1:208, tipo:'cartel', cx:300, cy:166 }); } });
   // el personaje elegido pasea por el patio de la casa
-  { const v = campoVis, h = hojaPJ(visitantePJ());
+  { const v = campoVis, pjV = campoVisita ? c.pj : visitantePJ(), h = hojaPJ(pjV);
     v.t -= dt; if (v.t <= 0){ v.t = rnd(2, 5); v.para = Math.random() < 0.4; v.dir = Math.random() < 0.5 ? 1 : -1; }
     if (!v.para){ v.x += v.dir*14*dt; if (v.x < 70){ v.x = 70; v.dir = 1; } if (v.x > 300){ v.x = 300; v.dir = -1; } }
-    if (h && h.der){ const fr = v.para ? (h.abajo || h.der)[0] : h.der[Math.floor(campoT*7) % h.der.length], im = aplicarSkin(fr, datos.skinSel[visitantePJ()]);
+    if (h && h.der){ const fr = v.para ? (h.abajo || h.der)[0] : h.der[Math.floor(campoT*7) % h.der.length], im = aplicarSkin(fr, campoVisita ? 'normal' : datos.skinSel[pjV]);
       cosas.push({ y:v.y, f:() => { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(Math.round(v.x - 6), v.y - 1, 12, 2);
         if (!v.para && v.dir < 0){ g.save(); g.translate(Math.round(v.x + im.width/2), v.y - im.height); g.scale(-1, 1); g.drawImage(im, 0, 0); g.restore(); } else g.drawImage(im, Math.round(v.x - im.width/2), v.y - im.height);
+        campoHits.push({ x0:v.x - im.width/2 - 3, y0:v.y - im.height - 3, x1:v.x + im.width/2 + 3, y1:v.y + 3, tipo:'vis', cx:v.x, cy:v.y - im.height });
         const e = c.enc; if (e && !e.cobrado && Math.floor(campoT*1.5)%2){ g.fillStyle = e.hecho ? '#7ed492' : '#f5d547'; g.fillRect(Math.round(v.x)-2, v.y - im.height - 9, 4, 6); g.fillRect(Math.round(v.x)-2, v.y - im.height - 2, 4, 2); } } }); } }
   cosas.sort((p, q) => p.y - q.y).forEach(o => o.f());
+  // de noche duermen: unas zetas arriba de algunos
+  if (duermen) campoAnim.slice(0, 4).forEach((a, i) => { const p = (campoT*0.4 + i*0.27) % 1, im = imgC(CAMPO_ANIMALES[a.k] && CAMPO_ANIMALES[a.k].spr || a.k, 2), hh = im ? im.height : 16;
+    g.globalAlpha = 1 - p; g.drawImage(txtImg('z', '#e8f2ff', null), Math.round(a.x + 4 + p*6), Math.round(a.y - hh - 4 - p*12)); g.globalAlpha = 1; });
+  dibLangostas(g, dt);
+  cieloCampo(g, c);
+  // lo producido, en globitos arriba de los animales: se junta tocando
+  if (!campoVisita){
+    if (campoT - campoAcum.t > 1) campoAcum = { t:campoT, n:acumulado().creditos };
+    if (campoAcum.n >= 1){ const prod = campoAnim.filter(a => (CAMPO_ANIMALES[a.k]||{}).prod > 0), n = Math.min(prod.length, 6, 1 + Math.floor(campoAcum.n/12));
+      for (let i=0; i<n; i++){ const a = prod[Math.floor(i*prod.length/n)], im = imgC(CAMPO_ANIMALES[a.k].spr || a.k, 0), x = Math.round(a.x), y = Math.round(a.y - (im ? im.height : 18) - 9 + Math.sin(campoT*3 + i)*1.5);
+        dibIconoProd(g, a.k, x, y); campoBurb.push({ x, y }); } }
+  }
+  // monedas que vuelan al contador y números
+  campoFx = campoFx.filter(f => (f.t += dt) < f.d);
+  for (const f of campoFx){ if (f.t < 0) continue; const p = f.t/f.d;
+    if (f.tipo==='moneda'){ const e2 = p*p, x = f.x0 + (CAMPO_W - 30 - f.x0)*e2, y = f.y0 + (8 - f.y0)*e2 - Math.sin(p*Math.PI)*30; px(g, Math.round(x)-1, Math.round(y)-1, 3, 3, '#f5d547'); px(g, Math.round(x)-1, Math.round(y)-1, 1, 1, '#fff6c8'); }
+    else { g.globalAlpha = Math.min(1, (1-p)*3); const ti = txtImg(f.txt, '#f5d547', '#15151c'); g.drawImage(ti, Math.round(f.x0 - ti.width), Math.round(f.y0 - p*18), ti.width*2, ti.height*2); g.globalAlpha = 1; } }
+  // ubicando una obra: se marcan los lugares donde entra
+  if (campoColocar){ const k = campoColocar.k, act = datos.campo.pos[k], pul = 0.55 + Math.sin(campoT*6)*0.3;
+    SITIOS.forEach((S, i) => { const ok = entraEn(k, i), col = i === act ? '126,212,146' : ok ? '245,213,71' : '200,80,70';
+      g.strokeStyle = `rgba(${col},${ok ? pul.toFixed(2) : 0.35})`; g.lineWidth = 2; g.beginPath(); g.ellipse(S[0], S[1] - 6, S[2]/2.6, 11, 0, 0, Math.PI*2); g.stroke(); }); }
 }
-setInterval(() => { if (!$('#campo').classList.contains('oculto')){ procesarCampo(); guardar(); renderCampo(); } }, 30000);
+setInterval(() => { if (!$('#campo').classList.contains('oculto')){ procesarCampo(); guardar(); renderCampo(); revisarLangostas(true); publicarEstancia(); } }, 30000);
+/* =========================================================
+   LA ESTANCIA VIVA: la escena se toca, las obras se ubican a gusto, hay decoración,
+   día y noche, clima, langostas, Expo Rural y se pueden visitar las estancias de los demás
+   ========================================================= */
+// lugares de tierra del dibujo donde puede ir una obra: pie del dibujo (x, y) y el ancho que entra
+const SITIOS = [[410,80,120],[680,177,90],[606,217,110],[686,273,84],[406,266,110],[546,332,110],[312,340,110],[44,188,110]];
+// obras que se pueden mover y su lugar de siempre
+const MOVIBLES = { galpon:0, silos:1, cosechadora:2, mixer:3, molino:4, feedlot:7 };
+const ANCHO_OBRA = { galpon:79, silos:51, cosechadora:74, mixer:50, molino:70, feedlot:101 };
+const SPR_OBRA = { feedlot:'corral', mixer:'tractor' };
+const entraEn = (k, i) => !!SITIOS[i] && (ANCHO_OBRA[k] || 80) <= SITIOS[i][2];
+function normPos(c){
+  c.pos = c.pos && typeof c.pos === 'object' ? c.pos : {};
+  const usados = new Set(), faltan = [];
+  for (const k in MOVIBLES){
+    if (!c.edificios[k]){ delete c.pos[k]; continue; }
+    const i = c.pos[k];
+    if (Number.isInteger(i) && entraEn(k, i) && !usados.has(i)) usados.add(i); else faltan.push(k);
+  }
+  for (const k of faltan){
+    let i = MOVIBLES[k]; if (usados.has(i) || !entraEn(k, i)) i = SITIOS.findIndex((_, j) => !usados.has(j) && entraEn(k, j));
+    if (i < 0){ delete c.pos[k]; continue; } c.pos[k] = i; usados.add(i);
+  }
+}
+function posEdif(c, k){
+  if (k==='tanque'){ const [x, y] = posEdif(c, 'molino'); return [x + 28, y + 4]; }
+  if (MOVIBLES[k] !== undefined){ const i = c.pos && c.pos[k] != null ? c.pos[k] : MOVIBLES[k], S = SITIOS[i] || SITIOS[MOVIBLES[k]]; return k==='molino' ? [S[0] - 14, S[1] - 2] : [S[0], S[1]]; }
+  return LUGAR[k];
+}
+
+// ---- decoración: no cambia nada del juego (salvo la miel), es para que el campo sea tuyo ----
+const CAMPO_DECO = {
+  bandera:  { nombre:'Bandera en el mástil', precio:120, desc:'Para que se vea desde la ruta.',                 x:252, y:120, w:22, h:44 },
+  flores:   { nombre:'Cantero de flores',    precio:60,  desc:'Alegra la galería de la casa.',                  x:186, y:134, w:30, h:12 },
+  hamaca:   { nombre:'Hamaca en el ombú',    precio:90,  desc:'Para la siesta después del asado.',              x:116, y:126, w:18, h:30 },
+  parrilla: { nombre:'Parrilla',             precio:180, desc:'Asado los domingos. De noche se ven las brasas.', x:40,  y:152, w:24, h:26 },
+  fogon:    { nombre:'Fogón',                precio:150, desc:'Para la guitarreada. De noche ilumina el patio.', x:205, y:167, w:20, h:16 },
+  colmenas: { nombre:'Colmenas',             precio:220, desc:'Miel: +3 créditos por hora.',                    x:655, y:108, w:36, h:16 },
+};
+function dBandera(g, x, y, t){
+  px(g, x-2, y-1, 6, 2, '#6b5236'); px(g, x, y-42, 2, 42, '#cfd3d6'); px(g, x+1, y-42, 1, 42, '#8d9296'); px(g, x-1, y-44, 4, 2, '#f5d547');
+  for (let i=0; i<16; i++){ const o = Math.round(Math.sin(t*4 - i*0.5)*1.3*(i/16));
+    for (let j=0; j<10; j++){ g.fillStyle = j<3 || j>6 ? '#74acdf' : '#ffffff'; g.fillRect(x+2+i, y-41+j+o, 1, 1); } }
+  const o = Math.round(Math.sin(t*4 - 3.5)*1.3*0.44); px(g, x+9, y-37+o, 2, 2, '#f6b40e');
+}
+function dFlores(g, x, y){
+  x = Math.round(x - 14); px(g, x, y-5, 28, 5, '#6b4a2a'); px(g, x+1, y-4, 26, 3, '#4a3420');
+  const cols = ['#e8604c','#f5d547','#b48ce0','#ffffff','#ff9ec4'];
+  for (let i=0; i<9; i++){ const fx = x+2+i*3, fh = 3 + (i*7)%3; px(g, fx+1, y-4-fh, 1, fh, '#3e8a3e'); px(g, fx, y-5-fh, 3, 2, cols[(i*3)%5]); }
+}
+function dHamaca(g, x, y, t){
+  const s = Math.sin(t*1.3)*3, top = y - 28;
+  for (let i=0; i<24; i++){ const f = i/24; px(g, Math.round(x-6 + s*f), top+i, 1, 1, '#c9b085'); px(g, Math.round(x+6 + s*f), top+i, 1, 1, '#c9b085'); }
+  px(g, Math.round(x-8+s), y-4, 17, 2, '#8a5a32'); px(g, Math.round(x-8+s), y-2, 17, 1, '#5c3a1f');
+}
+function dParrilla(g, x, y, t){
+  x = Math.round(x - 10);
+  px(g, x, y-12, 20, 12, '#8e4a30'); for (let r=0; r<3; r++){ px(g, x, y-12+r*4, 20, 1, '#6e3622'); px(g, x + (r%2 ? 4 : 9), y-11+r*4, 1, 3, '#6e3622'); px(g, x + (r%2 ? 14 : 18), y-11+r*4, 1, 3, '#6e3622'); }
+  px(g, x-1, y-14, 22, 2, '#3a3a3a'); for (let i=0; i<10; i++) px(g, x+i*2, y-15, 1, 1, '#666');
+  for (let k=0; k<6; k++) if (Math.sin(t*6 + k*1.7) > -0.2) px(g, x+2+k*3, y-13, 2, 1, k%2 ? '#ff7a2a' : '#ffb03a');
+  for (let k=0; k<4; k++){ const p = (t*0.45 + k/4) % 1; g.fillStyle = `rgba(225,225,225,${(0.55*(1-p)).toFixed(2)})`; g.fillRect(Math.round(x+10 + Math.sin(t*2+k)*3*p), Math.round(y-17 - p*22), 2 + Math.round(p*2), 2); }
+}
+function dFogon(g, x, y, t){
+  for (let k=0; k<8; k++){ const a = k/8*Math.PI*2; px(g, Math.round(x + Math.cos(a)*7) - 1, Math.round(y - 3 + Math.sin(a)*3) - 1, 3, 2, '#8d8a84'); }
+  px(g, x-5, y-4, 10, 2, '#5a3a1e'); px(g, x-2, y-6, 4, 1, '#6b4423');
+  for (let k=0; k<5; k++){ const h = 3 + Math.round((Math.sin(t*10 + k*2.1) + 1)*2.5); px(g, x-5+k*2, y-4-h, 2, h, k%2 ? '#ff8a1e' : '#ffd23a'); }
+}
+function dColmenas(g, x, y, t){
+  for (let k=0; k<3; k++){ const bx = Math.round(x - 16 + k*11);
+    px(g, bx, y-9, 9, 9, '#f2efe6'); px(g, bx, y-6, 9, 1, '#c9c4b6'); px(g, bx, y-3, 9, 1, '#c9c4b6'); px(g, bx-1, y-11, 11, 2, '#a0583a'); px(g, bx+3, y-2, 3, 1, '#2b2b2b'); }
+  for (let k=0; k<6; k++){ const a = t*(2 + k*0.3) + k; px(g, Math.round(x + Math.cos(a)*15), Math.round(y - 15 + Math.sin(a*1.7)*5), 1, 1, k%2 ? '#f5d547' : '#2b2b2b'); }
+}
+const DIB_DECO = { bandera:dBandera, flores:dFlores, hamaca:dHamaca, parrilla:dParrilla, fogon:dFogon, colmenas:dColmenas };
+function comprarDeco(k){ const d = CAMPO_DECO[k], c = datos.campo; c.deco = c.deco || {}; if (c.deco[k] || !gastar(d.precio)) return; juntarCampo(true); c.deco[k] = true; guardar(); renderCampo(); toast(`¡${d.nombre} nueva en la estancia!`); sfx('cofre'); }
+
+// ---- nombres: cada animal tiene el suyo ----
+const NOMBRES_AN = {
+  holando:['Lola','Manchita','Clarabella','Pocha','Margarita','Tota','Blanquita','Mora'], angus:['Negra','Brasita','Carbón','Morocha','Tinta','Pampa'],
+  ternero:['Chiquito','Pochito','Mimo','Bombón','Teté','Rulo'], novillo:['Gordo','Asadito','Vacío','Matambre'], toro:['Ferdinando','Bravo','Don Toro','Tornado'],
+  oveja:['Copo','Lanita','Nube','Dolly'], chancho:['Chorizo','Panceta','Rosita','Bondiola'], gallina:['Turuleca','Cocó','Pirucha','Clotilde','Chiquitina','Plumas'],
+  caballo:['Malacara','Zaino','Tostado','Pampero'], perro:['Chicho','Toby','Negro','Ovejero'],
+};
+function nombreAnimal(k, i){ const l = NOMBRES_AN[k] || ['Sin nombre']; return l[i % l.length] + (i >= l.length ? ' ' + (Math.floor(i / l.length) + 1) : ''); }
+
+// ---- estado de la escena ----
+let campoHits = [], campoBurb = [], campoFx = [], campoColocar = null, campoLang = null, campoVisita = null, campoAcum = { t:-9, n:0 };
+const campoDatos = () => campoVisita ? campoVisita.d : datos.campo;
+function idEstancia(){ if (!datos.idEst) { datos.idEst = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); guardar(); } return datos.idEst; }
+function hitAncla(spr, fr, cx, piso, tipo, ref){ const im = imgC(spr, fr); if (!im) return; campoHits.push({ x0:cx - im.width/2 - 3, y0:piso - im.height - 3, x1:cx + im.width/2 + 3, y1:piso + 3, tipo, ref, cx, cy:piso - im.height }); }
+function enLote(L, x, y){
+  const ux = L.t[0]-L.l[0], uy = L.t[1]-L.l[1], vx = L.b[0]-L.l[0], vy = L.b[1]-L.l[1], px_ = x - L.l[0], py_ = y - L.l[1], det = ux*vy - uy*vx;
+  const a = (px_*vy - py_*vx)/det, b = (ux*py_ - uy*px_)/det; return a >= -0.04 && a <= 1.04 && b >= -0.1 && b <= 1.1;
+}
+const centroLote = L => [L.l[0] + (L.t[0]-L.l[0])/2 + (L.b[0]-L.l[0])/2, L.l[1] + (L.t[1]-L.l[1])/2 + (L.b[1]-L.l[1])/2];
+
+// ---- carteles arriba de la escena y globito de información ----
+function avisoCampo(html, botones){
+  const el = $('#campoAviso'); if (!html){ el.classList.add('oculto'); el.innerHTML = ''; return; }
+  el.innerHTML = `<span>${html}</span>`; for (const b of botones||[]){ const bt = document.createElement('button'); bt.textContent = b.txt; if (b.sec) bt.className = 'sec'; bt.disabled = !!b.off; bt.onclick = ev => { ev.stopPropagation(); b.fn(); }; el.appendChild(bt); }
+  el.classList.remove('oculto');
+}
+function abrirPop(x, y, titulo, texto, acciones, extra){
+  const pop = $('#campoPop'), esc_ = $('#campoEscena');
+  pop.innerHTML = `<button class="x" aria-label="Cerrar">×</button><b>${titulo}</b><small>${texto}</small>${extra||''}`;
+  if (acciones && acciones.length){ const acc = document.createElement('div'); acc.className = 'acc';
+    for (const a of acciones){ const b = document.createElement('button'); b.textContent = a.txt; b.disabled = !!a.off; b.onclick = ev => { ev.stopPropagation(); cerrarPop(); a.fn(); }; acc.appendChild(b); }
+    pop.appendChild(acc); }
+  pop.querySelector('.x').onclick = ev => { ev.stopPropagation(); cerrarPop(); };
+  pop.classList.remove('oculto');
+  const W = esc_.clientWidth, H = esc_.clientHeight, k = W / CAMPO_W, pw = pop.offsetWidth, ph = pop.offsetHeight;
+  let lx = x*k - pw/2, ly = y*k - ph - 14; if (ly < 4) ly = y*k + 18;
+  pop.style.left = Math.max(4, Math.min(W - pw - 4, lx)) + 'px'; pop.style.top = Math.max(4, Math.min(H - ph - 4, ly)) + 'px';
+}
+function cerrarPop(){ $('#campoPop').classList.add('oculto'); }
+
+// ---- ubicar obras ----
+function empezarColocar(k){
+  cerrarPop(); normPos(datos.campo); campoColocar = { k };
+  avisoCampo(`Tocá un lugar marcado para poner <b>${esc(CAMPO_EDIFICIOS[k].nombre)}</b>`, [{ txt:'Listo', fn:terminarColocar }]);
+  const el = $('#campoEscena'); if (el.getBoundingClientRect().top < 0) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function terminarColocar(){ campoColocar = null; avisoCampo(null); revisarLangostas(true); }
+function colocarEn(i){
+  const c = datos.campo, k = campoColocar.k;
+  if (!entraEn(k, i)){ toast('Ahí no entra, probá en un lugar más grande'); return; }
+  const otro = Object.keys(c.pos).find(o => o !== k && c.pos[o] === i);
+  if (otro){ if (!entraEn(otro, c.pos[k])){ toast(`Ahí está ${CAMPO_EDIFICIOS[otro].nombre.toLowerCase()} y no entra en el lugar de este`); return; } c.pos[otro] = c.pos[k]; }
+  c.pos[k] = i; guardar(); sfx('cofre'); terminarColocar(); toast(`${CAMPO_EDIFICIOS[k].nombre} en su lugar nuevo`);
+}
+
+// ---- tocar la escena ----
+function queHay(x, y){
+  if (campoColocar){ let m = null, dm = 40*40; SITIOS.forEach((S, i) => { const d = (S[0]-x)**2 + (S[1]-12-y)**2; if (d < dm){ dm = d; m = i; } }); return m === null ? null : { tipo:'sitio', i:m }; }
+  if (campoLang && !campoLang.fin) for (const b of campoLang.bichos) if (b.vivo && (b.x-x)**2 + (b.y-y)**2 < 15*15) return { tipo:'langosta', b };
+  for (const b of campoBurb) if ((b.x-x)**2 + (b.y-y)**2 < 11*11) return { tipo:'burbuja' };
+  for (let i = campoHits.length - 1; i >= 0; i--){ const h = campoHits[i]; if (x >= h.x0 && x <= h.x1 && y >= h.y0 && y <= h.y1) return h; }
+  const c = campoDatos(); for (let i = 0; i < LOTES.length; i++) if (enLote(LOTES[i], x, y)) return { tipo:'lote', i, propio: i < c.lotes.length };
+  return null;
+}
+function tocarCampo(x, y){
+  const h = queHay(x, y);
+  if (campoColocar){ if (h) colocarEn(h.i); else toast('Tocá uno de los lugares marcados'); return; }
+  if (!h){ cerrarPop(); return; }
+  if (h.tipo==='langosta'){ espantar(h.b); return; }
+  if (h.tipo==='burbuja'){ juntarTocando(); return; }
+  if (h.tipo==='animal') return popAnimal(h.ref, h.cx, h.cy);
+  if (h.tipo==='edif') return popEdif(h.ref, h.cx, h.cy);
+  if (h.tipo==='deco'){ const d = CAMPO_DECO[h.ref]; return abrirPop(h.cx, h.cy, esc(d.nombre), esc(d.desc)); }
+  if (h.tipo==='vis') return popVisitante(h.cx, h.cy);
+  if (h.tipo==='cartel'){ if (campoVisita) return; cerrarPop(); const i = $('#campoNombre'); i.focus(); i.select(); toast('Escribí el nombre de tu estancia'); return; }
+  if (h.tipo==='lote'){ const [cx, cy] = centroLote(LOTES[h.i]); return popLote(h.i, h.propio, cx, cy - 8); }
+}
+function popAnimal(a, x, y){
+  const c = campoDatos(), def = CAMPO_ANIMALES[a.k] || { nombre:a.k, desc:'' }, nom = nombreAnimal(a.k, a.i);
+  let txt = esc(def.desc);
+  if (a.k==='ternero' && !campoVisita && Array.isArray(c.crias) && c.crias[a.i] != null){ const eng = c.edificios.feedlot ? 4 : 8, h = Math.max(0, eng - (Date.now() - c.crias[a.i])/3600000); txt += ` Se hace novillo en ${fmtHoras(h)}.`; }
+  if (a.k==='perro') txt += ' En las partidas te acompaña y ladra a los que se acercan.';
+  if (campoVisita) return abrirPop(x, y, esc(nom), `${esc(def.nombre)} de ${esc(c.nombre)}.`);
+  const acc = [];
+  if (VENTA_HACIENDA[a.k]) acc.push({ txt:`Vender ${precioHacienda(a.k)}`, fn:() => venderAnimal(a.k) });
+  const w = semanaExpo();
+  if (EXPO_BASE[a.k]) acc.push(c.expoSem === w ? { txt:'Ya fuiste a la Expo esta semana', off:true, fn:() => {} } : { txt:'🏅 Llevar a la Expo Rural', fn:() => presentarExpo(a.k, a.i, nom) });
+  abrirPop(x, y, `${esc(nom)} <span style="color:var(--tiza-2);font-weight:400">· ${esc(def.nombre)}</span>`, txt, acc);
+}
+function popEdif(k, x, y){
+  const e = CAMPO_EDIFICIOS[k]; if (!e) return;
+  if (campoVisita) return abrirPop(x, y, esc(e.nombre), esc(e.desc));
+  abrirPop(x, y, esc(e.nombre), esc(e.desc), MOVIBLES[k] !== undefined ? [{ txt:'Mover de lugar', fn:() => empezarColocar(k) }] : []);
+}
+function popVisitante(x, y){
+  const c = campoDatos(), pj = campoVisita ? c.pj : visitantePJ(), P = PERSONAJES.find(p => p.id===pj) || PERSONAJES[0];
+  if (campoVisita) return abrirPop(x, y, esc(P.nombre), 'Anda paseando por la estancia.');
+  const e = c.enc, def = e && ENCARGOS[e.i];
+  if (!def || e.cobrado) return abrirPop(x, y, esc(P.nombre), 'Hoy ya cumpliste su encargo. Mañana viene con otro.');
+  abrirPop(x, y, esc(P.nombre), `“${esc(def.txt[pj] || def.txt.ruso)}”<br>${e.prog}/${def.n} · premio: 100 créditos y 1 ticket`, e.hecho ? [{ txt:'Cobrar', fn:cobrarEncargo }] : []);
+}
+function popLote(i, propio, x, y){
+  const c = campoDatos();
+  if (!propio){ const nv = NIVELES_CAMPO.findIndex(n => n.lotes > i), sig = NIVELES_CAMPO[(c.nivel||0) + 1];
+    if (campoVisita) return abrirPop(x, y, `Lote ${i+1}`, 'Todavía no es parte de esta estancia.');
+    return abrirPop(x, y, `Lote ${i+1} · del vecino`, `Se suma cuando tu campo llega a ${esc(NIVELES_CAMPO[nv].nombre)}.`, sig && nv === (c.nivel||0) + 1 ? [{ txt:`Ampliar ${sig.precio}`, off:datos.creditos < sig.precio, fn:ampliarCampo }] : []); }
+  const l = c.lotes[i];
+  if (campoVisita) return abrirPop(x, y, `Lote ${i+1}`, l ? `${esc(CAMPO_CULTIVOS[l.c].nombre)} · ${Math.round((l.av||0)*100)}% crecido` : 'Lote vacío.');
+  if (!l){
+    const sem = (c.semillas||0) > 0 ? `<br>🌱 Tenés ${c.semillas} bolsa${c.semillas>1?'s':''} de semilla criolla: este lote rinde 50% más.` : '';
+    const acc = Object.entries(CAMPO_CULTIVOS).map(([k, cu]) => { const r = rotacion(i, k); return { txt:`${cu.nombre} ${cu.precio}${r>1?' ▲':r<1?' ▼':''}`, off:datos.creditos < cu.precio, fn:() => sembrar(i, k) }; });
+    return abrirPop(x, y, `Lote ${i+1} · vacío`, (c.previos[i] ? `Antes tuvo ${CAMPO_CULTIVOS[c.previos[i]].nombre.toLowerCase()}. ` : '') + '▲ rinde más por la rotación, ▼ rinde menos.' + sem, acc);
+  }
+  const cu = CAMPO_CULTIVOS[l.c], av = avanceLote(l), venta = Math.round(precioGrano(l.c) * rindeLote(l));
+  const barra = `<div class="barra-crec"><i style="width:${Math.round(av*100)}%"></i></div>`;
+  if (av < 1) return abrirPop(x, y, `Lote ${i+1} · ${esc(cu.nombre)}`, `Falta ${fmtHoras((1-av)*horasCultivo(l.c))}. Hoy se pagaría ${venta}.${l.s ? ' 🌱 Semilla criolla.' : ''}`, [], barra);
+  const acc = [{ txt:`Vender +${venta}`, fn:() => cosechar(i) }];
+  if (c.edificios.silos) acc.push({ txt:'Al silo', fn:() => cosechar(i, 'silo') });
+  if (l.c==='alfalfa') acc.push({ txt:`${Math.round(4*(l.r||1))} rollos`, fn:() => cosechar(i, 'rollos') });
+  abrirPop(x, y, `Lote ${i+1} · ${esc(cu.nombre)}`, `¡Listo para cosechar! Hoy se paga ${venta}.`, acc, barra);
+}
+
+// ---- juntar tocando lo que produjeron los animales ----
+const ICONO_PROD = { holando:'leche', gallina:'huevo', oveja:'lana' };
+function juntarTocando(){
+  const ac = acumulado(); if (ac.creditos <= 0) return;
+  for (const b of campoBurb) for (let k=0; k<3; k++) campoFx.push({ tipo:'moneda', x0:b.x, y0:b.y, t:-k*0.07, d:0.7 + Math.random()*0.2 });
+  const b0 = campoBurb[0] || { x:CAMPO_W/2, y:CAMPO_H/2 };
+  campoFx.push({ tipo:'txt', txt:'+' + ac.creditos, x0:b0.x, y0:b0.y - 6, t:0, d:1.3 });
+  juntarCampo(false); campoAcum = { t:campoT, n:0 }; sfx('cofre');
+  const chip = $('#campoCred').parentElement; chip.classList.remove('salta'); void chip.offsetWidth; chip.classList.add('salta');
+}
+function dibIconoProd(g, k, x, y){
+  px(g, x-5, y-5, 11, 10, '#15151c'); px(g, x-4, y-6, 9, 12, '#15151c'); px(g, x-4, y-5, 9, 10, '#f2efe6'); px(g, x-1, y+5, 3, 2, '#15151c'); px(g, x, y+5, 1, 1, '#f2efe6');
+  const t = ICONO_PROD[k];
+  if (t==='leche'){ px(g, x-2, y-3, 5, 6, '#ffffff'); px(g, x-2, y-3, 5, 1, '#9fd0f0'); px(g, x-1, y-4, 3, 1, '#9fd0f0'); px(g, x-2, y-3, 1, 6, '#c9c4b6'); }
+  else if (t==='huevo'){ px(g, x-1, y-3, 3, 6, '#f4e3c3'); px(g, x-2, y-2, 5, 4, '#f4e3c3'); px(g, x-1, y-2, 1, 1, '#ffffff'); }
+  else if (t==='lana'){ px(g, x-3, y-1, 7, 3, '#e8e4d8'); px(g, x-2, y-3, 5, 2, '#e8e4d8'); px(g, x-2, y+1, 5, 1, '#c9c4b6'); }
+  else { px(g, x-2, y-3, 5, 6, '#f5d547'); px(g, x-3, y-2, 7, 4, '#f5d547'); px(g, x-1, y-2, 2, 4, '#c99a1e'); px(g, x-2, y-3, 1, 1, '#fff6c8'); }
+}
+
+// ---- día y noche (la hora de verdad) y el clima del día ----
+function horaCampo(){ if (window.__horaCampo != null) return window.__horaCampo; const d = new Date(); return d.getHours() + d.getMinutes()/60; }
+function nocheDe(h){ if (h >= 20.5 || h < 5) return 1; if (h >= 18) return (h - 18)/2.5; if (h < 7) return 1 - (h - 5)/2; return 0; }
+const VENTANAS_CASA = [[163,96],[184,99],[214,103]];
+function cieloCampo(g, c){
+  const h = horaCampo(), n = nocheDe(h), cl = campoVisita ? { id:'normal' } : climaCampo();
+  // clima
+  if (cl.id==='lluvia'){ g.fillStyle = 'rgba(45,65,100,.22)'; g.fillRect(0, 0, CAMPO_W, CAMPO_H); g.fillStyle = 'rgba(200,220,255,.55)';
+    for (let i=0; i<90; i++){ const x = (i*61 + campoT*60) % (CAMPO_W + 20) - 10, y = (i*37 + campoT*300) % (CAMPO_H + 20) - 10; g.fillRect(Math.round(x), Math.round(y), 1, 5); } }
+  else if (cl.id==='helada'){ g.fillStyle = 'rgba(225,238,255,.22)'; g.fillRect(0, 0, CAMPO_W, CAMPO_H); g.fillStyle = 'rgba(255,255,255,.8)';
+    for (let i=0; i<40; i++) if (Math.sin(campoT*2 + i*2.3) > 0.7) g.fillRect((i*97) % CAMPO_W, 60 + (i*53) % 300, 1, 1); }
+  else if (cl.id==='sequia'){ g.fillStyle = 'rgba(235,180,70,.14)'; g.fillRect(0, 0, CAMPO_W, CAMPO_H); }
+  // atardecer y amanecer
+  const dorado = Math.max(0, 1 - Math.abs(h - 19)/1.6, 1 - Math.abs(h - 6.2)/1.2);
+  if (dorado > 0){ g.fillStyle = `rgba(255,128,50,${(dorado*0.22).toFixed(3)})`; g.fillRect(0, 0, CAMPO_W, CAMPO_H); }
+  if (n <= 0) return n;
+  g.fillStyle = `rgba(12,18,50,${(n*0.58).toFixed(3)})`; g.fillRect(0, 0, CAMPO_W, CAMPO_H);
+  // estrellas y luna
+  if (n > 0.4){ for (let i=0; i<46; i++){ const x = (i*131 + 17) % 560, y = 2 + (i*47) % 38; if (Math.sin(campoT*1.5 + i*1.9) > -0.6){ g.fillStyle = `rgba(255,255,235,${(n*0.9).toFixed(2)})`; g.fillRect(x, y, 1, 1); } }
+    g.fillStyle = `rgba(250,245,220,${n.toFixed(2)})`; g.beginPath(); g.arc(470, 18, 6, 0, Math.PI*2); g.fill(); g.fillStyle = `rgba(12,18,50,${(n*0.9).toFixed(2)})`; g.beginPath(); g.arc(473, 16, 5, 0, Math.PI*2); g.fill(); }
+  // luces: ventanas, fogón y parrilla
+  const luz = (x, y, r, col) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(255,170,60,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r*2, r*2); };
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (const [x, y] of VENTANAS_CASA){ luz(x, y, 16, `rgba(255,190,90,${(n*0.35).toFixed(2)})`); }
+  const d = c.deco || {}, chis = 0.85 + Math.sin(campoT*9)*0.1;
+  if (d.fogon) luz(CAMPO_DECO.fogon.x, CAMPO_DECO.fogon.y - 6, 46, `rgba(255,150,50,${(n*0.5*chis).toFixed(2)})`);
+  if (d.parrilla) luz(CAMPO_DECO.parrilla.x, CAMPO_DECO.parrilla.y - 12, 24, `rgba(255,110,40,${(n*0.4*chis).toFixed(2)})`);
+  g.restore();
+  for (const [x, y] of VENTANAS_CASA){ g.fillStyle = `rgba(255,214,120,${(n*0.85).toFixed(2)})`; g.fillRect(x - 2, y - 3, 4, 4); }
+  return n;
+}
+
+// ---- langostas: una manga cae en un lote sembrado de vez en cuando; tocalas para espantarlas ----
+const LANG_V = 3*3600000;
+function revisarLangostas(silencioso){
+  if (campoVisita || campoColocar) return;
+  const c = datos.campo, w = Math.floor(Date.now()/LANG_V);
+  if (campoLang && campoLang.w === w){ if (!campoLang.fin && !silencioso) avisoLang(); return; }
+  campoLang = null;
+  if (c.langUlt === w || hashT(w*13 + 5, 77) % 3) return;
+  const ls = c.lotes.map((l, i) => l ? i : -1).filter(i => i >= 0); if (!ls.length) return;
+  const i = ls[hashT(w, 3) % ls.length], [cx, cy] = centroLote(LOTES[i]);
+  campoLang = { w, i, cx, cy, fin:false, bichos:Array.from({ length:12 }, () => ({ a:Math.random()*Math.PI*2, r:rnd(6, 30), f:Math.random()*6, vel:rnd(1.2, 2.2)*(Math.random()<0.5?1:-1), vivo:true, x:cx, y:cy, vx:0, vy:0 })) };
+  avisoLang();
+}
+function avisoLang(){ if (campoLang) avisoCampo(`🦗 ¡Manga de langostas en el lote ${campoLang.i + 1}! Tocalas para espantarlas`); }
+function espantar(b){
+  b.vivo = false; b.vx = (b.x - campoLang.cx)*5 + rnd(-50, 50); b.vy = -rnd(70, 130); sfx('golpe');
+  if (campoLang.bichos.some(q => q.vivo)) return;
+  campoLang.fin = true; const c = datos.campo; c.langUlt = campoLang.w; datos.creditos += 40; guardar(); renderCampo(); avisoCampo(null);
+  campoFx.push({ tipo:'txt', txt:'+40', x0:campoLang.cx, y0:campoLang.cy - 10, t:0, d:1.3 }); toast('¡Espantaste la manga de langostas! +40 créditos'); sfx('cofre');
+}
+function dibLangostas(g, dt){
+  if (!campoLang) return;
+  for (const b of campoLang.bichos){
+    if (b.vivo){ b.a += b.vel*dt; b.x = campoLang.cx + Math.cos(b.a)*b.r*1.3; b.y = campoLang.cy - 6 + Math.sin(b.a)*b.r*0.45 + Math.sin(campoT*9 + b.f)*2; }
+    else { b.x += b.vx*dt; b.y += b.vy*dt; b.vy -= 40*dt; }
+    if (b.y < -10 || b.x < -10 || b.x > CAMPO_W + 10) continue;
+    const ala = Math.floor(campoT*18 + b.f) % 2, x = Math.round(b.x), y = Math.round(b.y);
+    px(g, x-4, y-1, 9, 4, '#2a2f0e'); px(g, x-3, y, 7, 2, '#7d8f2c'); px(g, x+3, y-1, 2, 2, '#4a5a18'); px(g, x-3, y+2, 1, 2, '#2a2f0e'); px(g, x+1, y+2, 1, 2, '#2a2f0e');
+    px(g, x-3, y - 3 - ala*2, 6, 2, 'rgba(235,245,210,.9)');
+  }
+}
+
+// ---- Expo Rural: una vez por semana llevás un animal y vuelve con premio ----
+const EXPO_BASE = { toro:5, novillo:5, angus:4, holando:4, caballo:4, chancho:3, oveja:3, perro:3, gallina:2, ternero:2 };
+const semanaExpo = () => Math.floor((Date.now()/86400000 + 3)/7);
+function presentarExpo(k, i, nom){
+  const c = datos.campo, w = semanaExpo(); if (c.expoSem === w) return;
+  const id = idEstancia(); let hs = 0; for (const ch of id) hs = (hs*31 + ch.charCodeAt(0)) | 0;
+  const p = EXPO_BASE[k] + hashT(w*31 + 7, hs ^ (k.length*97 + i*13)) % 6;
+  c.expoSem = w;
+  let msg;
+  if (p >= 8){ datos.creditos += 150; datos.tickets = (datos.tickets||0) + 2; msg = `🏆 ¡${nom} salió Gran Campeón de la Expo Rural! +150 créditos y 2 tickets`; }
+  else if (p >= 6){ datos.creditos += 80; datos.tickets = (datos.tickets||0) + 1; msg = `🥈 ${nom} se llevó una cinta en la Expo Rural: +80 créditos y 1 ticket`; }
+  else { datos.creditos += 40; msg = `🎗️ ${nom} se llevó una mención en la Expo Rural: +40 créditos`; }
+  guardar(); renderCampo(); toast(msg); sfx('cofre');
+}
+
+// ---- visitar estancias: cada uno sube un resumen de su campo y los demás lo pueden recorrer ----
+function resumenEstancia(){
+  const c = datos.campo; normPos(c);
+  const an = {}; for (const k in c.animales) if (c.animales[k] > 0 && CAMPO_ANIMALES[k]) an[k] = c.animales[k];
+  return { v:1, nombre:normTxt(c.nombre).slice(0, 22), jugador:(datos.jugador||'').slice(0, 14), nivel:c.nivel||0, animales:an,
+    edificios:Object.keys(c.edificios).filter(k => c.edificios[k] && CAMPO_EDIFICIOS[k]), pos:Object.assign({}, c.pos),
+    deco:Object.keys(c.deco||{}).filter(k => c.deco[k] && CAMPO_DECO[k]), lotes:c.lotes.map(l => l ? { c:l.c, av:Math.round(avanceLote(l)*100)/100 } : null),
+    pj:visitantePJ(), t:Date.now() };
+}
+function limpiarEstancia(d){
+  if (!d || typeof d !== 'object') return null;
+  const lista = v => Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : [];   // Firebase devuelve algunas listas como objetos
+  const n = (v, a, b) => Number.isFinite(+v) ? Math.max(a, Math.min(b, Math.floor(+v))) : a, str = (v, m) => typeof v === 'string' ? v.slice(0, m) : '';
+  const o = { nombre:str(d.nombre, 22) || 'Estancia', jugador:str(d.jugador, 14), nivel:n(d.nivel, 0, 3), animales:{}, edificios:{}, pos:{}, deco:{}, lotes:[],
+    pj:PERSONAJES.some(p => p.id === d.pj) ? d.pj : 'ruso', t:n(d.t, 0, 9e15), crias:[], enc:null, previos:[], silo:{} };
+  let tot = 0; for (const k in CAMPO_ANIMALES) if (d.animales && d.animales[k]){ const m = Math.min(n(d.animales[k], 0, 34), 34 - tot); if (m > 0){ o.animales[k] = m; tot += m; } }
+  for (const k of lista(d.edificios)) if (CAMPO_EDIFICIOS[k]) o.edificios[k] = true;
+  if (d.pos && typeof d.pos === 'object') for (const k in MOVIBLES) if (d.pos[k] != null) o.pos[k] = n(d.pos[k], 0, SITIOS.length - 1);
+  for (const k of lista(d.deco)) if (CAMPO_DECO[k]) o.deco[k] = true;
+  const nl = NIVELES_CAMPO[o.nivel].lotes;
+  for (let i=0; i<nl; i++){ const l = d.lotes && typeof d.lotes === 'object' ? d.lotes[i] : null; o.lotes.push(l && CAMPO_CULTIVOS[l.c] ? { c:l.c, av:Math.max(0, Math.min(1, +l.av || 0)) } : null); }
+  normPos(o); return o;
+}
+function valorEstancia(d){
+  let v = NIVELES_CAMPO.slice(0, d.nivel + 1).reduce((s, x) => s + x.precio, 0);
+  for (const k in d.animales) v += (CAMPO_ANIMALES[k].precio || VENTA_HACIENDA[k] || 0) * d.animales[k];
+  for (const k in d.edificios) v += CAMPO_EDIFICIOS[k].precio; for (const k in d.deco) v += CAMPO_DECO[k].precio;
+  return v;
+}
+let estPublicada = '';
+async function publicarEstancia(){
+  if (!DB_URL || !datos.jugador || campoVisita) return;
+  const r = resumenEstancia(), firma = JSON.stringify(Object.assign({}, r, { t:0 })); if (firma === estPublicada) return;
+  const ok = await NET.put(`estancias/${idEstancia()}/datos`, r); if (ok !== false) estPublicada = firma;
+}
+async function revisarMates(){
+  if (!DB_URL || !datos.jugador) return;
+  const m = await NET.get(`estancias/${idEstancia()}/mates`); if (!m || typeof m !== 'object') return;
+  const n = Object.keys(m).length, antes = datos.matesVistos || 0; if (n <= antes) return;
+  datos.matesVistos = n; guardar(); toast(`🧉 ${n - antes === 1 ? 'Alguien pasó por tu estancia y te cebó un mate' : (n - antes) + ' estudiantes pasaron por tu estancia y te cebaron un mate'}`);
+}
+async function abrirEstancias(){
+  const L = $('#estLista'); $('#mEstancias').classList.remove('oculto');
+  $('#estSub').textContent = datos.jugador ? 'Mirá cómo armaron su campo los demás y cebales un mate.' : 'Mirá cómo armaron su campo los demás. Poné tu nombre en el menú para que tu estancia también aparezca.';
+  if (!DB_URL){ L.innerHTML = '<p class="vacio">Lo online todavía no está conectado.</p>'; return; }
+  L.innerHTML = '<p class="vacio">Buscando estancias…</p>';
+  await publicarEstancia();
+  const todo = await NET.get('estancias');
+  if (!todo || typeof todo !== 'object'){ L.innerHTML = '<p class="vacio">No se pudieron cargar las estancias. ¿Hay internet?</p>'; return; }
+  const yo = idEstancia(), lim = Date.now() - 60*86400000;
+  const lista = Object.entries(todo).map(([id, v]) => { const d = limpiarEstancia(v && v.datos); return d && d.t > lim ? { id, d, mates:v.mates && typeof v.mates === 'object' ? Object.keys(v.mates).length : 0, valor:valorEstancia(d) } : null; }).filter(Boolean);
+  if (!lista.length){ L.innerHTML = '<p class="vacio">Todavía no hay estancias. ¡Sé el primero!</p>'; return; }
+  lista.sort((a, b) => b.valor - a.valor);
+  const masVisitada = lista.slice().sort((a, b) => b.mates - a.mates)[0];
+  L.innerHTML = '';
+  lista.slice(0, 40).forEach((e, n) => {
+    const d = e.d, an = Object.values(d.animales).reduce((s, x) => s + x, 0), el = document.createElement('div');
+    const tag = n === 0 ? '🏆 La más grande · ' : e === masVisitada && e.mates > 0 ? '🧉 La más visitada · ' : '';
+    el.className = 'est-item' + (n === 0 ? ' top' : '');
+    el.innerHTML = `<div class="tx"><b>${tag}${esc(d.nombre)}${e.id === yo ? ' (la tuya)' : ''}</b><small>${d.jugador ? esc(d.jugador) + ' · ' : ''}${esc(NIVELES_CAMPO[d.nivel].nombre)} · ${an} animales · ${Object.keys(d.edificios).length} obras · 🧉 ${e.mates}</small></div>`;
+    if (e.id !== yo){ const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Visitar'; b.onclick = () => visitarEstancia(e); el.appendChild(b); }
+    L.appendChild(el);
+  });
+}
+function visitarEstancia(e){
+  cerrarModales(); cerrarPop(); campoColocar = null; campoLang = null; campoBurb = [];
+  campoVisita = e; campoAnim = null; $('#campo').classList.add('visitando'); avisoVisita();
+  $('#campoEscena').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function avisoVisita(){
+  const v = campoVisita; if (!v) return;
+  avisoCampo(`Visitando <b>${esc(v.d.nombre)}</b>${v.d.jugador ? ' de ' + esc(v.d.jugador) : ''}`, [
+    { txt:v.cebado ? '🧉 ¡Mate cebado!' : '🧉 Cebarle un mate', off:!!v.cebado, fn:cebarMate },
+    { txt:'Volver a mi campo', sec:true, fn:volverDeVisita }]);
+}
+async function cebarMate(){
+  const v = campoVisita; if (!v || v.cebado) return;
+  const ok = await NET.put(`estancias/${v.id}/mates/${idEstancia()}`, Date.now());
+  if (ok === false){ toast('No se pudo mandar el mate. ¿Hay internet?'); return; }
+  v.cebado = true; if (campoVisita === v) avisoVisita(); toast('¡Le cebaste un mate! 🧉'); sfx('cofre');
+}
+function volverDeVisita(){ campoVisita = null; campoAnim = null; cerrarPop(); $('#campo').classList.remove('visitando'); avisoCampo(null); revisarLangostas(); }
+
+// ---- el campo en las partidas ----
+// el perro ovejero te acompaña: sigue al jugador y cada tanto ladra y empuja a los que están cerca
+function actualizarPerro(dt){
+  const j = G.jug; let p = G.perro;
+  if (!p) p = G.perro = { x:j.x - 30, y:j.y + 10, t:3, dir:1, paso:0, mov:false, ladra:0 };
+  const tx = j.x - j.dir.x*34, ty = j.y - j.dir.y*26 + 10, dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
+  if (d > 600){ p.x = tx; p.y = ty; }
+  else { p.mov = d > 10; if (p.mov){ const v = Math.min(d*4, j.st.vel*1.25); p.x += dx/d*v*dt; p.y += dy/d*v*dt; if (Math.abs(dx) > 2) p.dir = Math.sign(dx); p.paso += dt*10; } }
+  if (!G.dim) chocar(p, 8);
+  p.t -= dt; p.ladra = Math.max(0, p.ladra - dt);
+  if (p.t > 0) return;
+  let n = 0;
+  for (const e of G.enemigos){ if (e.hp <= 0 || e.jefe || e.invisible) continue; const ex = e.x - p.x, ey = e.y - p.y, d2 = ex*ex + ey*ey;
+    if (d2 < 110*110){ const dd = Math.sqrt(d2) || 1; golpear(e, 6*j.st.danio, null, 0, ex/dd, ey/dd, 140, { tipo:'campo', clase:'fis' }); n++; } }
+  if (!n){ p.t = 0.5; return; }
+  p.t = 6; p.ladra = 0.6; G.efectos.push({ tipo:'anillo', x:p.x, y:p.y, r:8, max:110, vida:0.35, t:0.35, color:'245,213,71' });
+  if (Math.random() < 0.5) charla(p.x, p.y - 26, '¡guau!', '#f5d547');
+}
+function dibujarPerroC(){
+  const p = G.perro, fr = p.mov ? Math.floor(p.paso) % 2 : 0, im = imgC('perro', fr); if (!im) return;
+  const x = bx_(p.x), y = by_(p.y) + (p.ladra > 0.3 ? -1 : 0); pElipse(x, by_(p.y), 7, 1, 'rgba(0,0,0,.3)');
+  if (p.dir < 0){ bctx.save(); bctx.translate(x + (im.width>>1), y - im.height + 1); bctx.scale(-1, 1); bctx.drawImage(im, 0, 0); bctx.restore(); }
+  else bctx.drawImage(im, x - (im.width>>1), y - im.height + 1);
+}
+// en el Campo experimental, una vez por vuelta aparece un regalo para tu estancia: un ternero perdido o semilla criolla
+function revisarRegaloCampo(){
+  if (G.coop || G.dim || G.escenario !== 'campo') return;
+  const vuelta = Math.floor(G.t/1260); if (G.regaloVuelta === vuelta || G.t % 1260 < 870) return;
+  G.regaloVuelta = vuelta;
+  const tipo = hashT(vuelta*7 + 3, Math.floor(Date.now()/86400000)) % 2 ? 'ternero' : 'semilla', a = Math.random()*Math.PI*2, r = rnd(420, 620);
+  const it = { x:G.jug.x + Math.cos(a)*r, y:G.jug.y + Math.sin(a)*r, tipo:'regalo', id:tipo }; chocar(it, 12); G.items.push(it);
+  mostrarBanner(tipo === 'ternero' ? '¡Se escapó un ternero! Agarralo y va a tu estancia' : '¡Bolsa de semilla criolla! Tu próximo lote rinde 50% más');
+}
+function recibirRegalo(tipo, x, y){
+  const c = datos.campo; if (!Array.isArray(c.crias)) c.crias = [];
+  if (tipo === 'ternero'){
+    if (totalAnimales() < capacidadPotrero()){ c.animales.ternero = (c.animales.ternero||0) + 1; c.crias.push(Date.now()); texto(x, y - 30, 'Ternero a tu estancia', '#7ed492'); }
+    else { datos.creditos += 40; texto(x, y - 30, 'No entra en el potrero: +40 créditos', '#f5d547'); }
+  } else { c.semillas = (c.semillas||0) + 1; texto(x, y - 30, 'Semilla criolla para tu campo', '#7ed492'); }
+  guardar(); sfx('cofre'); particulas(x, y - 10, '#7ed492', 12);
+}
+function dibujarRegalo(it){
+  const x = bx_(it.x), y = by_(it.y), sal = Math.sin(G.t*5) > 0 ? -1 : 0;
+  pElipse(x, y + 1, 7, 2, 'rgba(0,0,0,.3)');
+  if (it.id === 'ternero'){ const im = imgC('ternero', Math.floor(G.t*3) % 2); if (im) bctx.drawImage(im, x - (im.width>>1), y - im.height + 1 + sal); }
+  else { rect(x-4, y-10+sal, 8, 10, '#c9a46a'); rect(x-4, y-10+sal, 8, 2, '#8a6a3a'); rect(x-3, y-12+sal, 6, 2, '#c9a46a'); rect(x-1, y-6+sal, 2, 3, '#3e8a3e'); rect(x-2, y-5+sal, 4, 1, '#3e8a3e'); }
+  if (Math.floor(G.t*4) % 3 === 0) rect(x + 6, y - 14, 1, 1, '#ffffff');
+}
+
 function volverMenu(){
   if (G && G.coop && !G.fin) mpAlTerminar(false);
   mostrarEspera([]);
@@ -5904,6 +6400,11 @@ $('#btnCantina').onclick = () => { $('#cantinaRes').innerHTML = ''; renderCantin
 $('#btnCampo').onclick = abrirCampo;
 $('#btnCampoVolver').onclick = cerrarCampo;
 $('#btnJuntar').onclick = () => juntarCampo(false);
+{ const aCampo = ev => { const r = cvC.getBoundingClientRect(); return [(ev.clientX - r.left)*CAMPO_W/r.width, (ev.clientY - r.top)*CAMPO_H/r.height]; };
+  cvC.addEventListener('click', ev => { tocarCampo(...aCampo(ev)); });
+  cvC.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse') cvC.classList.toggle('tocable', !!queHay(...aCampo(ev))); }); }
+$('#btnVisitar').onclick = abrirEstancias;
+$('#btnEstCerrar').onclick = () => $('#mEstancias').classList.add('oculto');
 $('#campoNombre').addEventListener('change', e => { datos.campo.nombre = (e.target.value || 'LA ESTANCIA').toUpperCase().slice(0,22); guardar(); });
 document.querySelectorAll('#campoTabs button').forEach(b => b.onclick = () => { campoTab = b.dataset.t; renderCampo(); });
 $('#btnLogros').onclick = () => { renderLogros(); $('#mLogros').classList.remove('oculto'); };
