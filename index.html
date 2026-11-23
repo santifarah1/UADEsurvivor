@@ -5261,15 +5261,16 @@ function resumenEstancia(){
 }
 function limpiarEstancia(d){
   if (!d || typeof d !== 'object') return null;
+  const lista = v => Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : [];   // Firebase devuelve algunas listas como objetos
   const n = (v, a, b) => Number.isFinite(+v) ? Math.max(a, Math.min(b, Math.floor(+v))) : a, str = (v, m) => typeof v === 'string' ? v.slice(0, m) : '';
   const o = { nombre:str(d.nombre, 22) || 'Estancia', jugador:str(d.jugador, 14), nivel:n(d.nivel, 0, 3), animales:{}, edificios:{}, pos:{}, deco:{}, lotes:[],
     pj:PERSONAJES.some(p => p.id === d.pj) ? d.pj : 'ruso', t:n(d.t, 0, 9e15), crias:[], enc:null, previos:[], silo:{} };
   let tot = 0; for (const k in CAMPO_ANIMALES) if (d.animales && d.animales[k]){ const m = Math.min(n(d.animales[k], 0, 34), 34 - tot); if (m > 0){ o.animales[k] = m; tot += m; } }
-  if (Array.isArray(d.edificios)) for (const k of d.edificios) if (CAMPO_EDIFICIOS[k]) o.edificios[k] = true;
+  for (const k of lista(d.edificios)) if (CAMPO_EDIFICIOS[k]) o.edificios[k] = true;
   if (d.pos && typeof d.pos === 'object') for (const k in MOVIBLES) if (d.pos[k] != null) o.pos[k] = n(d.pos[k], 0, SITIOS.length - 1);
-  if (Array.isArray(d.deco)) for (const k of d.deco) if (CAMPO_DECO[k]) o.deco[k] = true;
+  for (const k of lista(d.deco)) if (CAMPO_DECO[k]) o.deco[k] = true;
   const nl = NIVELES_CAMPO[o.nivel].lotes;
-  for (let i=0; i<nl; i++){ const l = Array.isArray(d.lotes) ? d.lotes[i] : null; o.lotes.push(l && CAMPO_CULTIVOS[l.c] ? { c:l.c, av:Math.max(0, Math.min(1, +l.av || 0)) } : null); }
+  for (let i=0; i<nl; i++){ const l = d.lotes && typeof d.lotes === 'object' ? d.lotes[i] : null; o.lotes.push(l && CAMPO_CULTIVOS[l.c] ? { c:l.c, av:Math.max(0, Math.min(1, +l.av || 0)) } : null); }
   normPos(o); return o;
 }
 function valorEstancia(d){
