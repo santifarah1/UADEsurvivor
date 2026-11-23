@@ -828,6 +828,8 @@ const JEFES = [
 ];
 const ARENA_R = 380;
 // en la fase 2 cada legendario llama a los suyos: [tipo de enemigo, cuántos]
+// el proyectil propio de cada uno (para el anillo de la fase 2)
+const PROY_JEFE = { sebas:'hoja', laura:'fardo', gustavo:'consulta', claudio:'sello', herrera:'apunte', moltoni:'granos', noela:'granos', mariano:'sello' };
 const REFUERZOS = { sebas:['vaca',4], laura:['vaca',4], gustavo:['parcial',6], claudio:['formulario',8], herrera:['delegado',3], moltoni:['dron',4], noela:['toro',3], mariano:['final',3] };
 // el borde de cada arena: color del cerco y de los postes
 const BORDE_ARENA = { angola:['#c99b52','#6b4423'], corral:['#9a6a3a','#5a3a1e'], aula:['#8a3a2a','#4a1e16'], oficina:['#6a7a9a','#2a3348'],
@@ -3450,7 +3452,7 @@ function actualizarJefe(e, dt, dx, dy, d){
     e.fase2 = true; e.vel = def.vel*1.18; e.flash = 0.3; G.sacudon = 0.35; sfx('jefe');
     G.efectos.push({ tipo:'anillo', x:e.x, y:e.y, r:10, max:180, t:0.5, vida:0.5, color:'232,96,76' });
     hablar(e, elegir(['¡Ahora sí me enojé!','Se terminó la clase tranquila','Esto va a la libreta','¡No me hagan perder la paciencia!']), 2.4);
-    mostrarBanner(def.nombre.split(',')[0] + ' se enojó: ¡fase 2!'); anilloAvisado(e, 16, 170, 11, 'sello', 0.6);
+    mostrarBanner(def.nombre.split(',')[0] + ' se enojó: ¡fase 2!'); anilloAvisado(e, 16, 170, 11, PROY_JEFE[def.id] || 'sello', 0.6);
     const rf = REFUERZOS[def.id]; if (rf && G.dim){ const a0 = Math.random()*Math.PI*2;
       for (let k=0; k<rf[1]; k++){ const a = a0 + k*Math.PI*2/rf[1]; crearMinion(rf[0], Math.cos(a)*(ARENA_R-50), Math.sin(a)*(ARENA_R-50)); }
       G.efectos.push({ tipo:'anillo', x:0, y:0, r:ARENA_R-60, max:ARENA_R-20, t:0.6, vida:0.6, color:'232,96,76' }); }
@@ -3535,17 +3537,27 @@ function actualizarJefe(e, dt, dx, dy, d){
     case 'laura':
       if (d<230) avanzar = -1; else if (d<330) avanzar = 0;
       if (e.t1<=0){ e.t1 = 2.1; abanicoAvisado(e, ang, 3, 0.28, 235, 13, 'fardo'); }
-      if (e.t2<=0){ e.t2 = 7; anilloAvisado(e, 10, 150, 12, 'fardo', 0.6); hablar(e,'¡Ración para todos!',1.5); }
+      if (e.t2<=0){ e.t2 = 6; e.atk = 0.8; hablar(e,'¡Ración para todos!',1.5);
+        for (let k=0;k<6;k++){ const a = Math.random()*Math.PI*2, rr = k ? rnd(45,150) : 0; G.bombas.push({ x:j.x+Math.cos(a)*rr, y:j.y+Math.sin(a)*rr, t:1.1, max:1.1, de:def.id, spr:'jf_balde' }); } }
+      if (e.t3<=0){ e.t3 = 9; anilloAvisado(e, 10, 150, 12, 'fardo', 0.6); hablar(e, elegir(['Calculen la materia seca','¿Y la fibra efectiva?']), 1.6); }
       break;
     case 'gustavo':
       if (e.t1<=0){ e.t1 = 3; anilloAvisado(e, 14, 165, 10, 'consulta'); }
       if (e.t2<=0){ e.t2 = 6; avisoAbanico(e, ang, 1, 0, PRE, 300); tras(e, PRE, () => { e.rafaga = 5; e.rafT = 0; }); }
       if (e.rafaga>0){ e.rafT -= dt; if (e.rafT<=0){ e.rafT = 0.14; e.rafaga--; disparoE(e.x,e.y,ang,260,11,'consulta',def.id); } }
+      // "pasen a consulta": un rato te arrastra hacia él mientras tira consultas en espiral
+      if (e.t3<=0){ e.t3 = 10; e.atk = 1; avisoAnillo(e, 0.7, 300); hablar(e,'¡Pasen a consulta!',2); tras(e, 0.7, () => { e.tira = 2; e.giro = Math.random()*6; }); }
+      if (e.tira>0){ e.tira -= dt; avanzar = 0; if (d < 520 && d > 40){ j.x -= mx*115*dt; j.y -= my*115*dt; }
+        e.rafT2 = (e.rafT2||0) - dt; if (e.rafT2<=0){ e.rafT2 = 0.25; e.giro += 0.7; for (let k=0;k<3;k++) disparoE(e.x, e.y, e.giro + k*Math.PI*2/3, 150, 9, 'consulta', def.id); } }
       break;
     case 'claudio':
       if (e.t1<=0){ e.t1 = 4.5; const cx = j.x, cy = j.y; for (let k=0;k<6;k++){ const a = k*Math.PI*2/6; G.avisos.push({ tipo:'circulo', x:cx+Math.cos(a)*240, y:cy+Math.sin(a)*240, r:26, t:0.6, max:0.6 }); }
         tras(e, 0.6, () => { for (let k=0;k<6;k++){ const a = k*Math.PI*2/6; crearMinion('formulario', cx+Math.cos(a)*240, cy+Math.sin(a)*240); } }); hablar(e,'Falta un formulario',1.6); }
       if (e.t2<=0){ e.t2 = 2.5; abanicoAvisado(e, ang, 5, 0.18, 205, 12, 'sello'); }
+      // "lo vemos la semana que viene": si te agarra el círculo, quedás en trámite (casi sin poder moverte)
+      if (e.t3<=0){ e.t3 = 8; const cx = j.x, cy = j.y; G.avisos.push({ tipo:'circulo', x:cx, y:cy, r:70, t:0.85, max:0.85 }); hablar(e,'Lo vemos la semana que viene',1.8);
+        tras(e, 0.85, () => { if (Math.hypot(G.jug.x - cx, G.jug.y - cy) < 70 + G.jug.r){ G.jug.tramite = 1.6; texto(G.jug.x, G.jug.y - 44, '¡EN TRÁMITE!', '#9fd0f0'); sfx('golpe'); }
+          G.efectos.push({ tipo:'anillo', x:cx, y:cy, r:10, max:70, vida:0.4, t:0.4, color:'111,183,232' }); }); }
       break;
     case 'mariano':
       e.visT -= dt;
@@ -3820,7 +3832,8 @@ function actualizar(dt){
   let l = Math.hypot(ix,iy); if (l>1){ ix/=l; iy/=l; l = 1; }
   j.mov = l>0.05;
   if (j.mov){ j.dir = {x:ix/l, y:iy/l}; if (Math.abs(ix)>0.1) j.mira = Math.sign(ix); j.paso += dt*11; }
-  const vel = j.st.vel * (G.buff>0 ? 1.3 : 1) * (!G.dim && G.clima==='lluvia' ? 0.95 : !G.dim && G.clima==='calor' ? 0.88 : 1) * terrenoJug(j.x, j.y);
+  if (j.tramite > 0) j.tramite -= dt;
+  const vel = j.st.vel * (j.tramite > 0 ? 0.3 : 1) * (G.buff>0 ? 1.3 : 1) * (!G.dim && G.clima==='lluvia' ? 0.95 : !G.dim && G.clima==='calor' ? 0.88 : 1) * terrenoJug(j.x, j.y);
   const px0 = j.x, py0 = j.y;
   j.x += ix*vel*dt; j.y += iy*vel*dt;
   if (G.dim) limitarArena(j, j.r);
@@ -4196,7 +4209,7 @@ function dibujar(){
   for (const n of (G.nubes||[])){ const im = imgMapa('jf_humo'); if (!im) continue; const p = n.vida/(n.max||3.4);
     b.globalAlpha = Math.min(0.55, p*0.9); const w = Math.round(im.width*0.8); b.drawImage(im, bx_(n.x)-(w>>1), by_(n.y)-(w>>1)*0.7, w, Math.round(im.height*0.8)); b.globalAlpha = 1; }
   for (const k of (G.bombas||[])){
-    const p = 1 - k.t/k.max, sm = imgMapa('jf_sombra'), pq = imgMapa('jf_paquete');
+    const p = 1 - k.t/k.max, sm = imgMapa('jf_sombra'), pq = imgMapa(k.spr || 'jf_paquete') || imgMapa('jf_paquete');
     if (sm){ const w = Math.round(sm.width*(0.5+p*0.5)); b.globalAlpha = 0.5 + p*0.4; b.drawImage(sm, bx_(k.x)-(w>>1), by_(k.y)-(w>>2), w, w>>1); b.globalAlpha = 1; }
     if (pq) b.drawImage(pq, bx_(k.x)-(pq.width>>1), by_(k.y) - pq.height - Math.round((1-p)*70));
   }
