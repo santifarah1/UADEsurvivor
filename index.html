@@ -130,7 +130,9 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .btn.multi{background:var(--violeta);color:#1e1430;box-shadow:0 4px 0 #6a4b94,4px 6px 0 rgba(0,0,0,.4);font-size:16px;padding:10px}
 .menu-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:7px 2px;font-size:12px;font-weight:700;box-shadow:3px 3px 0 rgba(0,0,0,.4);transition:transform .1s,border-color .1s}
-.tile:hover{transform:translateY(-2px);border-color:var(--amarillo)}.tile:active{transform:translateY(2px)}
+.tile:hover{transform:translateY(-2px);border-color:var(--amarillo)}
+.tile{position:relative}.tile .aviso{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e8604c;color:#fff;font-style:normal;font-size:13px;line-height:20px;text-align:center;box-shadow:2px 2px 0 rgba(0,0,0,.5);border:2px solid #15151c;animation:latir 1.6s ease-in-out infinite;pointer-events:none}
+@keyframes latir{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}.tile:active{transform:translateY(2px)}
 .tile i{font-style:normal;font-size:20px;line-height:24px}.tile .pxic{width:24px;height:24px}
 #btnCampo{border-color:rgba(126,212,146,.6)}
 .menu-mini{display:grid;grid-template-columns:1fr auto auto auto;gap:6px}
@@ -6134,6 +6136,30 @@ function proximoDesbloqueo(id){
   return `<div class="lin prox" style="font-size:11px;color:var(--tiza-2)">${esc(partes.join(' · '))}</div>`;
 }
 function caraPJ(id){ const h = hojaPJ(id); return h ? aplicarSkin(h.abajo[0], datos.skinSel[id]) : spritePersona('pj-'+id, PERSONAJES.find(p=>p.id===id).look, false).a; }
+// globitos en los botones del menú: dicen que hay algo para hacer ahí
+function avisosMenu(){
+  const pon = (id, txt, titulo) => { const b = document.getElementById(id); if (!b) return; let i = b.querySelector('.aviso');
+    if (!txt){ if (i) i.remove(); b.removeAttribute('title'); return; }
+    if (!i){ i = document.createElement('i'); i.className = 'aviso'; b.appendChild(i); } i.textContent = txt; b.title = titulo; };
+  // la Nona: te alcanza para alguna mejora
+  const nona = KIOSCO.some(k => { const l = datos.mejoras[k.id]||0; return l < k.max && datos.creditos >= k.costo(l); });
+  pon('btnKiosco', nona ? '!' : '', 'Te alcanza para una mejora');
+  // cantina: tickets para tirar
+  const tk = datos.tickets || 0; pon('btnCantina', tk > 0 ? String(Math.min(tk, 99)) : '', `Tenés ${tk} ticket${tk===1?'':'s'}`);
+  // logros nuevos que todavía no miraste
+  const lg = LOGROS.filter(l => datos.logros[l.id]).length; if (typeof datos.logrosVistos !== 'number') datos.logrosVistos = lg;
+  pon('btnLogros', lg > datos.logrosVistos ? String(lg - datos.logrosVistos) : '', 'Logros nuevos');
+  // el campo: cosecha lista, langostas, encargo para cobrar o producción para juntar
+  let campo = '';
+  try { const c = datos.campo, w = Math.floor(Date.now()/LANG_V), sembrado = (c.lotes||[]).some(l => l);
+    if ((c.lotes||[]).some(l => l && avanceLote(l) >= 1)) campo = 'Hay una cosecha lista';
+    else if (sembrado && c.langUlt !== w && !(hashT(w*13 + 5, 77) % 3)) campo = '¡Langostas en un lote!';
+    else if (c.enc && c.enc.hecho && !c.enc.cobrado && c.enc.dia === Math.floor(Date.now()/86400000)) campo = 'Encargo listo para cobrar';
+    else if (acumulado().creditos >= 30) campo = 'Hay producción para juntar';
+  } catch(_){}
+  pon('btnCampo', campo ? '!' : '', campo);
+}
+setInterval(() => { if (!$('#menu').classList.contains('oculto')) avisosMenu(); }, 30000);
 function renderMenu(){
   $('#menuCreditos').textContent = datos.creditos; $('#menuTickets').textContent = datos.tickets || 0; renderNombreMenu();
   renderEscenarios();
@@ -6159,6 +6185,7 @@ function renderMenu(){
     <div class="lin rec">${esc(rec)}</div>${proximoDesbloqueo(p.id)}`;
   $('#descPj').innerHTML = esc(p.desc) + ' <span style="color:var(--violeta)">' + esc(hb.nombre) + ':</span> ' + esc(hb.desc);
   menuAn.pj = p.id;
+  avisosMenu();
   const bd = $('#btnDificil'); bd.classList.toggle('oculto', !dificilDesbloqueado()); bd.textContent = datos.dificil ? '🔥 Modo difícil: SÍ (+50% créditos)' : 'Modo difícil: no';
   bd.style.borderColor = datos.dificil ? '#e8604c' : ''; bd.style.color = datos.dificil ? '#ff9a7a' : '';
 }
@@ -6408,7 +6435,7 @@ $('#btnVisitar').onclick = abrirEstancias;
 $('#btnEstCerrar').onclick = () => $('#mEstancias').classList.add('oculto');
 $('#campoNombre').addEventListener('change', e => { datos.campo.nombre = (e.target.value || 'LA ESTANCIA').toUpperCase().slice(0,22); guardar(); });
 document.querySelectorAll('#campoTabs button').forEach(b => b.onclick = () => { campoTab = b.dataset.t; renderCampo(); });
-$('#btnLogros').onclick = () => { renderLogros(); $('#mLogros').classList.remove('oculto'); };
+$('#btnLogros').onclick = () => { renderLogros(); $('#mLogros').classList.remove('oculto'); datos.logrosVistos = LOGROS.filter(l => datos.logros[l.id]).length; guardar(); avisosMenu(); };
 $('#btnTirar1').onclick = () => tirar(1);
 $('#btnTirar10').onclick = () => tirar(10);
 $('#btnMulti').onclick = abrirMulti;
