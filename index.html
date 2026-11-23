@@ -50,8 +50,8 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .opc input[type=range]{width:100%;accent-color:var(--amarillo);height:28px}
 .opc .btn{margin:0;font-size:14px;padding:9px;text-align:left}
 .logo-img{display:block;width:clamp(220px,34vw,440px);height:auto;margin:0 auto;image-rendering:auto;filter:drop-shadow(0 10px 14px rgba(0,0,0,.55));animation:logoFlota 3.2s ease-in-out infinite}
-.logo-img.tit{width:min(78vw,520px);margin-bottom:4px}
-@media (max-height:460px) and (orientation:landscape){.logo-img{width:200px}.logo-img.tit{width:min(54vw,330px)}}
+.logo-img.tit{width:min(78vw,520px,calc(34vh * 1.89));margin-bottom:4px}
+@media (max-height:460px) and (orientation:landscape){.logo-img{width:200px}.logo-img.tit{width:min(54vw,330px,calc(30vh * 1.89))}}
 #consejo{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:26;pointer-events:none;max-width:min(560px,86vw);background:rgba(10,18,13,.9);border:3px solid var(--amarillo);box-shadow:4px 4px 0 rgba(0,0,0,.5);padding:8px 14px;font-size:14px;font-weight:700;text-align:center}
 #consejo.ve{animation:consejoVe 5.2s ease both}@keyframes consejoVe{0%{opacity:0;transform:translate(-50%,12px)}8%,88%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 #cartelMapa{position:fixed;left:0;right:0;top:44%;z-index:29;pointer-events:none;text-align:center;display:flex;flex-direction:column;align-items:center}
@@ -187,7 +187,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .titulo-pant .grande span{color:var(--amarillo)}
 .titulo-pant .lema{color:var(--tiza-2);font-size:clamp(12px,2.6vw,16px)}
 @keyframes flotar{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-#tituloDesfile{width:min(92vw,720px);height:auto;image-rendering:pixelated;margin:6px 0;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)}
+#tituloDesfile{width:min(92vw,720px,calc(26vh * 3.25));height:auto;image-rendering:pixelated;margin:6px 0;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)}
 .carga{width:min(80vw,420px)}
 .carga .barra{height:16px;border:3px solid #000;background:#0c1810;box-shadow:var(--sombra)}
 .carga .barra i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--amarillo) 0 10px,#e0b830 10px 20px)}
@@ -195,6 +195,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .toca{font-size:clamp(15px,3.4vw,22px);color:var(--amarillo);animation:titilar 1s steps(2) infinite}
 @keyframes titilar{50%{opacity:0}}
 .titulo-pant .pie{position:absolute;bottom:10px;font-size:11px;color:#5d7a66}
+@media (max-height:460px){.titulo-pant{gap:5px;padding:6px 20px 22px}.titulo-pant .pie{bottom:4px}.carga small{margin-top:4px}}
 .tabla-stats{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 .tabla-stats th{font-size:11px;color:var(--tiza-2);font-weight:400;text-align:right;padding:3px 6px}
 .tabla-stats th:first-child,.tabla-stats td:first-child{text-align:left}
@@ -581,7 +582,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 <div class="modal oculto" id="mAyuda"><div class="caja ayuda"><h2>Cómo se juega</h2>
   <p>Te movés arrastrando el dedo (o con WASD / flechas). Tu personaje ataca y apunta solo: vos esquivás. Si ves un imán en el piso, agarralo: por 4 segundos te trae todo el conocimiento del mapa. Hay lagunitas desparramadas por el mapa: si te quedás quieto adentro te curan (después se secan un rato). Las zonas rojas en el piso avisan dónde va a pegar algo: salí de ahí.</p>
   <h3>El mapa</h3>
-  <p>Cada 7 minutos se abre una <b>puerta</b> (seguí la flecha blanca) que te lleva al aula y después al campo; si no entrás, a los 75 segundos te lleva igual. En el campo hay <b>arroyos</b>: el agua te frena a vos y más a los enemigos (los que vuelan pasan igual), así que cruzar sirve para sacarte la horda de encima; los <b>puentes</b> están sobre los caminos y en el medio entre camino y camino. Los <b>caminos</b> te hacen ir más rápido, el <b>barro</b> de la orilla frena a todos y los <b>alambrados</b> tienen tranqueras abiertas. En la facu, el <b>piso mojado</b> (el del cartelito amarillo) también frena, y los pasillos con línea amarilla están siempre libres. La flecha verde agua te lleva al <b>lugar especial</b> más cercano (buffet, biblioteca u ombú), que tiene un cofre.</p>
+  <p>Cada 7 minutos se abre una <b>puerta</b> (seguí la flecha blanca) que te lleva al aula y después al campo; si no entrás, a los 75 segundos te lleva igual. En el campo hay <b>arroyos</b>: el agua te frena a vos y más a los enemigos (los que vuelan pasan igual), así que cruzar sirve para sacarte la horda de encima; los <b>puentes</b> están sobre los caminos y en el medio entre camino y camino. Los <b>caminos</b> te hacen ir más rápido, el <b>barro</b> de la orilla frena a todos y los <b>alambrados</b> tienen tranqueras abiertas. En la facu, el <b>piso mojado</b> (el del cartelito amarillo) también frena, y los pasillos principales (la franja de piso más oscura) están siempre libres. La flecha verde agua te lleva al <b>lugar especial</b> más cercano (buffet, biblioteca u ombú), que tiene un cofre.</p>
   <h3>Teclado (compu)</h3>
   <p><b>WASD / flechas</b> moverte · <b>Espacio o F</b> habilidad · <b>1-4</b> elegir ataque · <b>Q / E</b> o <b>ruedita</b> rotar ataques · <b>5-6 o Z / X</b> consumibles · <b>P o Esc</b> pausa · <b>G</b> pantalla completa. También se juega con joystick.</p>
   <h3>Ataques (slots)</h3>
@@ -2343,45 +2344,45 @@ function ruidoA(dest, t, dur, vol, corte){
 /* ---------- temas: cada compás son 16 semicorcheas; '.' alarga la nota anterior, '-' es silencio ---------- */
 const bajo = (raices, patron) => raices.map(r => patron.replace(/R/g, r)).join(' ');
 const TEMAS = {
-  mapa: { bpm:138, lead:'square', vLead:0.06,
+  mapa: { bpm:138, inst:'square', vLead:0.06,
     lead:[ 'A4 . C5 . E5 . A5 . G5 . E5 . C5 . D5 .', 'E5 . . . D5 . C5 . B4 . . . G4 . . .',
            'A4 . C5 . E5 . A5 . B5 . A5 . G5 . E5 .', 'F5 . E5 . D5 . C5 . B4 . . . A4 . . .',
            'C5 . E5 . G5 . C6 . B5 . G5 . E5 . G5 .', 'A5 . . . G5 . F5 . E5 . . . C5 . . .',
            'D5 . F5 . A5 . D6 . C6 . A5 . F5 . A5 .', 'G5 . . . E5 . . . E5 . F5 . G#5 . B5 .' ].join(' '),
     bajo: bajo(['A','E','A','F','C','F','D','E'], 'R2 . R3 - R2 . R3 - R2 . R3 - R2 . R3 -'),
     bat: 'k-h-s-h-k-k-s-h-'.repeat(7) + 'k-h-s-h-k-s-s-ss' },
-  arena: { bpm:164, lead:'square', vLead:0.06,
+  arena: { bpm:164, inst:'square', vLead:0.06,
     lead:[ 'E5 . E5 . G5 . E5 . A5 . G5 . F#5 . D5 .', 'E5 . . . B4 . . . E5 . F#5 . G5 . A5 .',
            'B5 . A5 . G5 . F#5 . G5 . F#5 . E5 . D5 .', 'E5 . . . . . . . B4 . D5 . F#5 . A5 .' ].join(' '),
     bajo: bajo(['E','E','C','B'], 'R2 R2 R3 R2 R2 R2 R3 R2 R2 R2 R3 R2 R2 R3 R2 R3'),
     bat: 'k-hsk-hsk-hsk-ss'.repeat(3) + 'k-hsk-hsksksssss' },
-  angola: { bpm:150, lead:'triangle', vLead:0.16,
+  angola: { bpm:150, inst:'triangle', vLead:0.16,
     lead:[ 'E5 . G5 . A5 . . . G5 . E5 . D5 . E5 .', 'G5 . . . E5 . D5 . C5 . D5 . E5 . . .',
            'A5 . G5 . E5 . G5 . A5 . . . B5 . A5 .', 'G5 . E5 . D5 . C5 . D5 . . . E5 . . .' ].join(' '),
     bajo: bajo(['E','C','A','B'], 'R2 . - R2 R3 . R2 - R2 . - R2 R3 . R2 -'),
     bat: 'k.t.s.tt.kt.s.t.'.repeat(3) + 'k.t.s.tttttts.ss' },
-  aula: { bpm:122, lead:'square', vLead:0.05,
+  aula: { bpm:122, inst:'square', vLead:0.05,
     lead:[ 'D5 . . F5 . . A5 . G5 . F5 . E5 . . .', 'C5 . . E5 . . G5 . F5 . E5 . D5 . . .',
            'D5 . F5 . A5 . D6 . C6 . A5 . G5 . F5 .', 'E5 . . . C#5 . . . E5 . . . A4 . . .',
            'A#4 . . D5 . . F5 . E5 . D5 . C5 . . .', 'A4 . . C5 . . E5 . D5 . C5 . A#4 . . .',
            'G4 . A#4 . D5 . G5 . F5 . D5 . A#4 . G4 .', 'A4 . . . C#5 . . . E5 . G5 . A5 . . .' ].join(' '),
     bajo: bajo(['D','C','D','A','A#','A','G','A'], 'R2 . . R3 . . R2 . R2 . . R3 . . R2 .'),
     bat: 'k---h-s-k-h-s-h-'.repeat(7) + 'k---h-s-k-s-sss-' },
-  campo: { bpm:132, lead:'triangle', vLead:0.15,
+  campo: { bpm:132, inst:'triangle', vLead:0.15,
     lead:[ 'G5 . . E5 . C5 . . D5 . E5 . . . . .', 'F5 . . D5 . B4 . . C5 . D5 . . . . .',
            'E5 . . G5 . C6 . . B5 . A5 . G5 . . .', 'A5 . . F5 . D5 . . E5 . F5 . G5 . . .',
            'G5 . . E5 . C5 . . D5 . E5 . . . . .', 'F5 . . A5 . D6 . . C6 . B5 . A5 . . .',
            'G5 . E5 . C5 . E5 . D5 . . . G4 . . .', 'C5 . . . . . . . - . - . - . - .' ].join(' '),
     bajo: bajo(['C','G','C','F','C','F','G','C'], 'R2 . . R3 . . R2 . R2 . . R3 . . R3 .'),
     bat: 'k..t..s.k..t.ts.'.repeat(7) + 'k..t..s.k.tts.ss' },
-  dios: { bpm:116, lead:'sawtooth', vLead:0.045,
+  dios: { bpm:116, inst:'sawtooth', vLead:0.045,
     lead:[ 'A4 . . . E5 . . . A5 . . . G5 . E5 .', 'F5 . . . . . . . E5 . . . D5 . . .',
            'C5 . . . F5 . . . A5 . . . C6 . A5 .', 'B5 . . . . . . . G#5 . . . E5 . . .',
            'A5 . . . C6 . . . E6 . . . D6 . C6 .', 'D6 . . . . . . . C6 . . . B5 . . .',
            'A5 . G5 . F5 . E5 . F5 . . . D5 . . .', 'E5 . . . . . . . G#5 . . . B5 . . .' ].join(' '),
     bajo: bajo(['A','F','F','E','A','D','D','E'], 'R1 . . . R2 . . . R1 . . . R2 . R2 .'),
     bat: 'k-------s-----k-'.repeat(3) + 'k---k-s-k-k-s-ss' + 'k-h-s-h-k-h-s-hk'.repeat(3) + 'k-ssk-ssk-sssss-' },
-  mariano: { bpm:104, lead:'triangle', vLead:0.18,
+  mariano: { bpm:104, inst:'triangle', vLead:0.18,
     lead:[ 'E5 . . . F5 . . . E5 . . . D#5 . . .', 'E5 . . . G5 . . . F#5 . . . F5 . . .',
            'C6 . . . B5 . . . A#5 . . . A5 . . .', 'G#5 . . . . . . . - - - - - - - -' ].join(' '),
     bajo: bajo(['E','E','C','B'], 'R2 . . . . . . . R2 . . . . . . .'),
@@ -2399,7 +2400,7 @@ function compilarTema(T){
     }
   }
   for (let i=0;i<largo;i++) if (T.bat[i]!=='-' && T.bat[i]!=='.') ev[i].push({ canal:'bat', g:T.bat[i] });
-  return { spb, largo, ev, tipoLead:T.lead, vLead:T.vLead };
+  return { spb, largo, ev, tipoLead:T.inst || 'square', vLead:T.vLead };   // inst: el instrumento de la melodía (antes se pisaba con las notas)
 }
 const TEMAS_C = {}; for (const k in TEMAS) TEMAS_C[k] = compilarTema(TEMAS[k]);
 function tocarTema(id){
