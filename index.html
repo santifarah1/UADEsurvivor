@@ -51,7 +51,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .opc .btn{margin:0;font-size:14px;padding:9px;text-align:left}
 .logo-img{display:block;width:clamp(220px,34vw,440px);height:auto;margin:0 auto;image-rendering:auto;filter:drop-shadow(0 10px 14px rgba(0,0,0,.55));animation:logoFlota 3.2s ease-in-out infinite}
 .logo-img.tit{width:min(78vw,520px,calc(34vh * 1.89));margin-bottom:4px}
-@media (max-height:460px) and (orientation:landscape){.logo-img{width:200px}.logo-img.tit{width:min(54vw,330px,calc(30vh * 1.89))}}
+@media (max-height:460px) and (orientation:landscape){.logo-img{width:200px}.logo-img.tit{width:min(54vw,330px,calc(27vh * 1.89))}}
 #consejo{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:26;pointer-events:none;max-width:min(560px,86vw);background:rgba(10,18,13,.9);border:3px solid var(--amarillo);box-shadow:4px 4px 0 rgba(0,0,0,.5);padding:8px 14px;font-size:14px;font-weight:700;text-align:center}
 #consejo.ve{animation:consejoVe 5.2s ease both}@keyframes consejoVe{0%{opacity:0;transform:translate(-50%,12px)}8%,88%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 #cartelMapa{position:fixed;left:0;right:0;top:44%;z-index:29;pointer-events:none;text-align:center;display:flex;flex-direction:column;align-items:center}
@@ -197,7 +197,8 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .toca{font-size:clamp(15px,3.4vw,22px);color:var(--amarillo);animation:titilar 1s steps(2) infinite}
 @keyframes titilar{50%{opacity:0}}
 .titulo-pant .pie{position:absolute;bottom:10px;font-size:11px;color:#5d7a66}
-@media (max-height:460px){.titulo-pant{gap:5px;padding:6px 20px 22px}.titulo-pant .pie{bottom:4px}.carga small{margin-top:4px}}
+.tit-consejo{max-width:min(90vw,560px);min-height:1.4em;font-size:13px;color:#9fc4a8;transition:opacity .4s}.tit-consejo.fuera{opacity:0}
+@media (max-height:460px){.titulo-pant{gap:4px;padding:4px 20px 28px}.titulo-pant .pie{bottom:3px;font-size:10px}.carga small{margin-top:4px}.tit-consejo{font-size:11px}#tituloDesfile{width:min(92vw,720px,calc(23vh * 3.25))}}
 .tabla-stats{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 .tabla-stats th{font-size:11px;color:var(--tiza-2);font-weight:400;text-align:right;padding:3px 6px}
 .tabla-stats th:first-child,.tabla-stats td:first-child{text-align:left}
@@ -429,6 +430,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
   <canvas id="tituloDesfile" width="260" height="80"></canvas>
   <div class="carga" id="carga"><div class="barra"><i id="cargaBarra"></i></div><small id="cargaTxt">Cargando…</small></div>
   <div class="toca oculto" id="toca">Tocá cualquier tecla para empezar</div>
+  <div class="tit-consejo" id="titConsejo"></div>
   <div class="pie">Hecho por el Ruso · UADE · Producción y Gestión Agropecuaria</div>
 </div>
 <canvas id="cv"></canvas>
@@ -5469,6 +5471,16 @@ function leerPad(){
   pad.prev = gp.buttons.map(x => x.pressed);
 }
 /* ---------- pantalla de título (la carga es de mentira, como en los juegos de verdad) ---------- */
+// consejos de verdad, para la pantalla de carga y la de título
+const CONSEJOS = ['Moverte es lo único que hacés: los ataques salen solos.', 'Si te quedás quieto adentro de una laguna, te curás.',
+  'En el campo, los arroyos frenan a los enemigos: cruzalos para sacarte la horda de encima.', 'Los caminos de tierra te hacen ir más rápido.',
+  'Agarrá el imán del piso: por 4 segundos te trae todo el conocimiento del mapa.', 'Cada 7 minutos se abre una puerta a otro mapa: seguí la flecha.',
+  'En el vínculo fusionás dos ataques en un slot y te queda un lugar libre.', 'Las zonas rojas en el piso avisan dónde va a pegar algo: salí de ahí.',
+  'El perro ovejero de tu estancia te acompaña en las partidas.', 'En el Campo experimental a veces se escapa un ternero: llevalo a tu estancia.',
+  'Rotá los cultivos: maíz o trigo después de soja o alfalfa rinde 25% más.', 'Los créditos de las partidas se gastan con la Nona y en tu campo.',
+  'Tocá cualquier cosa del dibujo de tu estancia: los animales tienen nombre.', 'Una vez por semana podés llevar un animal a la Expo Rural.'];
+let consejoN = Math.floor(Math.random()*14), consejoT = 0;
+function rotarConsejo(){ const el = $('#titConsejo'); el.classList.add('fuera'); setTimeout(() => { el.textContent = '💡 ' + CONSEJOS[consejoN++ % CONSEJOS.length]; el.classList.remove('fuera'); }, 400); }
 const FRASES_CARGA = ['Cebando el primer mate…','Buscando los apuntes de Pili…','Despertando al Conejo…','Calentando la pava…',
   'Imprimiendo los TPs…','Esperando que aparezca Mariano…','Contando hectáreas en Angola…','Buscando la credencial para pasar por seguridad…','Peinando al Feo… (no hubo caso)'];
 const tit = { listo:false, cerrado:false, t:0, prog:0, frase:0, fraseT:0 };
@@ -5490,6 +5502,7 @@ function tituloAbierto(){ return !tit.cerrado; }
 function animarTitulo(dt){
   if (tit.cerrado) return;
   tit.t += dt;
+  if ((consejoT -= dt) <= 0){ consejoT = 5; rotarConsejo(); }
   if (!tit.listo){
     // avanza a los saltos, como las barras de carga de verdad
     const vel = tit.prog < 0.35 ? 0.55 : tit.prog < 0.7 ? (Math.sin(tit.t*3)>0.2 ? 0.05 : 0.6) : 0.4;
