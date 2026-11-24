@@ -2446,6 +2446,13 @@ function osc(dest, tipo, f, t, dur, vol, fFin){
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
   o.connect(g); g.connect(dest); o.start(t); o.stop(t+dur+0.03);
 }
+// una cuerda punteada: ataque rápido y se apaga sola, con un poco de brillo arriba
+function punteo(dest, f, t, vol, dur){
+  dur = dur || 0.9; const c = AU.ctx, g = c.createGain(), fl = c.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.setValueAtTime(f*6, t); fl.frequency.exponentialRampToValueAtTime(f*1.5, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  for (const [tipo, mul, v] of [['triangle', 1, 1], ['sawtooth', 1, 0.35], ['sine', 2, 0.25]]){ const o = c.createOscillator(), og = c.createGain(); o.type = tipo; o.frequency.setValueAtTime(f*mul, t); og.gain.value = v; o.connect(og); og.connect(fl); o.start(t); o.stop(t + dur + 0.05); }
+  fl.connect(g); g.connect(dest);
+}
 function ruidoA(dest, t, dur, vol, corte){
   const c = AU.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
   s.buffer = AU.ruido; f.type = 'highpass'; f.frequency.value = corte;
@@ -2486,6 +2493,14 @@ const TEMAS = {
            'G5 . E5 . C5 . E5 . D5 . . . G4 . . .', 'C5 . . . . . . . - . - . - . - .' ].join(' '),
     bajo: bajo(['C','G','C','F','C','F','G','C'], 'R2 . . R3 . . R2 . R2 . . R3 . . R3 .'),
     bat: 'k..t..s.k..t.ts.'.repeat(7) + 'k..t..s.k.tts.ss' },
+  // Mi campo: milonga tranquila, guitarra punteada con el bajo en 3-3-2
+  estancia: { bpm:96, inst:'guitarra', vLead:0.11,
+    lead:[ 'B4 . . D5 . . G5 . A5 . . G5 . . E5 .', 'D5 . . . . . . . - . - . - . - .',
+           'C5 . . E5 . . G5 . E5 . . D5 . . C5 .', 'B4 . . . . . . . - . - . - . - .',
+           'A4 . . C5 . . D5 . F#5 . . E5 . . D5 .', 'D5 . . C5 . . B4 . A4 . . . . . . .',
+           'B4 . . D5 . . G5 . B5 . . A5 . . F#5 .', 'G5 . . . . . . . - . - . - . - .' ].join(' '),
+    bajo: bajo(['G','G','C','G','D','D','G','G'], 'R2 . . R3 . . R3 . R2 . . R3 . . R3 .'),
+    bat: ('h.......h.......').repeat(8) },
   dios: { bpm:116, inst:'sawtooth', vLead:0.045,
     lead:[ 'A4 . . . E5 . . . A5 . . . G5 . E5 .', 'F5 . . . . . . . E5 . . . D5 . . .',
            'C5 . . . F5 . . . A5 . . . C6 . A5 .', 'B5 . . . . . . . G#5 . . . E5 . . .',
@@ -2527,8 +2542,8 @@ function programarMusica(){
   while (AU.prox < AU.ctx.currentTime + 0.12){
     const t = AU.prox;
     for (const e of T.ev[AU.paso % T.largo]){
-      if (e.canal==='lead') osc(AU.mus, T.tipoLead, e.f, t, e.dur, T.vLead);
-      else if (e.canal==='bajo') osc(AU.mus, 'triangle', e.f, t, e.dur, 0.2);
+      if (e.canal==='lead'){ if (T.tipoLead === 'guitarra') punteo(AU.mus, e.f, t, T.vLead); else osc(AU.mus, T.tipoLead, e.f, t, e.dur, T.vLead); }
+      else if (e.canal==='bajo'){ if (T.tipoLead === 'guitarra') punteo(AU.mus, e.f, t, 0.09, 1.1); else osc(AU.mus, 'triangle', e.f, t, e.dur, 0.2); }
       else if (e.g==='k') osc(AU.mus, 'sine', 150, t, 0.13, 0.55, 40);
       else if (e.g==='s') ruidoA(AU.mus, t, 0.11, 0.22, 1400);
       else if (e.g==='h') ruidoA(AU.mus, t, 0.03, 0.07, 7000);
@@ -2556,7 +2571,19 @@ function sfx(id, k){
     case 'nivel': [523,659,784,1047].forEach((f,i) => osc(d,'square',f,t+i*0.07,0.14,0.06)); break;
     case 'cofre': [392,523,659,784,1047,1319].forEach((f,i) => osc(d,'square',f,t+i*0.06,0.12,0.05)); break;
     case 'danio': ruidoA(d,t,0.14,0.28,500); osc(d,'square',150,t,0.15,0.07,60); break;
-    case 'muere': osc(d,'square',rnd(480,700),t,0.06,0.03,200); ruidoA(d, t, 0.05, 0.035, 3500); break;
+    case 'muere': { const v = Math.floor(Math.random()*3);
+      if (v === 0){ osc(d,'square',rnd(480,700),t,0.06,0.03,200); ruidoA(d, t, 0.05, 0.035, 3500); }
+      else if (v === 1){ osc(d,'triangle',rnd(700,900),t,0.07,0.04,240); osc(d,'square',rnd(300,400),t+0.03,0.05,0.02,120); }
+      else { ruidoA(d, t, 0.07, 0.045, 2200); osc(d,'square',rnd(380,520),t,0.05,0.025,160); } break; }
+    case 'animal': {   // cada bicho suena distinto
+      const k_ = String(k||'');
+      if (/holando|angus|toro|ternero|novillo|vaca/.test(k_)){ const f0 = /ternero/.test(k_) ? 210 : /toro/.test(k_) ? 95 : 130; osc(d,'sawtooth',f0,t,0.75,0.07,f0*0.8); osc(d,'triangle',f0*2,t,0.6,0.03,f0*1.5); }
+      else if (/gallina/.test(k_)) [0,0.09,0.18,0.34].forEach((dt_, i) => osc(d,'square',i===3?980:rnd(620,760),t+dt_,0.07,0.06,i===3?700:500));
+      else if (/oveja/.test(k_)) [0,0.12,0.24].forEach((dt_, i) => osc(d,'triangle',i%2?420:380,t+dt_,0.13,0.06,i%2?400:360));
+      else if (/chancho/.test(k_)){ osc(d,'sawtooth',210,t,0.14,0.06,120); ruidoA(d, t, 0.12, 0.03, 700); osc(d,'sawtooth',190,t+0.2,0.12,0.05,110); }
+      else if (/caballo/.test(k_)){ for (let i=0;i<6;i++) osc(d,'triangle',760 - i*55 + (i%2)*40,t+i*0.07,0.08,0.085,700 - i*50); }
+      else if (esPerro(k_)){ const f0 = k_==='salchicha' ? 520 : k_==='dogo' ? 230 : 330; [0,0.16].forEach(dt_ => { osc(d,'square',f0,t+dt_,0.08,0.06,f0*0.5); ruidoA(d, t+dt_, 0.05, 0.04, 1500); }); }
+      break; }
     case 'latido': osc(d,'sine',70,t,0.12,0.32,40); osc(d,'sine',62,t+0.16,0.14,0.26,36); break;
     case 'critico': osc(d,'square',880,t,0.06,0.05,1760); ruidoA(d,t,0.06,0.15,1800); break;
     case 'hab': osc(d,'sawtooth',260,t,0.4,0.07,1300); osc(d,'square',520,t+0.05,0.3,0.04,1800); break;
@@ -5022,9 +5049,9 @@ function abrirCampo(){
   $('#menu').classList.add('oculto'); $('#campo').classList.remove('oculto'); document.body.classList.add('en-campo');
   $('#campoNombre').value = datos.campo.nombre;
   normPos(datos.campo); campoVisita = null; campoColocar = null; $('#campo').classList.remove('visitando'); $('#campoHoja').classList.add('oculto'); cerrarPop(); avisoCampo(null);
-  armarAnimalesCampo(); renderCampo(); $('#campoMover').classList.remove('fuera'); requestAnimationFrame(() => verEnCampo(430, 330)); revisarLangostas(); revisarMates(); publicarEstancia();
+  armarAnimalesCampo(); renderCampo(); audioInit(); AU.tema = null; tocarTema('estancia'); $('#campoMover').classList.remove('fuera'); requestAnimationFrame(() => verEnCampo(430, 330)); revisarLangostas(); revisarMates(); publicarEstancia();
 }
-function cerrarCampo(){ document.body.classList.remove('en-campo'); if (campoVisita) volverDeVisita(); campoColocar = null; cerrarPop(); avisoCampo(null); publicarEstancia(); $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
+function cerrarCampo(){ if (AU.tema === 'estancia') pararTema(); document.body.classList.remove('en-campo'); if (campoVisita) volverDeVisita(); campoColocar = null; cerrarPop(); avisoCampo(null); publicarEstancia(); $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
 function miniCanvas(k, i, max){
   const im = imgC(k, i); const c = document.createElement('canvas');
   if (!im){ c.width = c.height = 1; return c; }
@@ -5519,6 +5546,7 @@ function tocarCampo(x, y){
   if (h.tipo==='lote'){ const [cx, cy] = centroLote(LOTES[h.i]); return popLote(h.i, h.propio, cx, cy - 8); }
 }
 function popAnimal(a, x, y){
+  sfx('animal', a.k);
   const c = campoDatos(), def = CAMPO_ANIMALES[a.k] || { nombre:a.k, desc:'' }, nom = nombreAnimal(a.k, a.i);
   let txt = esc(def.desc);
   if (a.k==='ternero' && !campoVisita && Array.isArray(c.crias) && c.crias[a.i] != null){ const eng = c.edificios.feedlot ? 4 : 8, h = Math.max(0, eng - (Date.now() - c.crias[a.i])/3600000); txt += ` Se hace novillo en ${fmtHoras(h)}.`; }
