@@ -172,7 +172,16 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 #btnCampo{border-color:rgba(126,212,146,.6)}
 .menu-mini{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:6px}
 #btnNovedades{position:relative}
-@media (max-height:460px){#btnBackup{font-size:0;gap:0}.menu-mini .mini{padding:3px 6px;min-width:0}}
+.cuenta-punto{display:inline-block;width:8px;height:8px;background:#7ed492;border:2px solid #000;margin-left:4px;vertical-align:middle}
+.cuenta-caja .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;color:#1f1f1f;border:3px solid #000;font:inherit;font-weight:700;font-size:16px;padding:11px;box-shadow:3px 3px 0 rgba(0,0,0,.4);cursor:pointer}
+.cuenta-caja .btn-google b{font-size:20px;color:#4285f4;font-family:Arial,sans-serif}
+.cuenta-caja .separa{display:flex;align-items:center;gap:8px;color:var(--tiza-2);font-size:12px;margin:12px 0 8px}.cuenta-caja .separa:before,.cuenta-caja .separa:after{content:'';flex:1;height:2px;background:rgba(255,255,255,.15)}
+.cuenta-caja input{width:100%;min-height:42px;font:inherit;font-size:16px;background:#0c1810;color:#fff;border:3px solid #000;padding:6px 10px;margin-bottom:6px;box-sizing:border-box}
+.cuenta-caja .link{background:none;border:0;color:var(--tiza-2);text-decoration:underline;font:inherit;font-size:12px;cursor:pointer;margin-top:6px}
+.cuenta-caja .err{color:#ff8a7a;font-size:13px;min-height:16px;margin:4px 0}
+.cuenta-yo{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:2px solid #000;padding:8px 10px;margin-bottom:8px;text-align:left}.cuenta-yo img{width:40px;height:40px;border:2px solid #000;image-rendering:auto}.cuenta-yo small{display:block;color:var(--tiza-2);font-size:12px}
+.cuenta-elige{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.cuenta-elige>div{background:rgba(0,0,0,.25);border:2px solid #000;padding:8px;text-align:left;font-size:13px}.cuenta-elige b{color:var(--amarillo)}.cuenta-elige .btn{margin-top:8px;width:100%;font-size:13px;padding:8px}
+@media (max-height:460px){#btnBackup{font-size:0;gap:0}#btnBackup .cuenta-punto{font-size:0}.menu-mini .mini{padding:3px 6px;min-width:0}}
 .mini{background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:6px 10px;font-size:13px;font-weight:700;min-width:44px}
 @media (max-height:460px) and (orientation:landscape){
   .menu-lay{grid-template-columns:minmax(0,1fr) 270px;padding-top:8px;padding-bottom:8px;gap:12px}
@@ -598,7 +607,7 @@ body.en-campo #toast{bottom:auto;top:62px}
         <button class="tile" id="btnAyuda"><img class="pxic uic" data-ic="ui:ayuda" alt=""><span>Cómo se juega</span></button>
       </div>
       <div class="menu-mini">
-        <button class="mini" id="btnBackup" title="Backup"><img class="pxic uic" data-ic="ui:backup" alt=""> Backup</button>
+        <button class="mini" id="btnBackup" title="Cuenta y backup"><img class="pxic uic" data-ic="ui:backup" alt=""> <span id="btnCuentaTx">Cuenta</span><i id="cuentaPunto" class="cuenta-punto oculto"></i></button>
         <button class="mini" id="btnPerfil" title="Perfil">👤</button>
         <button class="mini" id="btnNovedades" title="Novedades">📰</button>
         <button class="mini" id="btnSonido" title="Sonido"><img class="pxic uic" data-ic="ui:son" alt=""></button>
@@ -740,7 +749,7 @@ body.en-campo #toast{bottom:auto;top:62px}
 </div></div>
 
 <div class="modal oculto" id="mBackup"><div class="caja ayuda"><h2>💾 Backup</h2>
-  <p>Tu progreso (créditos, mejoras de la Nona y ranking) queda guardado solo en este navegador. Hacé una copia de vez en cuando, o usala para pasar tu progreso a otro dispositivo.</p>
+  <p>Si no usás una cuenta, tu progreso (créditos, mejoras de la Nona y ranking) queda guardado solo en este navegador. Hacé una copia de vez en cuando, o usala para pasar tu progreso a otro dispositivo.</p>
   <button class="btn" id="btnExportar">Hacer backup</button>
   <div class="fila-btn" style="grid-template-columns:1fr"><button class="btn sec" id="btnImportar">Cargar backup desde archivo</button></div>
   <div class="fila-btn" style="grid-template-columns:1fr"><button class="btn sec" id="btnPegar">Pegar backup copiado</button></div>
@@ -751,6 +760,12 @@ body.en-campo #toast{bottom:auto;top:62px}
   <input type="file" id="fileImport" accept="application/json,.json" class="oculto">
   <div id="importResumen" style="margin-top:12px"></div>
   <button class="btn sec" data-cerrar style="margin-top:12px">Cerrar</button>
+</div></div>
+
+<div class="modal oculto" id="mCuenta"><div class="caja ayuda cuenta-caja"><h2>👤 Tu cuenta</h2>
+  <div id="cuentaVista"></div>
+  <button class="btn sec" id="btnIrBackup" style="margin-top:12px">💾 Backup en archivo o con código</button>
+  <button class="btn sec" data-cerrar style="margin-top:8px">Cerrar</button>
 </div></div>
 
 <div id="toast" class="oculto"></div>
@@ -1269,6 +1284,7 @@ function cargar(){
 let avisoGuardado = false;
 function guardar(){
   if (typeof subirNube === 'function') setTimeout(() => subirNube(false), 0);
+  if (typeof subirCuenta === 'function') setTimeout(() => subirCuenta(false), 0);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(datos)); }
   catch(e){ if (!avisoGuardado){ avisoGuardado = true; toast('Ojo: este navegador no deja guardar el progreso.'); } }
 }
@@ -7436,6 +7452,107 @@ async function cargarDeNube(){
   const r = await NET.get(`guardados/${c}`); if (!r || typeof r.d !== 'string'){ toast('No encontré nada con ese código'); return; }
   procesarImport(r.d); setTimeout(() => { const b = $('#btnConfImport'); if (b){ const o = b.onclick; b.onclick = () => { o(); datos.nubeId = c; guardar(); pintarNube(); toast('Listo: este dispositivo ahora usa ese código'); }; } }, 0);
 }
+// ======== cuentas: Google o mail; el progreso queda en usuarios/<uid> y solo lo puede leer y escribir el dueño ========
+const FB_CFG = { apiKey:'AIzaSyCUZSp-Xu24HxG8HfGZbf0K0IWh97v5FWM', authDomain:'uadesurvivor.firebaseapp.com', databaseURL:'https://uadesurvivor-default-rtdb.firebaseio.com', projectId:'uadesurvivor', appId:'1:284736794509:web:ca525da0b1918ea57cd7c4' };   // la apiKey de Firebase es pública: va en la página
+const CUENTA = { auth:null, mod:null, user:null, cargando:null, subT:0, subiendo:false, estado:'', conflicto:null, err:'' };
+const ERR_CUENTA = { 'auth/invalid-email':'Ese mail no es válido.', 'auth/missing-password':'Falta la contraseña.', 'auth/wrong-password':'Mail o contraseña incorrectos.', 'auth/invalid-credential':'Mail o contraseña incorrectos.', 'auth/invalid-login-credentials':'Mail o contraseña incorrectos.',
+  'auth/user-not-found':'No hay ninguna cuenta con ese mail. Tocá "Crear cuenta".', 'auth/email-already-in-use':'Ya hay una cuenta con ese mail. Tocá "Entrar".', 'auth/weak-password':'La contraseña tiene que tener al menos 6 letras o números.',
+  'auth/popup-closed-by-user':'Cerraste la ventana de Google antes de terminar.', 'auth/cancelled-popup-request':'', 'auth/network-request-failed':'No hay conexión. Probá de nuevo.', 'auth/too-many-requests':'Demasiados intentos. Esperá un rato.',
+  'auth/unauthorized-domain':'Esta página no está autorizada en Firebase (falta agregar el dominio).', 'auth/operation-not-allowed':'Ese modo de entrar no está activado en Firebase.', 'sin-config':'Las cuentas todavía no están configuradas.' };
+function errorCuenta(e){ const c = (e && (e.code || e.message)) || ''; CUENTA.err = ERR_CUENTA[c] !== undefined ? ERR_CUENTA[c] : 'No se pudo: ' + c; pintarCuenta(); }
+async function fbAuth(){
+  if (CUENTA.auth) return CUENTA.auth;
+  if (!FB_CFG.apiKey) throw { code:'sin-config' };
+  if (!CUENTA.cargando) CUENTA.cargando = (async () => {
+    const V = '10.12.2', app = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`), mod = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+    const auth = mod.getAuth(app.initializeApp(FB_CFG)); auth.languageCode = 'es';
+    CUENTA.mod = mod; CUENTA.auth = auth;
+    mod.onAuthStateChanged(auth, u => alCambiarCuenta(u));
+    mod.getRedirectResult(auth).catch(errorCuenta);
+    return auth; })().catch(e => { CUENTA.cargando = null; throw e; });
+  return CUENTA.cargando;
+}
+// lo que se compara y se sube (sin cosas de este dispositivo)
+function copiaCuenta(){ const c = Object.assign({}, datos); for (const k of ['pendOnline','cuentaUid','cuentaFirma','cuentaT','nubeId','nubeUlt']) delete c[k]; return JSON.stringify(c); }
+function firmaTxt(t){ let h = 2166136261; for (let i=0;i<t.length;i++){ h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + ':' + t.length; }
+async function urlCuenta(){ const tok = await CUENTA.user.getIdToken(); return `${DB_URL.replace(/\/$/,'')}/usuarios/${CUENTA.user.uid}.json?auth=${encodeURIComponent(tok)}`; }
+async function leerCuenta(){ const r = await fetch(await urlCuenta(), { cache:'no-store' }); if (!r.ok) throw { code:'db-' + r.status }; return r.json(); }
+function guardarLocal(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(datos)); } catch(_){} }
+async function subirCuenta(forzar){
+  if (!CUENTA.user || CUENTA.conflicto || CUENTA.subiendo || datos.cuentaUid !== CUENTA.user.uid) return;
+  if (!forzar && Date.now() - CUENTA.subT < 20000){ clearTimeout(CUENTA.timer); CUENTA.timer = setTimeout(() => subirCuenta(false), 20500 - (Date.now() - CUENTA.subT)); return; }
+  const txt = copiaCuenta(), f = firmaTxt(txt); if (f === datos.cuentaFirma && !forzar) return;
+  CUENTA.subiendo = true; CUENTA.subT = Date.now();
+  try { const t = Date.now(), r = await fetch(await urlCuenta(), { method:'PUT', body:JSON.stringify({ t, d:txt, n:datos.jugador || '' }) });
+    if (r.ok){ datos.cuentaFirma = f; datos.cuentaT = t; guardarLocal(); CUENTA.estado = 'Guardado ' + new Date(t).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' }); }
+    else CUENTA.estado = 'No se pudo guardar (' + r.status + ')';
+  } catch(e){ CUENTA.estado = 'Sin conexión: se guarda cuando vuelva'; }
+  CUENTA.subiendo = false; pintarCuenta();
+}
+function usarDeCuenta(rem){
+  const nuevo = migrar(JSON.parse(rem.d)); nuevo.cuentaUid = CUENTA.user.uid; nuevo.cuentaT = rem.t; nuevo.cuentaFirma = null;
+  datos = nuevo; datos.cuentaFirma = firmaTxt(copiaCuenta()); guardarLocal(); CUENTA.conflicto = null;
+  try { renderMenu(); } catch(_){} pintarCuenta(); toast('Listo: estás usando el progreso de tu cuenta');
+}
+function usarDeAca(){ datos.cuentaUid = CUENTA.user.uid; datos.cuentaFirma = null; CUENTA.conflicto = null; guardarLocal(); subirCuenta(true); toast('Listo: tu cuenta ahora tiene el progreso de este dispositivo'); }
+const vacio = d => !(d.partidas||[]).length && !(d.creditos > 0) && !Object.values(d.mejoras||{}).some(v => v > 0);
+async function alCambiarCuenta(u){
+  CUENTA.user = u || null; CUENTA.err = ''; CUENTA.conflicto = null;
+  $('#cuentaPunto').classList.toggle('oculto', !u);
+  if (!u){ pintarCuenta(); return; }
+  if (!datos.jugador && u.displayName){ datos.jugador = u.displayName.split(' ')[0].slice(0, 14); guardarLocal(); try { renderNombreMenu(); } catch(_){} }
+  CUENTA.estado = 'Sincronizando…'; pintarCuenta();
+  let rem; try { rem = await leerCuenta(); } catch(e){ CUENTA.estado = e.code === 'db-401' ? 'Falta actualizar las reglas de Firebase' : 'Sin conexión con tu cuenta'; pintarCuenta(); return; }
+  const local = copiaCuenta(), cambioAca = firmaTxt(local) !== datos.cuentaFirma;
+  if (!rem || typeof rem.d !== 'string'){ datos.cuentaUid = u.uid; datos.cuentaFirma = null; subirCuenta(true); toast('Tu progreso quedó guardado en tu cuenta ☁️'); return; }
+  if (datos.cuentaUid === u.uid){
+    if (rem.t > (datos.cuentaT||0)){                                            // otro dispositivo guardó después
+      if (!cambioAca) return usarDeCuenta(rem);
+      CUENTA.conflicto = rem; CUENTA.estado = ''; pintarCuenta(); $('#mCuenta').classList.remove('oculto'); return; }
+    return subirCuenta(true);
+  }
+  if (vacio(datos)) return usarDeCuenta(rem);
+  if (firmaTxt(rem.d) === firmaTxt(local)){ datos.cuentaUid = u.uid; datos.cuentaT = rem.t; datos.cuentaFirma = firmaTxt(local); guardarLocal(); CUENTA.estado = 'Al día'; pintarCuenta(); return; }
+  CUENTA.conflicto = rem; CUENTA.estado = ''; pintarCuenta(); $('#mCuenta').classList.remove('oculto');
+}
+function resumenProg(d){ const ms = Object.values(d.mejoras||{}).reduce((s,v)=>s+v,0); return `<b>${(d.creditos||0).toLocaleString('es-AR')}</b> créditos<br><b>${(d.partidas||[]).length}</b> partidas · <b>${ms}</b> mejoras<br>Estancia nivel <b>${((d.campo||{}).nivel||0)+1}</b>`; }
+function pintarCuenta(){
+  const v = $('#cuentaVista'); if (!v) return; const u = CUENTA.user;
+  $('#btnCuentaTx').textContent = u ? 'Cuenta' : 'Cuenta';
+  if (u && CUENTA.conflicto){
+    let rem = null; try { rem = migrar(JSON.parse(CUENTA.conflicto.d)); } catch(_){}
+    v.innerHTML = `<p>Tu cuenta y este dispositivo tienen <b>progresos distintos</b>. ¿Con cuál te quedás? El otro se pierde.</p>
+      <div class="cuenta-elige"><div>☁️ <b>En tu cuenta</b><br><small>${new Date(CUENTA.conflicto.t).toLocaleString('es-AR')}</small><br>${rem ? resumenProg(rem) : '?'}<button class="btn" id="btnUsarCuenta">Usar este</button></div>
+      <div>📱 <b>En este dispositivo</b><br><small>ahora</small><br>${resumenProg(datos)}<button class="btn sec" id="btnUsarAca">Usar este</button></div></div>`;
+    $('#btnUsarCuenta').onclick = () => usarDeCuenta(CUENTA.conflicto); $('#btnUsarAca').onclick = () => { if (confirm('¿Seguro? El progreso de tu cuenta se reemplaza por el de este dispositivo.')) usarDeAca(); };
+    return;
+  }
+  if (u){
+    v.innerHTML = `<div class="cuenta-yo">${u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : '<span style="font-size:30px">👤</span>'}<span><b>${esc(u.displayName || datos.jugador || 'Conectado')}</b><small>${esc(u.email || '')}</small><small>${esc(CUENTA.estado || '')}</small></span></div>
+      <p class="sub" style="font-size:13px">Tu progreso se guarda solo en tu cuenta. Entrá con la misma cuenta en otro celular o compu y seguís donde dejaste.</p>
+      <div class="fila-btn" style="grid-template-columns:1fr 1fr"><button class="btn sec" id="btnCuentaYa">Guardar ahora</button><button class="btn sec" id="btnCuentaSalir">Salir de la cuenta</button></div>`;
+    $('#btnCuentaYa').onclick = () => subirCuenta(true);
+    $('#btnCuentaSalir').onclick = async () => { if (!confirm('¿Salir de la cuenta? El progreso queda en este dispositivo y en tu cuenta.')) return; await subirCuenta(true); try { await CUENTA.mod.signOut(CUENTA.auth); } catch(_){} toast('Saliste de la cuenta'); };
+    return;
+  }
+  v.innerHTML = `<p class="sub" style="font-size:13px;margin-top:0">Entrá con una cuenta y <b>no perdés nunca más el progreso</b>: se guarda solo y lo podés seguir en cualquier celular o compu.</p>
+    <button class="btn-google" id="btnGoogle"><b>G</b> Entrar con Google</button>
+    <div class="separa">o con tu mail</div>
+    <input id="cuMail" type="email" placeholder="tu@mail.com" autocomplete="email"><input id="cuPass" type="password" placeholder="Contraseña (6 o más)" autocomplete="current-password">
+    <div class="err" id="cuErr">${esc(CUENTA.err || '')}</div>
+    <div class="fila-btn" style="grid-template-columns:1fr 1fr;margin-top:0"><button class="btn" id="btnCuEntrar">Entrar</button><button class="btn sec" id="btnCuCrear">Crear cuenta</button></div>
+    <button class="link" id="btnCuOlvide">Me olvidé la contraseña</button>`;
+  const mail = () => ($('#cuMail').value || '').trim(), pass = () => $('#cuPass').value || '';
+  const hacer = async fn => { CUENTA.err = ''; $('#cuErr').textContent = 'Un momento…'; try { const a = await fbAuth(); await fn(a, CUENTA.mod); } catch(e){ errorCuenta(e); } };
+  $('#btnGoogle').onclick = () => hacer(async (a, m) => { const pr = new m.GoogleAuthProvider(); pr.setCustomParameters({ prompt:'select_account' });
+    try { await m.signInWithPopup(a, pr); } catch(e){ if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') await m.signInWithRedirect(a, pr); else throw e; } });
+  $('#btnCuEntrar').onclick = () => hacer((a, m) => m.signInWithEmailAndPassword(a, mail(), pass()));
+  $('#btnCuCrear').onclick = () => hacer((a, m) => m.createUserWithEmailAndPassword(a, mail(), pass()));
+  $('#btnCuOlvide').onclick = () => { if (!mail()){ CUENTA.err = 'Escribí tu mail arriba y tocá de nuevo.'; pintarCuenta(); return; } hacer(async (a, m) => { await m.sendPasswordResetEmail(a, mail()); CUENTA.err = ''; toast('Te mandamos un mail para cambiar la contraseña'); }); };
+  $('#cuPass').addEventListener('keydown', ev => { ev.stopPropagation(); if (ev.key === 'Enter') $('#btnCuEntrar').click(); });
+  $('#cuMail').addEventListener('keydown', ev => ev.stopPropagation());
+}
+function abrirCuenta(){ CUENTA.err = ''; pintarCuenta(); $('#mCuenta').classList.remove('oculto'); if (FB_CFG.apiKey) fbAuth().catch(() => {}); }
 let pendienteImport = null;
 function leerImport(file){ const fr = new FileReader(); fr.onload = () => procesarImport(fr.result); fr.readAsText(file); }
 function procesarImport(texto){
@@ -7575,7 +7692,11 @@ $('#btnMulti').onclick = abrirMulti;
 $('#btnCerrarMulti').onclick = () => { $('#mMulti').classList.add('oculto'); };
 $('#btnRanking').onclick = () => { renderRanking(true); $('#mRanking').classList.remove('oculto'); };
 $('#btnAyuda').onclick = () => { renderAyuda(); $('#mAyuda').classList.remove('oculto'); };
-$('#btnBackup').onclick = () => { $('#importResumen').innerHTML = ''; pintarNube(); $('#mBackup').classList.remove('oculto'); };
+$('#btnBackup').onclick = abrirCuenta;
+$('#btnIrBackup').onclick = () => { $('#mCuenta').classList.add('oculto'); $('#importResumen').innerHTML = ''; pintarNube(); $('#mBackup').classList.remove('oculto'); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && CUENTA.user) subirCuenta(true); });
+// si este dispositivo ya estaba conectado a una cuenta, se reconecta solo
+if (datos.cuentaUid && FB_CFG.apiKey) setTimeout(() => fbAuth().catch(() => {}), 1500);
 $('#btnExportar').onclick = exportar;
 $('#btnNube').onclick = () => { datos.nube = datos.nube === false; guardar(); pintarNube(); if (datos.nube !== false) subirNube(true); };
 $('#btnNubeCargar').onclick = cargarDeNube;
