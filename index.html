@@ -380,11 +380,16 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .campo-abajo{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
 .campo-juntar{display:flex;gap:8px;align-items:center;background:rgba(12,20,14,.82);border:3px solid #000;padding:5px 8px;max-width:min(560px,62vw)}
 .campo-juntar #campoProd{flex:1;font-size:12px;color:var(--tiza);line-height:1.35}.campo-juntar .campo-clima{margin:2px 0 0;font-size:11px}
-.campo-hoja{position:absolute;left:0;right:0;bottom:0;z-index:8;max-height:min(78vh,620px);display:flex;flex-direction:column;background:var(--pizarra);border-top:4px solid #000;box-shadow:0 -6px 0 rgba(0,0,0,.35);animation:hojaSube .22s ease-out}
+.campo-hoja{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:var(--pizarra);border:4px solid #000;box-shadow:0 0 0 3px var(--borde),6px 6px 0 rgba(0,0,0,.5),0 0 0 100vmax rgba(8,14,10,.55);animation:hojaSube .18s ease-out}
+.campo-hoja .campo-tabs{display:none}
+body.en-campo #toast{bottom:auto;top:62px}
+.campo-botones{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.campo-botones .cb{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:20px;line-height:1;padding:6px 8px;min-width:62px;position:relative}.campo-botones .cb span{font-size:11px}
+.campo-botones .cb .aviso{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#e8604c;color:#fff;font-size:12px;line-height:18px;text-align:center;border:2px solid #15151c}
 .campo-hoja .hoja-cab{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:3px solid rgba(0,0,0,.35)}.campo-hoja .hoja-cab b{color:var(--amarillo);font-size:16px}
 .campo-hoja .hoja-cuerpo{overflow-y:auto;padding:10px 12px max(14px,env(safe-area-inset-bottom));width:min(100%,760px);margin:0 auto;touch-action:pan-y}
-@keyframes hojaSube{from{transform:translateY(40%);opacity:0}}
-@media (max-height:500px){.ch-btn{padding:4px 8px;font-size:12px}.ch-btn.grande{font-size:13px;padding:6px 10px}.ch-chip{padding:3px 8px;font-size:12px}.campo-juntar #campoProd{font-size:11px}.campo-juntar .campo-clima{display:none}.campo-nombre input{font-size:15px!important;min-height:30px!important}}
+@keyframes hojaSube{from{transform:translate(-50%,-44%);opacity:0}}
+@media (max-height:500px){.campo-botones{flex-wrap:nowrap;gap:4px}.campo-botones .cb{min-width:0;padding:4px 7px;font-size:17px}.campo-botones .cb span{display:none}.campo-juntar{max-width:46vw}.ch-btn{padding:4px 8px;font-size:12px}.ch-btn.grande{font-size:13px;padding:6px 10px}.ch-chip{padding:3px 8px;font-size:12px}.campo-juntar #campoProd{font-size:11px}.campo-juntar .campo-clima{display:none}.campo-nombre input{font-size:15px!important;min-height:30px!important}}
 .campo-top .ch-chip.salta{animation:saltaChip .5s}@keyframes saltaChip{30%{transform:scale(1.18);color:var(--amarillo)}}
 .campo-nombre{flex:1;min-width:0}.campo-nombre input{width:100%;min-height:38px;text-align:center;font:inherit;font-size:20px;text-shadow:2px 2px 0 #000;font-weight:700;color:var(--amarillo);background:transparent;border:0;border-bottom:2px dashed var(--borde);padding:4px;text-transform:uppercase}
 #campoEscena.arrastra{cursor:grabbing}
@@ -399,7 +404,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .campo-aviso{position:absolute;z-index:7;left:50%;top:58px;transform:translateX(-50%);max-width:92%;display:flex;gap:8px;align-items:center;background:rgba(12,20,14,.88);border:3px solid var(--amarillo);padding:6px 10px;font-size:13px;box-shadow:3px 3px 0 rgba(0,0,0,.45)}
 .campo-aviso button{width:auto;padding:5px 9px;font-size:12px;background:var(--amarillo);color:#2a2a1a;font-weight:700;box-shadow:0 3px 0 #8a7417;white-space:nowrap}
 .campo-aviso button.sec{background:rgba(0,0,0,.35);color:var(--tiza);box-shadow:none;border:2px solid var(--borde)}
-#campo.visitando .campo-juntar,#campo.visitando #btnAdmin,#campo.visitando .campo-hoja,#campo.visitando .campo-nombre{display:none}
+#campo.visitando .campo-juntar,#campo.visitando #campoBotones,#campo.visitando .campo-hoja,#campo.visitando .campo-nombre{display:none}
 .est-item{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:8px;margin-bottom:6px;text-align:left}
 .est-item .tx{flex:1;font-size:13px}.est-item .tx b{display:block;color:var(--amarillo)}.est-item .tx small{color:var(--tiza-2);font-size:12px}
 .est-item.top{border-color:var(--amarillo)}.est-item button{width:auto;padding:6px 10px;font-size:12px}
@@ -506,9 +511,9 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
       <div class="campo-nombre"><input id="campoNombre" maxlength="22" aria-label="Nombre de la estancia"></div>
       <span class="ch-chip">🪙 <b id="campoCred">0</b></span><button class="ch-btn" id="btnVisitar">🔭 Visitar</button></div>
     <div class="campo-abajo"><div class="campo-juntar"><div id="campoProd"></div><button class="ch-btn amarillo" id="btnJuntar">Juntar</button></div>
-      <button class="ch-btn amarillo grande" id="btnAdmin">📋 Hacienda, lotes y obras</button></div>
+      <div class="campo-botones" id="campoBotones"><button class="ch-btn cb" data-t="animales">🐄<span>Hacienda</span></button><button class="ch-btn cb" data-t="cultivos">🌾<span>Lotes</span></button><button class="ch-btn cb" data-t="mercado">📈<span>Mercado</span></button><button class="ch-btn cb" data-t="edificios">🏠<span>Obras</span></button><button class="ch-btn cb" data-t="deco">🌸<span>Deco</span></button><button class="ch-btn cb" data-t="encargo" id="btnEncargo">📜<span>Encargo</span></button></div></div>
   </div>
-  <div class="campo-hoja oculto" id="campoHoja"><div class="hoja-cab"><b>Tu estancia</b><button class="ch-btn" id="btnHojaCerrar">✕</button></div>
+  <div class="campo-hoja oculto" id="campoHoja"><div class="hoja-cab"><b id="hojaTit">Tu estancia</b><button class="ch-btn" id="btnHojaCerrar">✕</button></div>
     <div class="hoja-cuerpo"><div id="campoEnc"></div>
       <div class="campo-tabs" id="campoTabs">
         <button data-t="animales" class="sel">🐄 Hacienda</button><button data-t="cultivos">🌾 Lotes</button><button data-t="mercado">📈 Mercado</button><button data-t="edificios">🏠 Obras</button><button data-t="deco">🌸 Deco</button>
@@ -4923,8 +4928,7 @@ function perroRaza(raza, i){
 }
 const imgC = (k, i) => {
   if (k === 'mixer') return imgMapa(i ? 'jf_mixer#1' : 'jf_mixer') || imgMapa('jf_mixer');
-  if (k === 'lg_establo' && !IMG_C[k]) return imgC('galpon');
-  if (k === 'lg_canil' && !IMG_C[k]) return spriteCanil();
+  if ((k === 'lg_establo' || k === 'lg_canil') && !IMG_C[k]) return imgC('cartel');
   if (k.startsWith('perro_') && !IMG_C[k]) return perroRaza(k.slice(6), i||0);
   if (k === 'feedlot'){ if (!feedlotC){ const nov = imgC('novillo', 2); if (!nov) return null; feedlotC = spriteFeedlot(nov); } return feedlotC; }
   const l = IMG_C[k]; if (!l) return null; const im = l[Math.min(i||0, l.length-1)]; return im && im.complete && im.naturalWidth ? im : null; };
@@ -5010,12 +5014,12 @@ let campoTab = 'animales', campoAnim = null, campoT = 0;
 const campoVis = { x:260, y:325, dir:1, t:0, para:false };
 function abrirCampo(){
   normCampo(datos.campo); procesarCampo(); guardar();
-  $('#menu').classList.add('oculto'); $('#campo').classList.remove('oculto');
+  $('#menu').classList.add('oculto'); $('#campo').classList.remove('oculto'); document.body.classList.add('en-campo');
   $('#campoNombre').value = datos.campo.nombre;
   normPos(datos.campo); campoVisita = null; campoColocar = null; $('#campo').classList.remove('visitando'); $('#campoHoja').classList.add('oculto'); cerrarPop(); avisoCampo(null);
   armarAnimalesCampo(); renderCampo(); $('#campoMover').classList.remove('fuera'); requestAnimationFrame(() => verEnCampo(430, 330)); revisarLangostas(); revisarMates(); publicarEstancia();
 }
-function cerrarCampo(){ if (campoVisita) volverDeVisita(); campoColocar = null; cerrarPop(); avisoCampo(null); publicarEstancia(); $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
+function cerrarCampo(){ document.body.classList.remove('en-campo'); if (campoVisita) volverDeVisita(); campoColocar = null; cerrarPop(); avisoCampo(null); publicarEstancia(); $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
 function miniCanvas(k, i, max){
   const im = imgC(k, i); const c = document.createElement('canvas');
   if (!im){ c.width = c.height = 1; return c; }
@@ -5046,7 +5050,12 @@ function renderCampo(){
     for (const a of acciones){ const b = document.createElement('button'); b.textContent = a.txt; b.disabled = !!a.off; b.onclick = a.fn; acc.appendChild(b); }
     d.appendChild(acc); panel.appendChild(d);
   };
-  if (campoTab==='animales'){
+  // la ventana muestra solo lo del botón que tocaste; el encargo tiene su propia ventana
+  $('#campoEnc').style.display = campoTab === 'encargo' ? '' : 'none';
+  if (campoTab === 'encargo' && !c.enc) panel.insertAdjacentHTML('beforeend', '<p class="sub">Hoy no pasó nadie por la estancia.</p>');
+  { const mark = (t, on) => { const b = document.querySelector(`#campoBotones .cb[data-t="${t}"]`); if (!b) return; let i = b.querySelector('.aviso'); if (!on){ if (i) i.remove(); return; } if (!i){ i = document.createElement('i'); i.className = 'aviso'; b.appendChild(i); } i.textContent = '!'; };
+    mark('encargo', c.enc && !c.enc.cobrado && c.enc.hecho); mark('cultivos', c.lotes.some(l => l && avanceLote(l) >= 1)); }
+  if (campoTab==='encargo'){ /* solo el encargo, arriba */ } else if (campoTab==='animales'){
     const cap = capacidadPotrero(), tot = totalAnimales();
     panel.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:4px 0 8px">Potrero: ${tot} de ${cap} animales</p>`);
     const vacas = (c.animales.holando||0) + (c.animales.angus||0), toros = c.animales.toro||0;
@@ -5174,13 +5183,15 @@ const LOTES = [
 const CORRALES = {"corral": [156, 646, 180, 112], "redil": [377, 650, 146, 105], "establo": [559, 654, 120, 90], "gallinero": [276, 433, 125, 95], "chiquero": [581, 432, 127, 97], "canil": [130, 390, 96, 75]};
 // qué obra necesita cada animal (las vacas viven en el potrero grande)
 const CASA_ANIMAL = { chancho:'chiquero', oveja:'redil', gallina:'gallinero', caballo:'establo', perro:'canil', galgo:'canil', dogo:'canil', salchicha:'canil', callejero:'canil', siberiano:'canil', golden:'canil' };
-const LUGAR = { tractor:[260, 341], camioneta:[335, 341], molino:[563, 188], tanque:[599, 214], tambo:[0,0] };
+const LUGAR = { tractor:[78, 318], camioneta:[335, 341], molino:[563, 188], tanque:[599, 214], tambo:[0,0] };
 const ARROYO = [[650, 650], [806, 585], [910, 520], [988, 494], [1079, 455], [1131, 364], [1170, 306], [1300, 273], [1331, 266]];
 function dentroPoly(P, x, y){ let d = false; for (let i=0, j=P.length-1; i<P.length; j=i++){ const [xi,yi] = P[i], [xj,yj] = P[j]; if ((yi>y) !== (yj>y) && x < (xj-xi)*(y-yi)/(yj-yi)+xi) d = !d; } return d; }
 function enCorral(x, y){ return !dentroPoly(POT_P, x, y); }
 // zona donde camina cada animal: adentro de su corral (si lo tiene) o en el potrero
-function zonaAnimal(k){
+const VACUNOS = ['holando','angus','ternero','toro','novillo'];
+function zonaAnimal(k, i){
   const casa = CASA_ANIMAL[k], c = campoDatos();
+  if (!casa && VACUNOS.includes(k) && c.edificios && c.edificios.corral && (i % 3 === 0)){ const [x, y, w, h] = CORRALES.corral; return { x0:x - w*0.24, x1:x + w*0.24, y0:y - h*0.5, y1:y - h*0.16 }; }
   if (casa && casa !== 'canil' && c.edificios && c.edificios[casa]){ const [x, y, w, h] = CORRALES[casa];
     if (casa === 'establo') return { x0:x - w*1.05, x1:x - w*0.6, y0:y - 34, y1:y - 6 };     // los caballos, al costado del establo
     return { x0:x - w*0.26, x1:x + w*0.26, y0:y - h*0.5, y1:y - h*0.14 }; }
@@ -5189,8 +5200,8 @@ function zonaAnimal(k){
 function libreEnPotrero(x, y){ if (!dentroPoly(POT_P, x, y)) return false;
   for (const k of ['corral','redil','establo']){ const [cx, cy, w, h] = CORRALES[k]; if (x > cx - w/2 - 6 && x < cx + w/2 + 6 && y > cy - h - 4 && y < cy + 8) return false; } return true; }
 function enCorral(x, y){ return !libreEnPotrero(x, y); }
-function lugarAnimal(k){
-  const z = zonaAnimal(k); if (z) return [rnd(z.x0, z.x1), rnd(z.y0, z.y1)];
+function lugarAnimal(k, i){
+  const z = zonaAnimal(k, i); if (z) return [rnd(z.x0, z.x1), rnd(z.y0, z.y1)];
   for (let n=0; n<80; n++){ const x = rnd(POT.x0, POT.x1), y = rnd(POT.y0, POT.y1); if (libreEnPotrero(x, y)) return [x, y]; }
   return [POT.x0 + 60, POT.y1 - 20];
 }
@@ -5205,7 +5216,7 @@ function armarAnimalesCampo(c){
   for (const k in c.animales) for (let i=0;i<c.animales[k];i++){
     if (esPerro(k)){ const cam = Math.floor(Math.random()*CAMINOS.length), s0 = Math.random()*LARGO_CAM[cam], [x, y] = puntoCamino(cam, s0);
       campoAnim.push({ k, i, x, y, cam, s:s0, lado:(Math.random()-0.5)*8, dir:Math.random()<0.5?1:-1, dy:0, t:rnd(1,4), come:false, paso:Math.random()*2 }); continue; }
-    const [x, y] = lugarAnimal(k);
+    const [x, y] = lugarAnimal(k, i);
     campoAnim.push({ k, i, x, y, dir:Math.random()<0.5?1:-1, dy:0, t:rnd(0,3), come:false, paso:Math.random()*2 });
   }
 }
@@ -5256,8 +5267,9 @@ function dibujarCampo(dt){
   for (const k in CORRALES){ const [x, y] = CORRALES[k], spr = SPR_LUGAR[k], tiene = !!e[k];
     if (!tiene && campoVisita) continue;
     const [, , , hh] = CORRALES[k];
-    cosas.push({ y:tiene ? y - hh*0.55 : y - hh*0.3, f:() => { const im = imgC(spr); if (!im) return;
-      if (tiene){ dibAncla(spr, 0, x, y); hitAncla(spr, 0, x, y, 'edif', k); return; }
+    cosas.push({ y:tiene && IMG_C[spr] ? y - hh*0.55 : y - hh*0.3, f:() => {
+      if (tiene && IMG_C[spr]){ dibAncla(spr, 0, x, y); hitAncla(spr, 0, x, y, 'edif', k); return; }
+      if (tiene){ const py = Math.round(y - hh*0.3); cartelCampo(g, x, py, CAMPO_EDIFICIOS[k].nombre.toUpperCase()); campoHits.push({ x0:x - 34, y0:py - 48, x1:x + 34, y1:py + 4, tipo:'edif', ref:k, cx:x, cy:py - 44 }); return; }   // todavía sin dibujo propio
       const py = Math.round(y - hh*0.3), cart = imgC('cartel');
       cartelCampo(g, x, py, CAMPO_EDIFICIOS[k].nombre.toUpperCase());
       if (Math.floor(campoT*1.5) % 2){ g.fillStyle = '#f5d547'; g.fillRect(Math.round(x) - 2, py - (cart ? cart.height : 40) - 9, 4, 6); g.fillRect(Math.round(x) - 2, py - (cart ? cart.height : 40) - 2, 4, 2); }
@@ -5266,7 +5278,7 @@ function dibujarCampo(dt){
   for (const k in c.deco || {}){ const d = CAMPO_DECO[k]; if (!c.deco[k] || !d) continue;
     cosas.push({ y:d.y, f:() => { DIB_DECO[k](g, d.x, d.y, campoT); campoHits.push({ x0:d.x - d.w/2, y0:d.y - d.h, x1:d.x + d.w/2, y1:d.y + 2, tipo:'deco', ref:k, cx:d.x, cy:d.y - d.h }); } }); }
   for (const a of campoAnim){
-    const zona = zonaAnimal(a.k), vel = a.k==='gallina' ? 9 : 7;
+    const zona = zonaAnimal(a.k, a.i), vel = a.k==='gallina' ? 9 : 7;
     a.t -= dt;
     if (a.cam !== undefined){   // perro: pasea por el camino, de ida y vuelta, y cada tanto se sienta
       if (duermen){ a.come = true; }
@@ -5319,8 +5331,11 @@ function dibujarCampo(dt){
     else { g.globalAlpha = Math.min(1, (1-p)*3); const ti = txtImg(f.txt, '#f5d547', '#15151c'); g.drawImage(ti, Math.round(f.x0 - ti.width), Math.round(f.y0 - p*18), ti.width*2, ti.height*2); g.globalAlpha = 1; } }
   // ubicando una obra: se marcan los lugares donde entra
   if (campoColocar){ const k = campoColocar.k, act = datos.campo.pos[k], pul = 0.55 + Math.sin(campoT*6)*0.3;
-    SITIOS.forEach((S, i) => { const ok = entraEn(k, i), col = i === act ? '126,212,146' : ok ? '245,213,71' : '200,80,70';
-      g.strokeStyle = `rgba(${col},${ok ? pul.toFixed(2) : 0.35})`; g.lineWidth = 2; g.beginPath(); g.ellipse(S[0], S[1] - 6, S[2]/2.6, 11, 0, 0, Math.PI*2); g.stroke(); }); }
+    // una flechita que rebota arriba de cada lugar donde entra (verde: donde está ahora)
+    SITIOS.forEach((S, i) => { if (!entraEn(k, i)) return; const aca = i === act, col = aca ? '#7ed492' : '#f5d547', yb = Math.round(S[1] - 62 + Math.sin(campoT*5 + i)*3), x = Math.round(S[0]);
+      g.fillStyle = '#15151c'; g.beginPath(); g.moveTo(x - 10, yb - 2); g.lineTo(x + 10, yb - 2); g.lineTo(x, yb + 11); g.closePath(); g.fill();
+      g.fillStyle = col; g.beginPath(); g.moveTo(x - 7, yb); g.lineTo(x + 7, yb); g.lineTo(x, yb + 8); g.closePath(); g.fill(); g.fillRect(x - 3, yb - 9, 6, 9);
+      const ti = txtImg(aca ? 'ACÁ ESTÁ' : 'PONER ACÁ', col, '#15151c'); g.drawImage(ti, x - (ti.width>>1), yb - 20); }); }
 }
 setInterval(() => { if (!$('#campo').classList.contains('oculto')){ procesarCampo(); guardar(); renderCampo(); revisarLangostas(true); publicarEstancia(); } }, 30000);
 /* =========================================================
@@ -6966,7 +6981,8 @@ $('#btnJuntar').onclick = () => juntarCampo(false);
   cvC.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse') cvC.classList.toggle('tocable', !!queHay(...aCampo(ev))); }); }
 $('#btnVisitar').onclick = abrirEstancias;
 const hojaCampo = abre => { $('#campoHoja').classList.toggle('oculto', !abre); if (abre){ cerrarPop(); renderCampo(); } };
-$('#btnAdmin').onclick = () => hojaCampo(true);
+const TIT_HOJA = { animales:'🐄 Hacienda', cultivos:'🌾 Lotes', mercado:'📈 Mercado', edificios:'🏠 Obras', deco:'🌸 Decoración', encargo:'📜 Encargo del día' };
+document.querySelectorAll('#campoBotones .cb').forEach(b => b.onclick = () => { campoTab = b.dataset.t; $('#hojaTit').textContent = TIT_HOJA[campoTab]; hojaCampo(true); });
 $('#btnHojaCerrar').onclick = () => hojaCampo(false);
 $('#btnDesafio').onclick = jugarDesafio;
 $('#btnEstCerrar').onclick = () => $('#mEstancias').classList.add('oculto');
