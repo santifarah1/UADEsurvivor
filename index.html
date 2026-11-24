@@ -5400,7 +5400,7 @@ const NOMBRES_AN = {
   caballo:['Malacara','Zaino','Tostado','Pampero'], perro:['Chicho','Toby','Negro','Ovejero'],
   galgo:['Rayo','Flecha','Bala'], dogo:['Tanque','Mordisco','Blanquito'], salchicha:['Chorizo','Mini','Longaniza'], callejero:['Firulais','Sultán','Pulgoso'], siberiano:['Nieve','Lobo','Hielo'], golden:['Manteca','Rubio','Miel'],
 };
-function nombreAnimal(k, i, c){ c = c || (campoVisita ? null : datos.campo); const pr = c && c.nombres && c.nombres[k + ':' + i]; if (pr) return pr;
+function nombreAnimal(k, i, c){ c = c || campoDatos(); const pr = c && c.nombres && c.nombres[k + ':' + i]; if (pr) return pr;
   const l = NOMBRES_AN[k] || ['Sin nombre']; return l[i % l.length] + (i >= l.length ? ' ' + (Math.floor(i / l.length) + 1) : ''); }
 
 // ---- estado de la escena ----
@@ -5636,8 +5636,12 @@ function resumenEstancia(){
   return { v:1, nombre:normTxt(c.nombre).slice(0, 22), jugador:(datos.jugador||'').slice(0, 14), nivel:c.nivel||0, animales:an,
     edificios:Object.keys(c.edificios).filter(k => c.edificios[k] && CAMPO_EDIFICIOS[k]), pos:Object.assign({}, c.pos),
     deco:Object.keys(c.deco||{}).filter(k => c.deco[k] && CAMPO_DECO[k]), lotes:c.lotes.map(l => l ? { c:l.c, av:Math.round(avanceLote(l)*100)/100 } : null),
-    pj:visitantePJ(), t:Date.now() };
+    nombres:nombresParaSubir(c), pj:visitantePJ(), t:Date.now() };
 }
+function nombresParaSubir(c){ const o = {}; let n = 0;
+  for (const k in (c.nombres||{})){ const [esp, i] = k.split(':'); if (!CAMPO_ANIMALES[esp] || !(+i < (c.animales[esp]||0)) || n >= 40) continue;
+    const v = String(c.nombres[k]).replace(/[<>]/g, '').trim().slice(0, 14); if (v){ o[esp + '_' + i] = v; n++; } }   // en Firebase las claves no pueden tener ':'
+  return o; }
 function limpiarEstancia(d){
   if (!d || typeof d !== 'object') return null;
   const lista = v => Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : [];   // Firebase devuelve algunas listas como objetos
@@ -5648,6 +5652,8 @@ function limpiarEstancia(d){
   for (const k of lista(d.edificios)) if (CAMPO_EDIFICIOS[k]) o.edificios[k] = true;
   if (d.pos && typeof d.pos === 'object') for (const k in MOVIBLES) if (d.pos[k] != null) o.pos[k] = n(d.pos[k], 0, SITIOS.length - 1);
   for (const k of lista(d.deco)) if (CAMPO_DECO[k]) o.deco[k] = true;
+  o.nombres = {}; if (d.nombres && typeof d.nombres === 'object') for (const k in d.nombres){ const m = /^([a-z]+)_(\d{1,2})$/.exec(k), v = typeof d.nombres[k] === 'string' ? d.nombres[k].replace(/[<>]/g, '').trim().slice(0, 14) : '';
+    if (m && CAMPO_ANIMALES[m[1]] && v) o.nombres[m[1] + ':' + m[2]] = v; }
   const nl = NIVELES_CAMPO[o.nivel].lotes;
   for (let i=0; i<nl; i++){ const l = d.lotes && typeof d.lotes === 'object' ? d.lotes[i] : null; o.lotes.push(l && CAMPO_CULTIVOS[l.c] ? { c:l.c, av:Math.max(0, Math.min(1, +l.av || 0)) } : null); }
   normPos(o); return o;
@@ -5662,7 +5668,9 @@ let estPublicada = '';
 async function publicarEstancia(){
   if (!DB_URL || !datos.jugador || campoVisita) return;
   const r = resumenEstancia(), firma = JSON.stringify(Object.assign({}, r, { t:0 })); if (firma === estPublicada) return;
-  const ok = await NET.put(`estancias/${idEstancia()}/datos`, r); if (ok !== false) estPublicada = firma;
+  let ok = await NET.put(`estancias/${idEstancia()}/datos`, r);
+  if (ok === false && r.nombres && Object.keys(r.nombres).length){ delete r.nombres; ok = await NET.put(`estancias/${idEstancia()}/datos`, r); }
+  if (ok !== false) estPublicada = firma;
 }
 // cebar mate: al que lo ceba le da créditos (hasta 5 estancias por día) y al dueño, cuando entra, más créditos
 const MATE_VISITA = 10, MATE_DUENO = 15, MATE_TOPE = 5;
