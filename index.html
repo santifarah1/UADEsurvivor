@@ -7395,7 +7395,7 @@ async function cargarDeNube(){
   procesarImport(r.d); setTimeout(() => { const b = $('#btnConfImport'); if (b){ const o = b.onclick; b.onclick = () => { o(); datos.nubeId = c; guardar(); pintarNube(); toast('Listo: este dispositivo ahora usa ese código'); }; } }, 0);
 }
 // ======== cuentas: Google o mail; el progreso queda en usuarios/<uid> y solo lo puede leer y escribir el dueño ========
-const FB_CFG = { apiKey:'', authDomain:'uadesurvivor.firebaseapp.com', projectId:'uadesurvivor' };
+const FB_CFG = { apiKey:'AIzaSyCUZSp-Xu24HxG8HfGZbf0K0IWh97v5FWM', authDomain:'uadesurvivor.firebaseapp.com', databaseURL:'https://uadesurvivor-default-rtdb.firebaseio.com', projectId:'uadesurvivor', appId:'1:284736794509:web:ca525da0b1918ea57cd7c4' };   // la apiKey de Firebase es pública: va en la página
 const CUENTA = { auth:null, mod:null, user:null, cargando:null, subT:0, subiendo:false, estado:'', conflicto:null, err:'' };
 const ERR_CUENTA = { 'auth/invalid-email':'Ese mail no es válido.', 'auth/missing-password':'Falta la contraseña.', 'auth/wrong-password':'Mail o contraseña incorrectos.', 'auth/invalid-credential':'Mail o contraseña incorrectos.', 'auth/invalid-login-credentials':'Mail o contraseña incorrectos.',
   'auth/user-not-found':'No hay ninguna cuenta con ese mail. Tocá "Crear cuenta".', 'auth/email-already-in-use':'Ya hay una cuenta con ese mail. Tocá "Entrar".', 'auth/weak-password':'La contraseña tiene que tener al menos 6 letras o números.',
