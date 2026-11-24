@@ -99,6 +99,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .lib-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.lib-tabs button{padding:7px;background:rgba(0,0,0,.3);border:3px solid var(--borde);font-size:13px}.lib-tabs button.sel{border-color:var(--amarillo);color:var(--amarillo)}
 .lib-h{font-size:14px;color:var(--amarillo);margin:10px 0 4px;text-align:left}
 .lib-it{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:6px 8px;margin-bottom:5px;text-align:left}
+.lib-it .rev{width:auto;margin:0 0 0 auto;padding:5px 9px;font-size:12px;flex:none}
 .lib-it .lib-dib{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}.lib-it img{max-width:40px;max-height:40px;image-rendering:pixelated}
 .lib-it b{font-size:13px}.lib-it small{display:block;color:var(--tiza-2);font-size:11px;line-height:1.35}.lib-it.no{opacity:.55}
 .lv-extra{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}.lv-extra .btn{width:auto;margin:0;padding:7px 12px;font-size:13px}.lv-extra span{font-size:11px;color:var(--tiza-2);flex:1;min-width:160px;text-align:left}
@@ -898,6 +899,10 @@ const ARENA_R = 380;
 // en la fase 2 cada legendario llama a los suyos: [tipo de enemigo, cuántos]
 // el proyectil propio de cada uno (para el anillo de la fase 2)
 const PROY_JEFE = { contratista:'granos', veterinaria:'jeringa', sebas:'hoja', laura:'fardo', gustavo:'consulta', claudio:'sello', herrera:'apunte', moltoni:'granos', noela:'granos', mariano:'sello' };
+// lo que dice cada uno cuando le queda poca vida
+const FRASE_FINAL = { sebas:'¡En Angola esto se arreglaba con un machete!', laura:'¡Les tomo la ración entera, de memoria!', gustavo:'Muchachos… se terminó el cariño', claudio:'¡Todo por triplicado y con firma!',
+  herrera:'Como el ingeniero Moltoni nunca les dijo… ¡CORRAN!', moltoni:'¡Modo deportivo, todos los drones!', noela:'¡Encierre total, noventa días!', mariano:'…ahora sí aparezco',
+  contratista:'¡Que entren todas las máquinas!', veterinaria:'¡Vacuna obligatoria para todos!' };
 const REFUERZOS = { contratista:['langosta',10], veterinaria:['vaca',5], sebas:['vaca',4], laura:['vaca',4], gustavo:['parcial',6], claudio:['formulario',8], herrera:['delegado',3], moltoni:['dron',4], noela:['toro',3], mariano:['final',3] };
 // el borde de cada arena: color del cerco y de los postes
 const BORDE_ARENA = { lote:['#d9b24a','#6b4423'], mangavet:['#9a6a3a','#4a2e18'], angola:['#c99b52','#6b4423'], corral:['#9a6a3a','#5a3a1e'], aula:['#8a3a2a','#4a1e16'], oficina:['#6a7a9a','#2a3348'],
@@ -3505,6 +3510,7 @@ function salirArena(gano){
   G.dim = null; G.mapa = null; G.jefe = null;
   $('#jefeBarra').classList.add('oculto');
   G.efectos.push({ tipo:'flash', vida:0.4, t:0.4 }); tocarTema(temaEsc());
+  if (gano && G.revancha){ terminarRevancha(true); return; }
   if (gano){
     G.proxLeg++;
     if (G.proxLeg < JEFES.length){ G.grietaT = G.t + rnd(95,145); if (defLeg(G.proxLeg).final) G.grietaT = Math.max(G.grietaT, 1290); }
@@ -3575,7 +3581,7 @@ function hablar(e, txt, dur){ e.frase = txt; e.fraseT = (dur||2.6) * velTexto();
 function actualizarJefe(e, dt, dx, dy, d){
   const j = G.jug, def = e.def;
   if (e.presenta > 0){ e.presenta -= dt; return; }
-  const ritmo = e.fase2 ? 1.4 : 1;
+  const ritmo = e.fase3 ? 1.75 : e.fase2 ? 1.4 : 1;
   e.t1 -= dt*ritmo; e.t2 -= dt*ritmo; e.fraseCd -= dt; if (e.fraseT>0) e.fraseT -= dt;
   if (!e.fase2 && !e.eco && def.id!=='tato' && e.hp < e.maxHp*0.5){
     e.fase2 = true; e.vel = def.vel*1.18; e.flash = 0.3; G.sacudon = 0.35; sfx('jefe');
@@ -3585,6 +3591,13 @@ function actualizarJefe(e, dt, dx, dy, d){
     const rf = REFUERZOS[def.id]; if (rf && G.dim){ const a0 = Math.random()*Math.PI*2;
       for (let k=0; k<rf[1]; k++){ const a = a0 + k*Math.PI*2/rf[1]; crearMinion(rf[0], Math.cos(a)*(ARENA_R-50), Math.sin(a)*(ARENA_R-50)); }
       G.efectos.push({ tipo:'anillo', x:0, y:0, r:ARENA_R-60, max:ARENA_R-20, t:0.6, vida:0.6, color:'232,96,76' }); }
+  }
+  if (e.fase2 && !e.fase3 && !e.eco && def.id!=='tato' && e.hp < e.maxHp*0.2){
+    e.fase3 = true; e.vel = def.vel*1.3; e.flash = 0.4; G.sacudon = 0.5; sfx('jefe'); G.efectos.push({ tipo:'flash', vida:0.35, t:0.35 });
+    hablar(e, FRASE_FINAL[def.id] || '¡Ahora van a ver!', 3); e.fraseCd = 5; mostrarBanner('¡' + def.nombre.split(',')[0] + ': último recurso!');
+    const pr = PROY_JEFE[def.id] || 'sello';
+    anilloAvisado(e, 22, 150, 12, pr, 0.7); tras(e, 1.4, () => anillo(e, 22, 190, 12, pr, 0.14)); tras(e, 2.2, () => anillo(e, 22, 230, 12, pr, 0.28));
+    const rf = REFUERZOS[def.id]; if (rf && G.dim){ const a0 = Math.random()*Math.PI*2; for (let k=0; k<rf[1]; k++){ const a = a0 + k*Math.PI*2/rf[1]; crearMinion(rf[0], Math.cos(a)*(ARENA_R-50), Math.sin(a)*(ARENA_R-50)); } }
   }
   // si sale tarde trae un ataque de más: lluvia de sellos donde estás parado
   if (e.tarde && def.id!=='tato'){ e.t4 = (e.t4 ?? 7) - dt*ritmo;
@@ -3812,10 +3825,33 @@ function renderLibreta(){
     return fila(k, (MINIONS[k].etiqueta || k).replace(/^./, c => c.toUpperCase()), MINIONS[k].tipoEn, d); });
   const profes = JEFES.concat([SEMI_DEF.cardinali, SEMI_DEF.padrillo].map((d, i) => Object.assign({ id:['cardinali','padrillo'][i] }, d))).map(d => {
     let dib = null; try { const r = imgMapa('ret_' + d.id); if (r){ const c = document.createElement('canvas'); c.width = r.width; c.height = r.height; c.getContext('2d').drawImage(r, 0, 0); dib = c.toDataURL(); } else { const sp = SPR_EN['j_'+d.id] || spritePersona('leg-'+d.id, d.look, true); dib = img(sp && sp.a); } } catch(_){}
-    return fila(d.id, d.nombre, d.tipoEn, dib, MATERIA[d.id] ? ' · ' + esc(MATERIA[d.id]) : ''); });
+    const ganado = JEFES.some(J => J.id === d.id) && (L[d.id]||0) > 0, rec = (datos.revanchas||{})[d.id];
+    return fila(d.id, d.nombre, d.tipoEn, dib, (MATERIA[d.id] ? ' · ' + esc(MATERIA[d.id]) : '') + (rec ? ` · récord ${fmtT(rec)}` : ''))
+      .replace(/<\/div><\/div>$/, ganado ? `</div><button class="btn rev" data-rev="${d.id}">⚔️ Revancha</button></div>` : '</div></div>'); });
   const vistos = Object.keys(MINIONS).concat(JEFES.map(d => d.id), ['cardinali','padrillo']).filter(id => L[id] > 0).length, tot = Object.keys(MINIONS).length + JEFES.length + 2;
   $('#logrosSub').textContent = `${vistos} de ${tot} anotados. Usá el ataque del tipo justo: pega 60% más.`;
-  $('#logrosLista').innerHTML = '<h3 class="lib-h">Profes</h3>' + profes.join('') + '<h3 class="lib-h">En los pasillos</h3>' + minis.join('');
+  $('#logrosLista').innerHTML = '<h3 class="lib-h">Profes</h3><p class="sub" style="font-size:11px;margin:0 0 4px;text-align:left">A los legendarios que ya bajaste los podés volver a enfrentar: elegís 6 mejoras y entrás directo a su grieta. Se guarda tu mejor tiempo.</p>' + profes.join('') + '<h3 class="lib-h">En los pasillos</h3>' + minis.join('');
+  $('#logrosLista').querySelectorAll('.rev').forEach(b => b.onclick = () => empezarRevancha(b.dataset.rev));
+}
+// revancha: partida corta para volver a pelear con un legendario
+function empezarRevancha(id){
+  cerrarModales(); audioInit(); acostarPantalla(); nuevaPartida(pjSel);
+  G.revancha = id; G.revListo = false; G.grietaT = 1e9; G.proxLeg = 3; G.proxSemi = 99; G.spawnT = 1e9; G.oleadaT = 1e9; G.plagaT = 1e9; G.temaT = 1e9; G.eliteT = 1e9; G.mapaEvT = 1e9;
+  G.jug.nivel = 7; recalcular(); G.jug.hp = G.jug.maxHp; G.pendientes = 6; mostrarBanner('Revancha: elegí 6 mejoras y entrás'); mostrarNivel();
+}
+function revisarRevancha(){
+  if (!G.revancha || G.revListo || G.pendientes > 0 || G.pausa || G.dim) return;
+  G.revListo = true; G.grieta = { x:G.jug.x, y:G.jug.y, def:defJefe(G.revancha), vida:90 }; G.revT0 = G.t; entrarGrieta();
+}
+function terminarRevancha(gano){
+  if (!G || G.fin) return; G.fin = true; G.pausa = true; joy = null; pararTema(); sfx(gano ? 'victoria' : 'derrota');
+  const def = defJefe(G.revancha), t = Math.max(1, Math.round(G.t - (G.revT0 || 0))); datos.revanchas = datos.revanchas || {};
+  const rec = datos.revanchas[G.revancha], nuevo = gano && (!rec || t < rec);
+  if (nuevo) datos.revanchas[G.revancha] = t; const premio = gano ? (nuevo ? 60 : 25) : 5; datos.creditos += premio; guardar();
+  $('#finTitulo').textContent = gano ? '⚔️ ¡Revancha ganada!' : '⚔️ Revancha perdida';
+  $('#finSub').textContent = gano ? `Le ganaste a ${def.nombre.split(',')[0]} en ${fmtT(t)}${nuevo ? ' · ¡récord nuevo!' : rec ? ' · tu récord: ' + fmtT(rec) : ''}` : `${def.nombre.split(',')[0]} te ganó esta vez.${rec ? ' Tu récord: ' + fmtT(rec) : ''}`;
+  $('#finStats').innerHTML = `<div class="stat"><small>Tiempo de pelea</small><b>${fmtT(t)}</b></div><div class="stat"><small>Créditos</small><b>+${premio}</b></div>`;
+  $('#mFin').classList.remove('oculto'); renderMenu();
 }
 function morirEnemigo(e){
   G.kills++; anotarLibreta(e);
@@ -4034,7 +4070,7 @@ function actualizar(dt){
   if (G.salidaT>0){ G.salidaT -= dt; if (G.salidaT<=0){ salirArena(true); return; } }
   if (G.grieta && (G.coop ? jugadoresVivos() : [j]).some(p => dist2(G.grieta, p.x, p.y) < 26*26)){ entrarGrieta(); return; }
 
-  spawns(dt); revisarDesafio();
+  spawns(dt); if (G.revancha) revisarRevancha(); revisarDesafio();
   actualizarFinal(dt);
   actualizarArmas(dt);
   actualizarBalas(dt);
@@ -4823,6 +4859,7 @@ function pausar(){
 function reanudar(){ if (!G) return; $('#mPausa').classList.add('oculto'); G.pausa = false; }
 function terminar(gano){
   if (!G || G.fin) return;
+  if (G.revancha){ terminarRevancha(false); return; }
   if (G.coop) mpAlTerminar(gano);
   G.fin = true; G.pausa = true; joy = null;
   pararTema(); sfx(gano ? 'victoria' : 'derrota');
@@ -7221,7 +7258,7 @@ $('#pausaBtn').onclick = () => { if (Date.now() - (+$('#pausaBtn').dataset.t || 
 $('#habBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); usarHabilidad(); });
 $('#btnSeguir').onclick = reanudar;
 $('#btnAbandonar').onclick = () => { $('#mPausa').classList.add('oculto'); terminar(false); };
-$('#btnRevancha').onclick = () => { const id = G ? G.pj.id : pjSel; nuevaPartida(id); };
+$('#btnRevancha').onclick = () => { if (G && G.revancha){ const r = G.revancha; cerrarModales(); empezarRevancha(r); return; } const id = G ? G.pj.id : pjSel; nuevaPartida(id); };
 const mostrarFinCoop = () => { $('#btnRevancha').classList.toggle('oculto', !!(G && G.coop)); };
 $('#btnMenu').onclick = volverMenu;
 
