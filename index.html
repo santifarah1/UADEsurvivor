@@ -377,6 +377,13 @@ body.zurdo.bot-chico #slots,body.zurdo.bot-grande #slots{transform-origin:bottom
 #mOpc .opc{display:grid!important;grid-template-columns:1fr 1fr;gap:6px}#mOpc .opc>label,#mOpc .opc>.opc-h,#mOpc .opc>.opc-datos,#mOpc #opBorrar{grid-column:1/-1}#mOpc .opc>.btn{margin:0!important;padding:9px 8px;font-size:13px}
 @media (max-width:520px){#mOpc .opc{grid-template-columns:1fr}}
 .opc-datos{font-size:12px;text-align:left;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:6px 8px}.opc-datos div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.opc-datos b{color:var(--amarillo)}
+.tuto-paso{position:fixed;left:50%;top:calc(56px + env(safe-area-inset-top));transform:translateX(-50%);z-index:7;pointer-events:none;width:min(420px,80vw);background:rgba(12,20,14,.9);border:3px solid var(--amarillo);padding:6px 10px 8px;text-align:center;box-shadow:3px 3px 0 rgba(0,0,0,.45)}
+#nubeInfo{text-align:left;font-size:13px;margin-bottom:4px}.nube-cod b{color:var(--amarillo);letter-spacing:1px}#nubeInfo small{color:var(--tiza-2);font-size:12px}
+#btnCopiarCod{width:auto;margin-left:6px;padding:2px 7px;font-size:11px;background:rgba(0,0,0,.35);border:2px solid var(--borde);color:var(--tiza)}
+/* en el celular, los textos chicos un poco más grandes */
+@media (pointer:coarse){ .lib-it small,.campo-item .tx small,.campo-pop small,#campoProd,.sub{font-size:max(12px,1em)!important} .lib-it b{font-size:14px} .tile span{font-size:11px} }
+.tuto-paso small{display:block;font-size:11px;color:var(--tiza-2)}.tuto-paso>b{display:block;font-size:14px;margin:2px 0 5px}.tuto-paso i{display:block;height:6px;background:#0c1810;border:2px solid #000}.tuto-paso i b{display:block;height:100%;width:0;background:var(--verde,#7ed492);transition:width .2s}
+.tuto-paso.bien{animation:tutoBien .5s}@keyframes tutoBien{40%{transform:translateX(-50%) scale(1.08);border-color:#7ed492}}
 #habBtn{position:fixed;right:calc(14px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));width:74px;height:74px;background:rgba(10,10,16,.75);border:4px solid var(--violeta);z-index:6;overflow:hidden;font-size:32px;display:flex;align-items:center;justify-content:center;touch-action:none;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
 #habBtn.lista{box-shadow:0 0 0 4px rgba(180,140,224,.45),3px 3px 0 rgba(0,0,0,.4)}
 #habBtn i{position:absolute;inset:0;pointer-events:none}
@@ -512,6 +519,7 @@ body.en-campo #toast{bottom:auto;top:62px}
 <canvas id="cv"></canvas>
 
 <div id="hud" class="oculto">
+  <div class="tuto-paso oculto" id="tutoPaso"><small id="tutoNum"></small><b id="tutoTxt"></b><i><b id="tutoBar"></b></i></div>
   <div class="xp"><i id="xpBar"></i><b id="xpNiv">NV 1</b></div>
   <div class="hud-fila">
     <div class="hud-izq"><span class="hud-niv oculto" id="hudNiv">Nv 1</span><div class="vida"><span class="cor">♥</span><div class="b"><i id="hpBar"></i><span class="t" id="hpTx">100/100</span></div></div><div class="hud-pas" id="hudPas"></div></div>
@@ -719,6 +727,7 @@ body.en-campo #toast{bottom:auto;top:62px}
   <h3>Evoluciones</h3>
   <p>Si un ataque llega a nivel 5 y tenés su pasiva, en la próxima subida podés evolucionarlo:</p>
   <div id="ayudaEvos"></div>
+  <button class="btn sec" id="btnRepTuto" style="margin-top:10px">🎓 Repetir el tutorial en la próxima partida</button>
   <button class="btn sec" data-cerrar style="margin-top:12px">Entendido</button>
 </div></div>
 
@@ -727,6 +736,10 @@ body.en-campo #toast{bottom:auto;top:62px}
   <button class="btn" id="btnExportar">Hacer backup</button>
   <div class="fila-btn" style="grid-template-columns:1fr"><button class="btn sec" id="btnImportar">Cargar backup desde archivo</button></div>
   <div class="fila-btn" style="grid-template-columns:1fr"><button class="btn sec" id="btnPegar">Pegar backup copiado</button></div>
+  <h3 style="margin:14px 0 4px;color:var(--amarillo)">☁️ Guardado en la nube</h3>
+  <p class="sub" style="font-size:12px;margin:0 0 6px">Se guarda solo, en internet, con un código secreto. Con ese código seguís tu progreso en otro celular o compu. No se lo pases a nadie.</p>
+  <div id="nubeInfo"></div>
+  <div class="fila-btn" style="grid-template-columns:1fr 1fr"><button class="btn sec" id="btnNube"></button><button class="btn sec" id="btnNubeCargar">Usar un código</button></div>
   <input type="file" id="fileImport" accept="application/json,.json" class="oculto">
   <div id="importResumen" style="margin-top:12px"></div>
   <button class="btn sec" data-cerrar style="margin-top:12px">Cerrar</button>
@@ -1247,6 +1260,7 @@ function cargar(){
 }
 let avisoGuardado = false;
 function guardar(){
+  if (typeof subirNube === 'function') setTimeout(() => subirNube(false), 0);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(datos)); }
   catch(e){ if (!avisoGuardado){ avisoGuardado = true; toast('Ojo: este navegador no deja guardar el progreso.'); } }
 }
@@ -2901,7 +2915,7 @@ function usarConsumible(i){
 function usarHabilidad(){
   if (!G || G.pausa || G.fin || G.habCd>0 || G.carga>0 || G.jug.muerto) return;
   if (G.espejo){ G.habCd = HABILIDADES[G.pj.hab].cd * ((G.jug.st && G.jug.st.habCd) || 1); MP.habN++; sfx('hab'); if (G.pj.hab==='gamer') G.buff = 5; return; }
-  const j = G.jug, id = G.pj.hab, def = HABILIDADES[id];
+  const j = G.jug, id = G.pj.hab, def = HABILIDADES[id]; G.tutoHab = true;
   G.habCd = def.cd * j.st.habCd; sfx('hab');
   G.sacudon = Math.max(G.sacudon, 0.22); G.efectos.push({ tipo:'anillo', x:j.x, y:j.y, r:10, max:150, t:0.45, vida:0.45, color:'180,140,224' }); particulas(j.x, j.y-20, '#b48ce0', 16);
   if (id!=='gamer') mostrarBanner(def.nombre.toUpperCase() + '!');
@@ -4019,7 +4033,7 @@ function actualizarGemas(dt){
     if (!p) break;
     if (G.imanT > 0) g.atraida = true;
     if (g.atraida || d < p.st.iman){ g.atraida = true; const sp = 460*dt; g.x += (p.x-g.x)/(d||1)*Math.min(sp,d); g.y += (p.y-g.y)/(d||1)*Math.min(sp,d); }
-    if (d < p.r + 6){ g.tomada = true; j.xp += g.v; if (p===j) sfx('gema'); }
+    if (d < p.r + 6){ g.tomada = true; G.tutoXp = (G.tutoXp||0) + 1; j.xp += g.v; if (p===j) sfx('gema'); }
   }
   G.gemas = G.gemas.filter(g => !g.tomada);
   for (const it of G.items){
@@ -4712,19 +4726,28 @@ function renderPasivas(){
     $('#hudBuffs').innerHTML = Object.entries(G.jug.buffs||{}).map(([id,n]) => `<span class="${n>=topeBuff()?'max':''} ${n!==(ant[id]||0)?'sube':''}" title="${esc(BUFFS[id].nombre)}">${icHTML(BUFFS[id].ic)}×${n}</span>`).join('');
   }
 }
+// el tutorial de la primera partida: cada paso se completa haciéndolo
 const TUTO = [
-  { t:2,   txt:'Moverte es lo único que hacés: los ataques salen solos.' },
-  { t:9,   txt:'Juntá los cristales para subir de nivel y elegir mejoras.' },
-  { t:20,  txt:'Cada ataque es de un tipo: mirá abajo a la izquierda a quién le pega fuerte.' },
-  { t:40,  txt:'Tu habilidad está abajo a la derecha (espacio o tocála).' },
-  { aviso:'grieta', txt:'¡Una grieta! Entrá para pelear con un profe y ganarte su vínculo.' },
+  { txt:() => esTactil() ? 'Movete: arrastrá el dedo por la pantalla' : 'Movete con WASD o las flechas', ok:G => (G.tutoCamino||0) >= 260, prog:G => (G.tutoCamino||0)/260 },
+  { txt:() => 'Tus ataques salen solos. Juntá los cristales que sueltan los enemigos', ok:G => (G.tutoXp||0) >= 5, prog:G => (G.tutoXp||0)/5 },
+  { txt:() => 'Subí de nivel y elegí una mejora', ok:G => G.jug.nivel >= 2 && !G.pausa, prog:G => G.jug.nivel >= 2 ? 1 : G.jug.xp/G.jug.xpNext },
+  { txt:() => esTactil() ? 'Usá tu poder: el botón grande de abajo a la derecha' : 'Usá tu poder: espacio o el botón grande', ok:G => !!G.tutoHab, prog:G => G.tutoHab ? 1 : 0 },
 ];
+const TUTO_EXTRA = [ { aviso:'grieta', txt:'¡Una grieta! Entrá para pelear con un profe y ganarte su vínculo.' } ];
 function tutorial(){
-  if (!G || G.coop || datos.tutoListo) return;
-  G.tuto = G.tuto || {};
-  for (let i=0;i<TUTO.length;i++){ const p = TUTO[i]; if (G.tuto[i]) continue;
-    if ((p.t !== undefined && G.t >= p.t) || (p.aviso==='grieta' && G.grieta)){ G.tuto[i] = true; mostrarConsejo(p.txt); break; } }
-  if (TUTO.every((_, i) => G.tuto[i])){ datos.tutoListo = true; guardar(); }
+  if (!G || G.coop || G.dim) return;
+  if (!datos.tutoListo){
+    G.tutoI = G.tutoI || 0; const j = G.jug;
+    if (G.tutoPos){ G.tutoCamino = (G.tutoCamino||0) + Math.hypot(j.x - G.tutoPos.x, j.y - G.tutoPos.y); } G.tutoPos = { x:j.x, y:j.y };
+    const p = TUTO[G.tutoI];
+    if (p){ $('#tutoPaso').classList.remove('oculto'); $('#tutoNum').textContent = `Paso ${G.tutoI + 1} de ${TUTO.length}`; $('#tutoTxt').textContent = p.txt();
+      $('#tutoBar').style.width = Math.round(Math.min(1, Math.max(0, p.prog(G)))*100) + '%';
+      if (p.ok(G)){ G.tutoI++; sfx('gema'); const el = $('#tutoPaso'); el.classList.remove('bien'); void el.offsetWidth; el.classList.add('bien');
+        if (G.tutoI >= TUTO.length){ datos.tutoListo = true; guardar(); setTimeout(() => $('#tutoPaso').classList.add('oculto'), 900); $('#tutoTxt').textContent = '¡Listo! Ya sabés lo básico. ¡A sobrevivir!'; $('#tutoNum').textContent = ''; $('#tutoBar').style.width = '100%'; mostrarBanner('¡Tutorial completo!'); } } }
+  }
+  G.tutoX = G.tutoX || {};
+  for (let i=0;i<TUTO_EXTRA.length;i++){ const p = TUTO_EXTRA[i]; if (G.tutoX[i] || (datos.tutoGrieta && p.aviso === 'grieta')) continue;
+    if (p.aviso==='grieta' && G.grieta){ G.tutoX[i] = true; datos.tutoGrieta = true; guardar(); mostrarConsejo(p.txt); } }
 }
 function mostrarConsejo(txt){ const el = $('#consejo'); if (!el) return; el.textContent = '💡 ' + txt; el.classList.remove('oculto','ve'); void el.offsetWidth; el.classList.add('ve'); clearTimeout(mostrarConsejo.t); mostrarConsejo.t = setTimeout(() => el.classList.add('oculto'), 5200); }
 function mostrarBanner(txt){
@@ -7300,6 +7323,27 @@ function exportar(){
     catch(e){ const t = $('#txtBackup'); t.focus(); t.select(); toast('Seleccioná el texto y copialo a mano.'); }
   };
 }
+// ---- nube: el progreso se sube solo (como mucho cada 45 s) a guardados/<código secreto> ----
+function codigoNube(){ if (!datos.nubeId){ const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const r = new Uint32Array(16); crypto.getRandomValues(r); for (const x of r) c += a[x % a.length]; datos.nubeId = c; guardar(); } return datos.nubeId; }
+const verCodigo = c => c.replace(/(.{4})/g, '$1-').replace(/-$/, '');
+let nubeT = 0, nubeFirma = '';
+async function subirNube(forzar){
+  if (!DB_URL || datos.nube === false) return; if (!forzar && Date.now() - nubeT < 45000) return; nubeT = Date.now();
+  const copia = Object.assign({}, datos); delete copia.pendOnline; const txt = JSON.stringify(copia); if (txt === nubeFirma && !forzar) return;
+  const ok = await NET.put(`guardados/${codigoNube()}`, { t:Date.now(), d:txt }); if (ok !== false){ nubeFirma = txt; datos.nubeUlt = Date.now(); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(datos)); } catch(_){} pintarNube(); }
+}
+function pintarNube(){
+  const el = $('#nubeInfo'); if (!el) return; const on = datos.nube !== false;
+  el.innerHTML = on ? `<div class="nube-cod">Tu código: <b>${verCodigo(codigoNube())}</b> <button class="ficha-btn" id="btnCopiarCod">Copiar</button></div><small>${datos.nubeUlt ? 'Último guardado: ' + new Date(datos.nubeUlt).toLocaleString('es-AR') : 'Todavía no se subió'}</small>` : '<small>Apagado: el progreso queda solo en este navegador.</small>';
+  $('#btnNube').textContent = on ? 'Apagar la nube' : 'Prender la nube';
+  const bc = $('#btnCopiarCod'); if (bc) bc.onclick = () => { try { navigator.clipboard.writeText(verCodigo(codigoNube())); toast('Código copiado'); } catch(_){ toast(verCodigo(codigoNube())); } };
+}
+async function cargarDeNube(){
+  const c = (prompt('Escribí el código de la nube (con o sin guiones):') || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!c) return;
+  if (c.length < 12){ toast('Ese código es muy corto'); return; }
+  const r = await NET.get(`guardados/${c}`); if (!r || typeof r.d !== 'string'){ toast('No encontré nada con ese código'); return; }
+  procesarImport(r.d); setTimeout(() => { const b = $('#btnConfImport'); if (b){ const o = b.onclick; b.onclick = () => { o(); datos.nubeId = c; guardar(); pintarNube(); toast('Listo: este dispositivo ahora usa ese código'); }; } }, 0);
+}
 let pendienteImport = null;
 function leerImport(file){ const fr = new FileReader(); fr.onload = () => procesarImport(fr.result); fr.readAsText(file); }
 function procesarImport(texto){
@@ -7439,8 +7483,11 @@ $('#btnMulti').onclick = abrirMulti;
 $('#btnCerrarMulti').onclick = () => { $('#mMulti').classList.add('oculto'); };
 $('#btnRanking').onclick = () => { renderRanking(true); $('#mRanking').classList.remove('oculto'); };
 $('#btnAyuda').onclick = () => { renderAyuda(); $('#mAyuda').classList.remove('oculto'); };
-$('#btnBackup').onclick = () => { $('#importResumen').innerHTML = ''; $('#mBackup').classList.remove('oculto'); };
+$('#btnBackup').onclick = () => { $('#importResumen').innerHTML = ''; pintarNube(); $('#mBackup').classList.remove('oculto'); };
 $('#btnExportar').onclick = exportar;
+$('#btnNube').onclick = () => { datos.nube = datos.nube === false; guardar(); pintarNube(); if (datos.nube !== false) subirNube(true); };
+$('#btnNubeCargar').onclick = cargarDeNube;
+$('#btnRepTuto').onclick = () => { datos.tutoListo = false; guardar(); toast('La próxima partida arranca con el tutorial'); };
 $('#btnImportar').onclick = () => $('#fileImport').click();
 $('#btnPegar').onclick = () => {
   $('#importResumen').innerHTML = `<textarea id="txtPegar" placeholder="Pegá acá el texto del backup" style="width:100%;height:90px;background:#0e1a13;color:var(--tiza);border:2px solid var(--borde);padding:8px;font-size:12px"></textarea>
