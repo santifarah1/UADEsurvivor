@@ -767,16 +767,16 @@ const ESCENARIOS = {
 function escenarioPorTiempo(t){ t = t % 1260; let r = 'facu'; for (const k in ESCENARIOS) if (t >= ESCENARIOS[k].desde) r = k; return r; }
 
 const PERSONAJES = [
-  { id:'ruso',   nombre:'El Ruso',   real:'Santiago Farah',      arma:'jueguito', hab:'gamer',    bonus:'+10% de daño', stats:{danio:1.10, fis:0.9, esp:1.2},
+  { id:'ruso',   nombre:'El Ruso',   real:'Santiago Farah',      arma:'jueguito', hab:'gamer',    bonus:'+15% de daño · +10 de vida', stats:{danio:1.15, vida:10, fis:0.9, esp:1.2},
     look:{piel:'#f1c9a5', pelo:'#f3d36b', ropa:'#3d6fb6'},
     desc:'Rubio. Vive jugando jueguitos en la compu: dispara ráfagas de pixeles al enemigo más cercano.' },
   { id:'feo',    nombre:'El Feo',    real:'Santiago Casal',     arma:'termo',    hab:'cebada',   bonus:'+20 de vida · ceba rapidísimo', stats:{vida:20, cebador:true, fis:1.2, esp:0.9},
     look:{piel:'#f2c9a8', pelo:'#2a1e17', ropa:'#cbb38a', pantalon:'#3b4f78', flequillo:true, sonrisa:true, chaleco:{manga:'#3d3f46', vivo:'#2f5a3a', cuello:'#f2c4cc'}},
     desc:'El del chaleco. El cebador oficial: los mates le giran el doble de rápido y tiene uno más. Sebas lo odia.' },
-  { id:'conejo', nombre:'El Conejo', real:'Joaquín Goicoechea', arma:'neumatico', hab:'clasico', bonus:'+15% de velocidad', stats:{vel:1.15, fis:1.2, esp:0.9},
+  { id:'conejo', nombre:'El Conejo', real:'Joaquín Goicoechea', arma:'neumatico', hab:'clasico', bonus:'+15% de velocidad · +15 de vida', stats:{vel:1.15, vida:15, fis:1.2, esp:0.9},
     look:{piel:'#f0c6a0', pelo:'#7a5230', ropa:'#3f8f5a', orejas:true},
     desc:'Fierrero: fanático del automovilismo y los autos clásicos. Tira neumáticos que se llevan puesto todo.' },
-  { id:'pili',   nombre:'Picher',    real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar · +15 de vida', stats:{iman:1.4, vida:15, fis:0.9, esp:1.2},
+  { id:'pili',   nombre:'Picher',    real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar · +25 de vida · +5% de daño', stats:{iman:1.4, vida:25, danio:1.05, fis:0.9, esp:1.2},
     look:{piel:'#f3cfb0', pelo:'#8a4b2a', ropa:'#8e5bb5', largo:true},
     desc:'La única del grupo que estudia posta, y enamorada de Italia. Sus apuntes van solos al enemigo más cercano.' },
 ];
@@ -3319,7 +3319,7 @@ function spawns(dt){
   revisarEventosMapa(dt);
   // los pesados de Pili
   if (hayPili()){
-    G.pesadosT = (G.pesadosT ?? 170) - dt;
+    G.pesadosT = (G.pesadosT ?? 300) - dt;
     if (G.pesadosT <= 0 && !G.enemigos.some(e => e.pesado)){ G.pesadosT = 330; traerPesados(); }
   }
   // plaga de langostas
@@ -3358,14 +3358,17 @@ function spawns(dt){
   G.oleadaT -= dt;
   if (G.oleadaT<=0){
     G.oleadaT = 120; mostrarBanner('¡Semana de parciales!');
-    const n = 22 + Math.floor(G.t/60), R = Math.hypot(VW/2,VH/2)+30;
-    for (let i=0;i<n;i++){ const a = i*Math.PI*2/n; crearMinion(G.t>300?'recu':'parcial', G.jug.x+Math.cos(a)*R, G.jug.y+Math.sin(a)*R); }
+    const n = 22 + Math.floor(G.t/60), R = Math.hypot(VW/2,VH/2)+30, hueco = Math.floor(Math.random()*n), ancho = Math.max(3, Math.round(n*0.14));
+    for (let i=0;i<n;i++){ if ((i - hueco + n) % n < ancho) continue;   // siempre queda una salida
+      const a = i*Math.PI*2/n; crearMinion(G.t>420?'recu':'parcial', G.jug.x+Math.cos(a)*R, G.jug.y+Math.sin(a)*R); }
   }
   G.spawnT -= dt;
   if (G.spawnT<=0){
-    G.spawnT = Math.max(0.17, 1.05 - G.t/360) * (G.clima==='paro' ? 1.6 : 1);
+    // enemigos por segundo: ~1 al arrancar, ~3,4 a los 2 min, ~7 a los 5, ~13 a los 10 y ~23 a los 15 (tope)
+    const porSeg = Math.min(24, 0.95 + Math.min(G.t, 600)/50 + Math.max(0, G.t - 600)/30), n = 1 + Math.floor(G.t/150);
+    G.spawnT = n/porSeg * (G.clima==='paro' ? 1.6 : 1);
     if (G.enemigos.length < 300){
-      const n = 1 + Math.floor(G.t/120), pool = poolMinions(G.t/1.5);
+      const pool = poolMinions(G.t/1.5);
       for (let i=0;i<n;i++){ const p = posBorde(); crearMinion(elegir(pool), p.x, p.y); }
     } else if (G.t > 420 && Math.random() < 0.12 && G.enemigos.filter(e => e.elite).length < Math.min(45, 8 + (G.t - 420)/30)){
       // con la horda al tope, la dificultad sigue subiendo: el más lejano se va y entra un élite
@@ -3945,7 +3948,7 @@ function morirEnemigo(e){
 function dañarJugador(dmg, de){
   const j = G.jug; if (j.inv>0 || G.fin || j.muerto) return;
   if (de==='sebas' && (j.pjId || G.pj.id)==='feo') dmg *= 1.5;           // Sebas lo odia al Feo
-  if ((de==='diego' || de==='pato') && (j.pjId || G.pj.id)==='pili') dmg *= 1.5;   // y estos dos, a Pili
+  if ((de==='diego' || de==='pato') && (j.pjId || G.pj.id)==='pili') dmg *= 1.25;   // y estos dos, a Pili
   if (de==='tato') dmg = Math.max(dmg, j.maxHp * dmg/100 * (1 + Math.max(0, G.t - 1800)/900));
   dmg *= ((j.st && j.st.def) || 1) * (G.dificil ? 1.25 : 1);
   j.hp -= dmg; j.inv = 0.5; if (j===G.jug && !G.coop || j===G.jugLocal) G.ultimoGolpe = de || G.ultimoDe || null;
