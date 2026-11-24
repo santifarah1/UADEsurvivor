@@ -91,6 +91,13 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .tr-confeti{position:absolute;top:0;width:6px;height:9px;pointer-events:none;animation:trCae 1.4s cubic-bezier(.2,.6,.4,1) forwards}
 @keyframes trCae{from{transform:translate(0,-10px) rotate(0)}to{transform:translate(var(--dx),220px) rotate(540deg);opacity:0}}
 .lib-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.lib-tabs button{padding:7px;background:rgba(0,0,0,.3);border:3px solid var(--borde);font-size:13px}.lib-tabs button.sel{border-color:var(--amarillo);color:var(--amarillo)}
+.fi-datos{font-size:12px;text-align:left;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:6px 8px}.fi-datos div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.fi-datos b{color:var(--amarillo)}
+.fi-barra{display:grid;grid-template-columns:130px 1fr 52px;gap:8px;align-items:center;font-size:12px;margin:3px 0}.fi-barra i{height:10px;background:#0c1810;border:2px solid #000}.fi-barra i b{display:block;height:100%;background:var(--amarillo)}.fi-barra small{text-align:right;color:var(--amarillo)}
+.ficha-btn{width:auto;margin-left:6px;padding:2px 7px;font-size:11px;background:rgba(0,0,0,.35);border:2px solid var(--borde);color:var(--tiza)}
+.perfil-cab{display:flex;gap:10px;align-items:center;margin-bottom:8px;text-align:left}.perfil-cab .rank-cara{width:48px;height:48px}.perfil-cab small{display:block;color:var(--tiza-2)}
+.nov{text-align:left;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:7px 9px;margin-bottom:6px}.nov b{color:var(--amarillo)}.nov p{margin:3px 0 0;font-size:12px}
+.rank-sub{display:flex;gap:6px;width:100%;margin-bottom:6px}.rank-sub button{flex:1}.tabla-rank tr.click{cursor:pointer}.tabla-rank tr.click:hover td{background:rgba(245,213,71,.08)}
+.rank-yo{margin:6px 0 0;padding:6px;border:2px dashed var(--amarillo);font-size:13px;cursor:pointer}
 .lib-h{font-size:14px;color:var(--amarillo);margin:10px 0 4px;text-align:left}
 .lib-it{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:6px 8px;margin-bottom:5px;text-align:left}
 .lib-it .lib-dib{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}.lib-it img{max-width:40px;max-height:40px;image-rendering:pixelated}
@@ -150,11 +157,13 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .menu-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:7px 2px;font-size:12px;font-weight:700;box-shadow:3px 3px 0 rgba(0,0,0,.4);transition:transform .1s,border-color .1s}
 .tile:hover{transform:translateY(-2px);border-color:var(--amarillo)}
-.tile{position:relative}.tile .aviso{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e8604c;color:#fff;font-style:normal;font-size:13px;line-height:20px;text-align:center;box-shadow:2px 2px 0 rgba(0,0,0,.5);border:2px solid #15151c;animation:latir 1.6s ease-in-out infinite;pointer-events:none}
+.tile{position:relative}#btnNovedades .aviso,.tile .aviso{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e8604c;color:#fff;font-style:normal;font-size:13px;line-height:20px;text-align:center;box-shadow:2px 2px 0 rgba(0,0,0,.5);border:2px solid #15151c;animation:latir 1.6s ease-in-out infinite;pointer-events:none}
 @keyframes latir{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}.tile:active{transform:translateY(2px)}
 .tile i{font-style:normal;font-size:20px;line-height:24px}.tile .pxic{width:24px;height:24px}
 #btnCampo{border-color:rgba(126,212,146,.6)}
-.menu-mini{display:grid;grid-template-columns:1fr auto auto auto;gap:6px}
+.menu-mini{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:6px}
+#btnNovedades{position:relative}
+@media (max-height:460px){#btnBackup{font-size:0;gap:0}.menu-mini .mini{padding:3px 6px;min-width:0}}
 .mini{background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:6px 10px;font-size:13px;font-weight:700;min-width:44px}
 @media (max-height:460px) and (orientation:landscape){
   .menu-lay{grid-template-columns:minmax(0,1fr) 270px;padding-top:8px;padding-bottom:8px;gap:12px}
@@ -554,6 +563,8 @@ body.en-campo #toast{bottom:auto;top:62px}
       </div>
       <div class="menu-mini">
         <button class="mini" id="btnBackup" title="Backup"><img class="pxic uic" data-ic="ui:backup" alt=""> Backup</button>
+        <button class="mini" id="btnPerfil" title="Perfil">👤</button>
+        <button class="mini" id="btnNovedades" title="Novedades">📰</button>
         <button class="mini" id="btnSonido" title="Sonido"><img class="pxic uic" data-ic="ui:son" alt=""></button>
         <button class="mini" id="btnOpc" title="Opciones"><img class="pxic uic" data-ic="ui:opc" alt=""></button>
         <button class="mini" id="btnFull" title="Pantalla completa"><img class="pxic uic" data-ic="ui:pantalla" alt=""></button>
@@ -630,6 +641,9 @@ body.en-campo #toast{bottom:auto;top:62px}
   <p class="multi-error" id="multiError"></p>
   <button class="btn sec" id="btnCerrarMulti" style="margin-top:8px">Cerrar</button>
 </div></div>
+<div class="modal oculto" id="mFicha"><div class="caja ayuda"><h2 id="fichaTit"></h2><div id="fichaCont"></div><button class="btn sec" data-cerrar style="margin-top:12px">Cerrar</button></div></div>
+<div class="modal oculto" id="mPerfil"><div class="caja ayuda"><h2 id="perfilTit">👤 Perfil</h2><div id="perfilCont"></div><button class="btn sec" data-cerrar style="margin-top:12px">Cerrar</button></div></div>
+<div class="modal oculto" id="mNovedades"><div class="caja ayuda"><h2>📰 ¿Qué hay de nuevo?</h2><div id="novCont"></div><button class="btn sec" data-cerrar style="margin-top:12px">¡Joya!</button></div></div>
 <div class="modal oculto" id="mRanking"><div class="caja"><h2>🏆 Ranking</h2><p class="sub" id="rankSub">Ranking online de la temporada</p>
   <label class="rank-nombre">Tu nombre: <input id="rankNombre" maxlength="14" placeholder="¿Quién juega?"></label>
   <div class="rank-mejores" id="rankMejores"></div>
@@ -6697,6 +6711,7 @@ function avisosMenu(){
   const tk = datos.tickets || 0; pon('btnCantina', tk > 0 ? String(Math.min(tk, 99)) : '', `Tenés ${tk} ticket${tk===1?'':'s'}`);
   // logros nuevos que todavía no miraste
   const lg = LOGROS.filter(l => datos.logros[l.id]).length; if (typeof datos.logrosVistos !== 'number') datos.logrosVistos = lg;
+  pon('btnNovedades', datos.novVista !== NOV_VERSION ? '!' : '', 'Hay novedades');
   pon('btnLogros', lg > datos.logrosVistos ? String(lg - datos.logrosVistos) : '', 'Logros nuevos');
   // el campo: cosecha lista, langostas, encargo para cobrar o producción para juntar
   let campo = '';
@@ -6731,7 +6746,7 @@ function renderMenu(){
     <div class="lin">${icArma(p.arma)} ${esc(ARMAS[p.arma].nombre)} <small style="color:var(--tiza-2)">· fuerte en ${st.fis>st.esp?'físicos':'especiales'}</small></div>
     <div class="lin hab">${icHab(p.hab)} ${esc(hb.nombre)}</div>
     ${st.fis!==undefined ? `<div class="barras">${barra('Físico', st.fis, 1.4)}${barra('Especial', st.esp, 1.4)}</div>` : ''}
-    <div class="lin rec">${esc(rec)}</div>${(() => { const pk = perroElegido(); return pk ? `<div class="lin" style="color:var(--tiza-2)">🐾 Te acompaña ${esc(nombreAnimal(pk, 0))} (${esc(CAMPO_ANIMALES[pk].nombre.toLowerCase())})</div>` : ''; })()}${proximoDesbloqueo(p.id)}`;
+    <div class="lin rec">${esc(rec)} <button class="ficha-btn" onclick="abrirFicha('${p.id}')">📋 Ficha</button></div>${(() => { const pk = perroElegido(); return pk ? `<div class="lin" style="color:var(--tiza-2)">🐾 Te acompaña ${esc(nombreAnimal(pk, 0))} (${esc(CAMPO_ANIMALES[pk].nombre.toLowerCase())})</div>` : ''; })()}${proximoDesbloqueo(p.id)}`;
   $('#descPj').innerHTML = esc(p.desc) + ' <span style="color:var(--violeta)">' + esc(hb.nombre) + ':</span> ' + esc(hb.desc);
   menuAn.pj = p.id;
   avisosMenu(); renderDesafio();
@@ -6774,8 +6789,62 @@ function animarMenu(dt){
   const img = fr ? aplicarSkin(fr, skin) : caraPJ(menuAn.pj);
   const S = Math.max(1, Math.floor(Math.min(188/img.width, 212/img.height))), sal = Math.round(Math.abs(Math.sin(menuAn.t*6*Math.PI/2))*3);
   hg.fillStyle = 'rgba(0,0,0,.35)'; hg.fillRect(Math.round(96 - img.width*S*0.3), 216, Math.round(img.width*S*0.6), 6);
-  hg.drawImage(img, Math.round((192-img.width*S)/2), 220-img.height*S - sal, img.width*S, img.height*S);
+  const pk = perroElegido(), dog = pk && imgC(CAMPO_ANIMALES[pk].spr || pk, Math.floor(menuAn.t*5) % 2), cx = dog ? 78 : 96;
+  hg.drawImage(img, Math.round(cx - img.width*S/2), 220-img.height*S - sal, img.width*S, img.height*S);
+  if (dog){ const D = Math.max(2, Math.round(S*0.8)), dx = 148 + Math.round(Math.sin(menuAn.t*1.3)*6);
+    hg.fillStyle = 'rgba(0,0,0,.3)'; hg.fillRect(Math.round(dx - dog.width*D*0.35), 217, Math.round(dog.width*D*0.7), 4);
+    hg.save(); hg.translate(Math.round(dx + dog.width*D/2), 220 - dog.height*D); hg.scale(-1, 1); hg.drawImage(dog, 0, 0, dog.width*D, dog.height*D); hg.restore(); }
 }
+// ---- ficha de personaje ----
+function abrirFicha(id){
+  const p = PERSONAJES.find(q => q.id === id) || PERSONAJES[0], h = HABILIDADES[p.hab], a = ARMAS[p.arma], ev = a.evo && EVOS[a.evo];
+  const B = id2 => { const q = PERSONAJES.find(x => x.id === id2), st = q.stats || {}; return { vida:100 + (st.vida||0), fis:(st.danio||1)*(st.fis||1), esp:(st.danio||1)*(st.esp||1), vel:st.vel||1, iman:st.iman||1 }; };
+  const yo = B(id), max = k => Math.max(...PERSONAJES.map(q => B(q.id)[k]));
+  const barra = (n, k, fmt) => `<div class="fi-barra"><span>${n}</span><i><b style="width:${Math.round(yo[k]/max(k)*100)}%"></b></i><small>${fmt(yo[k])}</small></div>`;
+  const runs = (datos.partidas||[]).filter(r => r.pj === id), mejor = runs.reduce((m, r) => Math.max(m, r.tiempo||0), 0), jefes = runs.reduce((m, r) => Math.max(m, r.jefes||0), 0);
+  const asp = ['normal'].concat(datos.skins[id]||[]).map(k => SKINS[k] ? SKINS[k].nombre : k).join(', ');
+  $('#fichaTit').textContent = p.nombre + ' · ' + p.real;
+  $('#fichaCont').innerHTML = `<p>${esc(p.desc)}</p><p style="color:var(--amarillo)">${esc(p.bonus)}</p>
+    <h3 class="lib-h">Comparado con los demás</h3>${barra('Vida', 'vida', v => Math.round(v))}${barra('Ataque físico', 'fis', v => Math.round(v*100) + '%')}${barra('Ataque especial', 'esp', v => Math.round(v*100) + '%')}${barra('Velocidad', 'vel', v => Math.round(v*100) + '%')}${barra('Alcance al juntar', 'iman', v => Math.round(v*100) + '%')}
+    <h3 class="lib-h">Su ataque</h3><p>${icArma(p.arma)} <b>${esc(a.nombre)}</b>: ${esc(a.desc)}</p>${ev ? `<p>Con <b>${esc(PASIVAS[a.pasiva].nombre)}</b> al nivel 5 evoluciona en <b style="color:var(--amarillo)">${esc(ev.nombre)}</b>: ${esc(ev.desc)}</p>` : ''}
+    <h3 class="lib-h">Su habilidad</h3><p>${icHab(p.hab)} <b>${esc(h.nombre)}</b> (cada ${h.cd} s): ${esc(h.desc)}</p>
+    <h3 class="lib-h">Con ${esc(p.nombre)}</h3><div class="fi-datos"><div><span>Partidas</span><b>${runs.length}</b></div><div><span>Mejor tiempo</span><b>${mejor ? fmtT(mejor) : '—'}</b></div><div><span>Más profes en una partida</span><b>${jefes}</b></div><div><span>Recibido</span><b>${(datos.stats.ganoPj||{})[id] ? '🎓 sí' : 'todavía no'}</b></div><div><span>Aspectos</span><b style="text-align:right">${esc(asp)}</b></div></div>`;
+  $('#mFicha').classList.remove('oculto');
+}
+// ---- perfil: el tuyo (con tus datos) o el de otro (con lo que hay en el ranking) ----
+function perfilDesde(runs){
+  const best = runs.reduce((m, r) => puntaje(r) > puntaje(m||{}) ? r : m, null), cuenta = {};
+  for (const r of runs) cuenta[r.pj] = (cuenta[r.pj]||0) + 1;
+  const fav = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0];
+  return { partidas:runs.length, puntaje:best ? puntaje(best) : 0, tiempo:runs.reduce((m, r) => Math.max(m, r.tiempo||0), 0), jefes:runs.reduce((m, r) => Math.max(m, r.jefes||0), 0), recibido:runs.some(r => r.gano), fav, skin:best && best.skin };
+}
+async function abrirPerfil(nombre){
+  const mio = !nombre || nombre.toLowerCase() === (datos.jugador||'').toLowerCase(), nom = mio ? (datos.jugador || 'Sin nombre') : nombre;
+  const runs = mio ? (datos.partidas||[]) : (rankCache||[]).filter(r => (r.jugador||'').toLowerCase() === nombre.toLowerCase()), pf = perfilDesde(runs), P = PERSONAJES.find(q => q.id === pf.fav);
+  const S = datos.stats || {}, amigo = (datos.amigos||[]).includes(nom.toLowerCase());
+  $('#perfilTit').textContent = '👤 ' + nom;
+  $('#perfilCont').innerHTML = `<div class="perfil-cab">${pf.fav ? caritaSkin(pf.fav, mio ? datos.skinSel[pf.fav] : pf.skin) : ''}<div><b>${esc(nom)}</b><small>${P ? 'Juega más con ' + esc(P.nombre) : 'Todavía sin partidas'}${pf.recibido ? ' · 🎓 Recibido' : ''}</small></div></div>
+    <div class="fi-datos"><div><span>Partidas${mio ? '' : ' en el ranking'}</span><b>${pf.partidas}</b></div><div><span>Mejor puntaje</span><b>${pf.puntaje.toLocaleString('es-AR')}</b></div><div><span>Mejor tiempo</span><b>${pf.tiempo ? fmtT(pf.tiempo) : '—'}</b></div><div><span>Más profes en una partida</span><b>${pf.jefes}</b></div>
+    ${mio ? `<div><span>Logros</span><b>${Object.keys(datos.logros||{}).length} de ${LOGROS.length}</b></div><div><span>Enemigos bajados en total</span><b>${(S.kills||Object.values(datos.libreta||{}).reduce((a, b) => a + b, 0)).toLocaleString('es-AR')}</b></div><div><span>Estancia</span><b>${esc(datos.campo.nombre)}</b></div>` : ''}</div>
+    <div id="perfilEst" style="margin-top:8px"></div>${mio ? '' : `<button class="btn sec" id="perfilAmigo" style="margin-top:8px">${amigo ? '★ Sacar de amigos' : '☆ Agregar a amigos'}</button>`}`;
+  $('#mPerfil').classList.remove('oculto');
+  const ba = $('#perfilAmigo'); if (ba) ba.onclick = () => { alternarAmigo(nom); abrirPerfil(nom); };
+  if (!mio && DB_URL){ const todo = await NET.get('estancias'); if (!todo || typeof todo !== 'object') return;
+    const e = Object.entries(todo).map(([id, v]) => ({ id, d:limpiarEstancia(v && v.datos) })).find(x => x.d && (x.d.jugador||'').toLowerCase() === nom.toLowerCase());
+    if (e){ $('#perfilEst').innerHTML = `<button class="btn">🔭 Visitar su estancia: ${esc(e.d.nombre)}</button>`; $('#perfilEst button').onclick = () => { cerrarModales(); abrirCampo(); visitarEstancia({ id:e.id, d:e.d, mates:0 }); }; } }
+}
+function alternarAmigo(nom){ datos.amigos = datos.amigos || []; const k = nom.toLowerCase(), i = datos.amigos.indexOf(k); if (i >= 0) datos.amigos.splice(i, 1); else datos.amigos.push(k); guardar(); toast(i >= 0 ? `${nom} ya no está en tus amigos` : `${nom} agregado a tus amigos ★`); }
+// ---- novedades ----
+const NOV_VERSION = 'nov-2026-11';
+const NOVEDADES = [
+  ['🌾 Mi campo renovado', 'Un mapa grande que se recorre arrastrando, con un lugar para cada animal: gallinero, chiquero, corral de ovejas, establo y canil. Cada sección se abre en su ventana.'],
+  ['🐕 Siete perros', 'Ovejero, galgo, dogo, salchicha, callejero, siberiano y golden. Elegí cuál te acompaña en las partidas y ponele nombre.'],
+  ['🎰 Cantina nueva', 'Aspecto asegurado cada 10 tiradas y legendario cada 50, sin repetidos, monedas para la vitrina, premios para tu estancia y boleto dorado.'],
+  ['👨‍🏫 Jefes nuevos y más duros', 'Llegaron el Contratista y la Veterinaria, cada profe tiene su ataque propio y un último recurso al 20% de vida. Revancha desde la Libreta.'],
+  ['⚔️ Más cosas en la partida', 'Evoluciones para todos los ataques, mochila, mini-mapa, élites con truco, olas temáticas, combo y eventos: fotocopiadora, examen, café, domiciliario y aula libre.'],
+  ['⚙️ Opciones', 'Joystick fijo, mano zurda, tamaño de botones, modo daltónico y más.'],
+];
+function abrirNovedades(){ $('#novCont').innerHTML = NOVEDADES.map(([t, d]) => `<div class="nov"><b>${t}</b><p>${esc(d)}</p></div>`).join(''); $('#mNovedades').classList.remove('oculto'); datos.novVista = NOV_VERSION; guardar(); avisosMenu(); }
 function renderKiosco(){
   $('#kioscoCred').textContent = datos.creditos;
   $('#kioscoLista').innerHTML = KIOSCO.map(k => {
@@ -6843,7 +6912,7 @@ async function bajarRanking(){
 const puntaje = r => Math.round((2*(r.tiempo||0) + (r.kills||0) + 400*(r.jefes||0) + (r.gano ? 3000 : 0)) * (r.dif ? 1.3 : 1));
 const dificilDesbloqueado = () => Object.values((datos.stats||{}).ganoPj||{}).some(Boolean);
 const fmtFecha = f => f ? f.slice(8,10) + '/' + f.slice(5,7) : '';
-let rankFiltro = 'todos';
+let rankFiltro = 'todos', rankRango = 'temporada', rankAmigos = false;
 function caritaPJ(id){ const h = hojaPJ(id); return h ? `<img class="rank-cara" src="${aplicarSkin(h.abajo[0], datos.skinSel[id]).toDataURL()}" alt="">` : ''; }
 let rankCache = null;
 function caritaSkin(pj, skin){ const h = (SKINS[skin] && SKINS[skin].traje && SPR_SKIN[skin]) || SPR_PJ[pj]; return h ? `<img class="rank-cara" src="${aplicarSkin(h.abajo[0], skin).toDataURL()}" alt="">` : ''; }
@@ -6858,7 +6927,8 @@ async function renderRanking(recargar){
     try { await enviarPendientes(); rankCache = await bajarRanking(); }
     catch(e){ cont.innerHTML = '<p class="vacio">No se pudo cargar el ranking. ¿Hay internet?</p>'; return; }
   }
-  const todas = rankCache.slice();
+  const semana = new Date(Date.now() - 7*86400000).toISOString().slice(0,10), am = datos.amigos || [];
+  const todas = rankCache.filter(r => (rankRango !== 'semana' || (r.fecha||'') >= semana) && (!rankAmigos || am.includes((r.jugador||'').toLowerCase()) || (r.jugador||'').toLowerCase() === (datos.jugador||'').toLowerCase()));
   const nom = id => (PERSONAJES.find(p=>p.id===id)||{nombre:id}).nombre;
   // el mejor de cada jugador
   const mejores = {};
@@ -6866,16 +6936,26 @@ async function renderRanking(recargar){
   const podio = Object.values(mejores).sort((a,b) => puntaje(b)-puntaje(a)).slice(0,4);
   $('#rankMejores').innerHTML = podio.length ? podio.map((r,i) => `<div class="rank-card">${caritaSkin(r.pj, r.skin)}<b>${['🥇','🥈','🥉','4°'][i]} ${esc(r.jugador)}</b><span class="pts">${puntaje(r).toLocaleString('es-AR')}</span><small>${esc(nom(r.pj))}${r.gano ? ' · recibido' : ''}</small></div>`).join('') : '';
   $('#rankTabs').innerHTML = [['todos','Todas']].concat(PERSONAJES.map(p => [p.id, p.nombre])).map(([k,n]) => `<button class="${k===rankFiltro?'sel':''}" data-k="${k}">${esc(n)}</button>`).join('') + '<button data-k="__r">↻ Actualizar</button>';
-  $('#rankTabs').querySelectorAll('button').forEach(b => b.onclick = () => { if (b.dataset.k==='__r') renderRanking(true); else { rankFiltro = b.dataset.k; renderRanking(); } });
+  $('#rankTabs').insertAdjacentHTML('afterbegin', `<div class="rank-sub"><button class="${rankRango==='temporada'?'sel':''}" data-r="temporada">Temporada</button><button class="${rankRango==='semana'?'sel':''}" data-r="semana">Esta semana</button><button class="${rankAmigos?'sel':''}" data-a="1">★ Amigos</button></div>`);
+  $('#rankTabs').querySelectorAll('button').forEach(b => b.onclick = () => { if (b.dataset.r){ rankRango = b.dataset.r; renderRanking(); return; } if (b.dataset.a){ rankAmigos = !rankAmigos; renderRanking(); return; } if (b.dataset.k==='__r') renderRanking(true); else { rankFiltro = b.dataset.k; renderRanking(); } });
   // una fila por persona: su mejor partida (con ese personaje, si hay filtro)
   const porPersona = {};
   for (const r of todas){ if (rankFiltro!=='todos' && r.pj!==rankFiltro) continue; const k = (r.jugador||'').trim().toLowerCase(); if (!porPersona[k] || puntaje(r) > puntaje(porPersona[k])) porPersona[k] = r; }
-  const lista = Object.values(porPersona).sort((a,b) => puntaje(b)-puntaje(a)).slice(0,20);
+  const ordenada = Object.values(porPersona).sort((a,b) => puntaje(b)-puntaje(a)), lista = ordenada.slice(0,20);
   if (!lista.length){ cont.innerHTML = '<p class="vacio">Todavía nadie jugó esta temporada. ¡Sé el primero!</p>'; return; }
   const medalla = i => i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
   const yo = (datos.jugador||'').toLowerCase();
   cont.innerHTML = `<table class="tabla-rank"><tr><th>#</th><th>Quién</th><th class="num">Puntaje</th><th class="num">Tiempo</th><th class="num">Bajó</th><th class="num">Profes</th></tr>` +
     lista.map((r,i) => `<tr class="${i<3?'top':''} ${r.jugador.toLowerCase()===yo?'yo':''}"><td>${medalla(i)}</td><td><div class="rank-quien">${caritaSkin(r.pj, r.skin)}<span><b>${esc(r.jugador)}</b><small>${esc(nom(r.pj))} · ${fmtFecha(r.fecha)}${r.coop ? ' · <i class="coop">EN EQUIPO</i>' : ''}${r.dif ? ' · <i class="coop" style="color:#e8604c">DIFÍCIL</i>' : ''}${r.gano ? ' · <i class="recibido">RECIBIDO</i>' : ''}</small></span></div></td><td class="num pts">${puntaje(r).toLocaleString('es-AR')}</td><td class="num">${fmtT(r.tiempo)}</td><td class="num">${esc(r.kills)}</td><td class="num">${esc(r.jefes??0)}</td></tr>`).join('') + '</table>';
+  completarRanking(ordenada, lista);
+}
+// después de pintar la tabla: tocar una fila abre el perfil, y si no estás en el top, tu puesto abajo
+function completarRanking(ordenada, lista){
+  const cont = $('#rankingCont'), filas = [...cont.querySelectorAll('.tabla-rank tr')].slice(1);
+  filas.forEach((tr, i) => { tr.classList.add('click'); tr.onclick = () => abrirPerfil(lista[i].jugador); });
+  const yo = (datos.jugador||'').toLowerCase(), pos = ordenada.findIndex(r => (r.jugador||'').toLowerCase() === yo);
+  if (yo && pos >= 20){ const r = ordenada[pos]; cont.insertAdjacentHTML('beforeend', `<p class="rank-yo" onclick="abrirPerfil()">… tu puesto: <b>${pos + 1}°</b> · ${puntaje(r).toLocaleString('es-AR')} puntos · ${fmtT(r.tiempo)}</p>`); }
+  else if (yo && pos < 0) cont.insertAdjacentHTML('beforeend', '<p class="rank-yo">Todavía no tenés partidas en esta vista.</p>');
 }
 function renderAyuda(){
   const en = Object.keys(TIPOS_EN);
@@ -6992,6 +7072,8 @@ $('#btnJuntar').onclick = () => juntarCampo(false);
   cvC.addEventListener('click', ev => { tocarCampo(...aCampo(ev)); });
   cvC.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse') cvC.classList.toggle('tocable', !!queHay(...aCampo(ev))); }); }
 $('#btnVisitar').onclick = abrirEstancias;
+$('#btnPerfil').onclick = () => abrirPerfil();
+$('#btnNovedades').onclick = abrirNovedades;
 const hojaCampo = abre => { $('#campoHoja').classList.toggle('oculto', !abre); if (abre){ cerrarPop(); renderCampo(); } };
 const TIT_HOJA = { animales:'🐄 Hacienda', cultivos:'🌾 Lotes', mercado:'📈 Mercado', edificios:'🏠 Obras', deco:'🌸 Decoración', encargo:'📜 Encargo del día' };
 document.querySelectorAll('#campoBotones .cb').forEach(b => b.onclick = () => { campoTab = b.dataset.t; $('#hojaTit').textContent = TIT_HOJA[campoTab]; hojaCampo(true); });
