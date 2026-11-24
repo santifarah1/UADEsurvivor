@@ -773,7 +773,7 @@ const PERSONAJES = [
   { id:'feo',    nombre:'El Feo',    real:'Santiago Casal',     arma:'termo',    hab:'cebada',   bonus:'+20 de vida · ceba rapidísimo', stats:{vida:20, cebador:true, fis:1.2, esp:0.9},
     look:{piel:'#f2c9a8', pelo:'#2a1e17', ropa:'#cbb38a', pantalon:'#3b4f78', flequillo:true, sonrisa:true, chaleco:{manga:'#3d3f46', vivo:'#2f5a3a', cuello:'#f2c4cc'}},
     desc:'El del chaleco. El cebador oficial: los mates le giran el doble de rápido y tiene uno más. Sebas lo odia.' },
-  { id:'conejo', nombre:'El Conejo', real:'Joaquín Goicoechea', arma:'neumatico', hab:'clasico', bonus:'+15% de velocidad · +15 de vida', stats:{vel:1.15, vida:15, fis:1.2, esp:0.9},
+  { id:'conejo', nombre:'El Conejo', real:'Joaquín Goicoechea', arma:'neumatico', hab:'clasico', bonus:'+15% de velocidad · +20 de vida', stats:{vel:1.15, vida:20, fis:1.2, esp:0.9},
     look:{piel:'#f0c6a0', pelo:'#7a5230', ropa:'#3f8f5a', orejas:true},
     desc:'Fierrero: fanático del automovilismo y los autos clásicos. Tira neumáticos que se llevan puesto todo.' },
   { id:'pili',   nombre:'Picher',    real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar · +25 de vida · +5% de daño', stats:{iman:1.4, vida:25, danio:1.05, fis:0.9, esp:1.2},
@@ -3081,11 +3081,11 @@ function dispararArma(w, dt, st, rapido, cebador){
       ax:Math.cos(a), ay:Math.sin(a), r:9*st.area, dmg:(E?36:13+4*L)*st.danio, vida:2.4, boomerang:true, hitcd:0.35, rot:a });
   } else if (w.id==='neumatico'){
     if (w.t>0) return;
-    w.t = (E?1.1:1.5-0.06*L)*st.cd;
+    w.t = (E?1.0:1.2-0.05*L)*st.cd;
     const base = anguloObjetivo(450), n = E?5:1+Math.floor(L/2), vv = E?380:310;
     for (let i=0;i<n;i++){ const a = base + (i-(n-1)/2)*(E?0.26:0.3);
       G.balas.push({ id:sigId++, tipo:'rueda', x:j.x, y:j.y, vx:Math.cos(a)*vv, vy:Math.sin(a)*vv, r:(E?14:10)*st.area,
-        dmg:(E?30:11+3.5*L)*st.danio, vida:2.2, hitcd:0.45, rot:0 }); }
+        dmg:(E?32:14+3.5*L)*st.danio, vida:2.2, hitcd:0.45, rot:0 }); }
   } else if (w.id==='resaltador'){
     if (w.t>0) return;
     w.t = (E?1.5:2.0)*st.cd;
