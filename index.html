@@ -370,6 +370,11 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 #campoMarco{position:absolute;inset:0}
 #campoEscena{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #campoEscena::-webkit-scrollbar{display:none}
+@media (pointer:fine) and (min-width:900px){
+  #campoEscena{overflow:hidden;display:flex;align-items:center;justify-content:center}
+  #cvCampo{height:auto!important;min-width:0!important;width:min(100vw, calc(100vh * 1.998))!important;flex:none}
+  .campo-mover{display:none}
+}
 #cvCampo{height:max(100vh, min(175vh, 1000px));width:auto;min-width:100vw;max-width:none;display:block;image-rendering:pixelated;touch-action:pan-x pan-y}
 .campo-hud{position:absolute;inset:0;pointer-events:none;z-index:6;display:flex;flex-direction:column;justify-content:space-between;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
 .campo-hud>*>*{pointer-events:auto}
@@ -5193,7 +5198,7 @@ function zonaAnimal(k, i){
   const casa = CASA_ANIMAL[k], c = campoDatos();
   if (!casa && VACUNOS.includes(k) && c.edificios && c.edificios.corral && (i % 3 === 0)){ const [x, y, w, h] = CORRALES.corral; return { x0:x - w*0.24, x1:x + w*0.24, y0:y - h*0.5, y1:y - h*0.16 }; }
   if (casa && casa !== 'canil' && c.edificios && c.edificios[casa]){ const [x, y, w, h] = CORRALES[casa];
-    if (casa === 'establo') return { x0:x - w*1.05, x1:x - w*0.6, y0:y - 34, y1:y - 6 };     // los caballos, al costado del establo
+    if (casa === 'establo'){ const ov = CORRALES.redil; return { x0:ov[0] + ov[2]/2 + 10, x1:x - w/2 - 4, y0:y - 44, y1:y - 8 }; }   // los caballos, entre el corral de ovejas y el establo
     return { x0:x - w*0.26, x1:x + w*0.26, y0:y - h*0.5, y1:y - h*0.14 }; }
   return null;
 }
@@ -5258,7 +5263,9 @@ function dibujarCampo(dt){
   });
   // construcciones y animales, ordenados por dónde pisan
   const cosas = [];
-  const edif = (k, spr, fr) => { if (!e[k]) return; const [x, y] = posEdif(c, k); cosas.push({ y, f:() => { dibAncla(spr||k, fr||0, x, y); hitAncla(spr||k, fr||0, x, y, 'edif', k); } }); };
+  const edif = (k, spr, fr) => { if (!e[k]) return; const [x, y] = posEdif(c, k), z = ESC_OBRA[k] || 1;
+    cosas.push({ y, f:() => { const im = imgC(spr||k, fr||0); if (!im) return; const w = Math.round(im.width*z), h = Math.round(im.height*z);
+      g.drawImage(im, Math.round(x - w/2), y - h, w, h); campoHits.push({ x0:x - w/2 - 3, y0:y - h - 3, x1:x + w/2 + 3, y1:y + 3, tipo:'edif', ref:k, cx:x, cy:y - h }); } }); };
   edif('galpon'); edif('silos'); edif('cosechadora'); edif('tractor'); edif('camioneta'); edif('feedlot'); edif('mixer');
   // molino y tanque ya están pintados en el mapa: si son tuyos, se pueden tocar
   if (e.molino) campoHits.push({ x0:LUGAR.molino[0]-30, y0:LUGAR.molino[1]-120, x1:LUGAR.molino[0]+30, y1:LUGAR.molino[1]+4, tipo:'edif', ref:'molino', cx:LUGAR.molino[0], cy:LUGAR.molino[1]-120 });
@@ -5343,7 +5350,7 @@ setInterval(() => { if (!$('#campo').classList.contains('oculto')){ procesarCamp
    día y noche, clima, langostas, Expo Rural y se pueden visitar las estancias de los demás
    ========================================================= */
 // lugares de tierra del dibujo donde puede ir una obra: pie del dibujo (x, y) y el ancho que entra
-const SITIOS = [[780, 162, 97], [731, 510, 104], [1061, 629, 104], [247, 546, 64], [656, 228, 78]];   // la 3 (en el potrero) solo le entra al mixer
+const SITIOS = [[780, 162, 124], [731, 510, 130], [1061, 629, 130], [247, 546, 90], [656, 228, 84]];   // la 3 (en el potrero) solo le entra al mixer
 // obras que se pueden mover y su lugar de siempre
 // dibujo de cada lugar fijo
 const SPR_LUGAR = { corral:'lg_corral_vacas', redil:'lg_corral_ovejas', establo:'lg_establo', gallinero:'lg_gallinero', chiquero:'lg_chiquero', canil:'lg_canil' };
@@ -5355,7 +5362,9 @@ function spriteCanil(){ if (canilC) return canilC; const c = document.createElem
     for (let k=0;k<14;k++){ P(x-2+k, 22-k*0.7|0, 2, 2, '#3a3a40'); P(x+28-k, 22-k*0.7|0, 2, 2, '#3a3a40'); } }
   P(44, 52, 6, 3, '#3a6ab0'); P(36, 54, 6, 3, '#b03a3a'); return canilC = c; }
 const MOVIBLES = { galpon:0, silos:4, cosechadora:2, mixer:3, feedlot:1 };
-const ANCHO_OBRA = { galpon:79, silos:51, cosechadora:74, mixer:62, feedlot:104 };
+// las obras del mapa viejo se agrandan para ir con el dibujo del mapa nuevo
+const ESC_OBRA = { galpon:1.5, silos:1.6, cosechadora:1.5, mixer:1.4, feedlot:1.2, tractor:1.3, camioneta:1.3 };
+const ANCHO_OBRA = { galpon:118, silos:82, cosechadora:111, mixer:87, feedlot:125 };
 const SPR_OBRA = {};
 const entraEn = (k, i) => !!SITIOS[i] && (ANCHO_OBRA[k] || 80) <= SITIOS[i][2];
 function normPos(c){
@@ -5459,7 +5468,8 @@ function abrirPop(x, y, titulo, texto, acciones, extra){
   pop.querySelector('.x').onclick = ev => { ev.stopPropagation(); cerrarPop(); };
   pop.classList.remove('oculto');
   const k = cvC.clientWidth / CAMPO_W, pw = pop.offsetWidth, ph = pop.offsetHeight, sl = esc_.scrollLeft, st = esc_.scrollTop, W = esc_.clientWidth, H = esc_.clientHeight;
-  let lx = x*k - pw/2, ly = y*k - ph - 14; if (ly < st + 4) ly = y*k + 18;
+  const ox = cvC.offsetLeft, oy = cvC.offsetTop;   // en la compu el mapa está centrado
+  let lx = ox + x*k - pw/2, ly = oy + y*k - ph - 14; if (ly < st + 4) ly = oy + y*k + 18;
   pop.style.left = Math.max(sl + 4, Math.min(sl + W - pw - 4, lx)) + 'px'; pop.style.top = Math.max(st + 4, Math.min(st + H - ph - 4, ly)) + 'px';
 }
 function cerrarPop(){ $('#campoPop').classList.add('oculto'); }
