@@ -81,6 +81,12 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .cofre-esc.abierto .cofre-luz{width:180px;height:220px}
 .cofre-premios{display:flex;gap:8px;justify-content:center;min-height:86px;margin:8px 0}
 #cantinaRes{position:relative}
+.pity{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:12px;margin:4px 0}.pity .pb{height:10px;background:#0c1810;border:2px solid #000;display:block}.pity .pf{display:block;height:100%}.pity small{color:var(--amarillo);min-width:18px;text-align:right}
+.vitrina{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.vit{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px;background:rgba(0,0,0,.3);border:3px solid #7ab8f0;font-size:11px}.vit.leg{border-color:#f5d547}.vit img{width:36px;height:36px;image-rendering:pixelated;object-fit:contain}.vit small{color:var(--amarillo)}.vit.tiene{opacity:.45}.vit[disabled]:not(.tiene){opacity:.7}
+.probs{margin-top:10px;font-size:12px;text-align:left}.probs summary{cursor:pointer;color:var(--tiza-2)}#cantinaProbs{display:block!important}#cantinaProbs>div{display:flex!important;width:100%;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding:2px 0}.probs p{color:var(--tiza-2);margin:4px 0 0}
+.carta{width:92px;height:96px;display:flex;align-items:center;justify-content:center;font-size:30px;background:repeating-linear-gradient(45deg,#24402e 0 6px,#1d3526 6px 12px);border:3px solid var(--borde)}
+.carta.rara{border-color:#7ab8f0;box-shadow:0 0 14px rgba(122,184,240,.8);animation:latir 1s infinite}.carta.legendaria{border-color:#f5d547;box-shadow:0 0 20px rgba(245,213,71,.9);animation:latir .7s infinite}
 .tr-maquina{display:flex;justify-content:center;gap:8px;margin:4px 0 10px}
 .tr-rod{width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#0c1810;border:3px solid #000;box-shadow:inset 0 6px 0 rgba(255,255,255,.06),inset 0 -6px 0 rgba(0,0,0,.4);overflow:hidden}
 .tr-rod .pxic,.tr-rod img{width:38px;height:38px;image-rendering:pixelated}
@@ -611,10 +617,15 @@ body.en-campo #toast{bottom:auto;top:62px}
 
 <div class="modal oculto" id="mCantina"><div class="caja"><h2>🎰 La máquina de la cantina</h2><p class="sub" id="cantinaTickets"></p>
   <div class="fila-btn" style="margin-top:0"><button class="btn" id="btnTirar1">Tirar ×1</button><button class="btn" id="btnTirar10">Tirar ×10</button></div>
+  <div id="cantinaPity"></div>
   <div id="cantinaRes" style="margin-top:10px"></div>
   <p class="sub" id="cantinaInicio" style="margin:8px 0 0"></p>
   <h3 style="margin:14px 0 6px;color:var(--amarillo)">Aspectos</h3>
   <div id="cantinaSkins"></div>
+  <h3 style="margin:14px 0 6px;color:var(--amarillo)">🪙 Vitrina <small id="cantinaMonedas" style="color:var(--tiza-2);font-size:13px"></small></h3>
+  <p class="sub" style="margin:0 0 6px;font-size:12px">Los aspectos repetidos se vuelven monedas. Con monedas te llevás el que quieras.</p>
+  <div id="cantinaVitrina" class="vitrina"></div>
+  <details class="probs"><summary>ⓘ Probabilidades</summary><div id="cantinaProbs"></div></details>
   <p class="sub" style="font-size:12px;margin-top:6px">Los tickets se ganan jugando: uno cada 2 minutos, por cada legendario, por los dorados y al recibirte.</p>
   <button class="btn sec" data-cerrar>Cerrar</button>
 </div></div>
@@ -4728,7 +4739,8 @@ function terminar(gano){
   if (G.coop) mpAlTerminar(gano);
   G.fin = true; G.pausa = true; joy = null;
   pararTema(); sfx(gano ? 'victoria' : 'derrota');
-  const cred = Math.round(Math.max(0, creditosGanados(G.t, G.kills, G.jefesMuertos, gano) + (G.extra||0)) * (G.dificil ? 1.5 : 1));
+  const boleto = !!datos.boleto && !G.coop; if (boleto) datos.boleto = false;
+  const cred = Math.round(Math.max(0, creditosGanados(G.t, G.kills, G.jefesMuertos, gano) + (G.extra||0)) * (G.dificil ? 1.5 : 1) * (boleto ? 2 : 1));
   datos.creditos += cred;
   const run = { fecha:new Date().toISOString().slice(0,10), jugador:datos.jugador||'', coop:G.coop ? 1 : 0, pj:G.pj.id, tiempo:Math.floor(G.t), kills:G.kills, nivel:G.jug.nivel, jefes:G.jefesMuertos, gano, dif:G.dificil ? 1 : 0 };
   const rec = datos.records[G.pj.id];
@@ -4788,28 +4800,57 @@ function renderLogros(){
   $('#logrosLista').innerHTML = LOGROS.map(l => `<div class="logro ${datos.logros[l.id]?'':'no'}"><span style="font-size:24px">${datos.logros[l.id]?'🏅':'🔒'}</span><div><b>${esc(l.nombre)}</b><small>${esc(l.desc)}</small></div></div>`).join('');
 }
 /* ---------- máquina de la cantina ---------- */
+// ---- la máquina: premio garantizado, sin repetidos mientras falten, monedas por repetidos y premios para la estancia ----
+const PITY_ASP = 10, PITY_LEG = 50, PRECIO_VITRINA = { rara:5, legendaria:12 };
+const PROB_CANTINA = [['Créditos (15 a 45)', 38], ['Consumible para la próxima partida', 14], ['Algo para tu estancia', 16], ['Boleto dorado (créditos ×2 la próxima partida)', 6], ['Monedas de aspecto', 6], ['Aspecto', 20]];
+function cantinaEstado(){ datos.pity = datos.pity && typeof datos.pity === 'object' ? datos.pity : { asp:0, leg:0 }; if (typeof datos.monedas !== 'number') datos.monedas = 0; return datos.pity; }
+const aspectosGacha = () => PERSONAJES.flatMap(p => trajesDe(p.id, true).map(k => ({ pj:p.id, k })));
+const tieneAsp = (pj, k) => (datos.skins[pj] || []).includes(k);
+function darAspecto(rar){
+  const todos = aspectosGacha(), nivel = todos.filter(a => (SKINS[a.k].rareza === 'legendaria') === (rar === 'legendaria'));
+  const faltan = nivel.filter(a => !tieneAsp(a.pj, a.k)), pool = faltan.length ? faltan : todos.filter(a => !tieneAsp(a.pj, a.k));
+  if (!pool.length){ const m = rar === 'legendaria' ? 3 : 1; datos.monedas += m; return { txt:`¡Ya tenés todos los aspectos! +${m} moneda${m>1?'s':''} de aspecto`, ic:'ticket', rar:'rara', todos:true }; }
+  const a = elegir(pool), lista = datos.skins[a.pj] = datos.skins[a.pj] || []; lista.push(a.k);
+  const nom = PERSONAJES.find(p => p.id === a.pj).nombre, r = SKINS[a.k].rareza === 'legendaria' ? 'legendaria' : 'rara';
+  return { txt:`¡Aspecto nuevo! ${nom} · ${SKINS[a.k].nombre}`, pj:a.pj, skin:a.k, rar:r };
+}
+function premioEstancia(){
+  const c = datos.campo, op = [];
+  const decoFalta = Object.keys(CAMPO_DECO).filter(k => !(c.deco||{})[k]); if (decoFalta.length) op.push('deco');
+  const perrosFalta = PERROS.filter(k => !(c.animales[k] > 0)); if (perrosFalta.length && c.edificios.canil && totalAnimales() < capacidadPotrero()) op.push('perro');
+  op.push('semilla', 'semilla');
+  const t = elegir(op);
+  if (t === 'deco'){ const k = elegir(decoFalta); c.deco = c.deco || {}; c.deco[k] = true; return { txt:`Para tu estancia: ${CAMPO_DECO[k].nombre}`, ic:'@pizza', rar:'' , campo:true }; }
+  if (t === 'perro'){ const k = elegir(perrosFalta); c.animales[k] = 1; return { txt:`¡Un perro para tu estancia! ${CAMPO_ANIMALES[k].nombre}`, ic:'@pizza', rar:'rara', campo:true }; }
+  c.semillas = (c.semillas||0) + 2; return { txt:'2 bolsas de semilla criolla (+50% en un lote)', ic:'@pizza', rar:'', campo:true };
+}
 function tirada(){
   datos.stats.tiradas = (datos.stats.tiradas||0) + 1;
-  const r = Math.random(), pjs = PERSONAJES.map(p=>p.id);
-  if (r < 0.50){ const c = 15 + Math.floor(Math.random()*30); datos.creditos += c; return { txt:`+${c} créditos`, ic:'ticket', rar:'' }; }
-  if (r < 0.72){
-    const id = elegir(Object.keys(CONSUMIBLES));
-    if (datos.inicio.length < 2){ datos.inicio.push(id); return { txt:`${CONSUMIBLES[id].nombre} para la próxima partida`, ic:CONSUMIBLES[id].icon, rar:'' }; }
-    datos.creditos += 20; return { txt:'+20 créditos (ya tenés 2 consumibles guardados)', ic:'ticket', rar:'' };
+  const pity = cantinaEstado(); pity.asp++; pity.leg++;
+  let res;
+  if (pity.leg >= PITY_LEG) res = darAspecto('legendaria');
+  else if (pity.asp >= PITY_ASP) res = darAspecto(Math.random() < 0.12 ? 'legendaria' : 'rara');
+  else {
+    const tot = PROB_CANTINA.reduce((s, x) => s + x[1], 0); let r = Math.random()*tot, i = 0;
+    for (; i < PROB_CANTINA.length; i++){ r -= PROB_CANTINA[i][1]; if (r < 0) break; }
+    if (i === 0){ const c = 15 + Math.floor(Math.random()*31); datos.creditos += c; res = { txt:`+${c} créditos`, ic:'ticket', rar:'' }; }
+    else if (i === 1){ const id = elegir(Object.keys(CONSUMIBLES));
+      if (datos.inicio.length < 2){ datos.inicio.push(id); res = { txt:`${CONSUMIBLES[id].nombre} para la próxima partida`, ic:CONSUMIBLES[id].icon, rar:'' }; }
+      else { datos.creditos += 25; res = { txt:'+25 créditos (ya tenés 2 consumibles guardados)', ic:'ticket', rar:'' }; } }
+    else if (i === 2) res = premioEstancia();
+    else if (i === 3){ if (datos.boleto){ datos.creditos += 40; res = { txt:'+40 créditos (ya tenías un boleto dorado)', ic:'ticket', rar:'' }; } else { datos.boleto = true; res = { txt:'🎫 Boleto dorado: la próxima partida, créditos ×2', ic:'ticket', rar:'rara' }; } }
+    else if (i === 4){ const m = 1 + (Math.random() < 0.25 ? 1 : 0); datos.monedas += m; res = { txt:`+${m} moneda${m>1?'s':''} de aspecto`, ic:'ticket', rar:'' }; }
+    else res = darAspecto(Math.random() < 0.15 ? 'legendaria' : 'rara');
   }
-  let pj = elegir(pjs);
-  let skin;
-  const conTraje = pjs.filter(p => trajesDe(p, true).length);
-  if (r >= 0.80 && conTraje.length){
-    pj = elegir(conTraje); const ts = trajesDe(pj, true);
-    const raros = ts.filter(k => SKINS[k].rareza!=='legendaria'), leg = ts.filter(k => SKINS[k].rareza==='legendaria');
-    skin = (leg.length && Math.random() < 0.2) ? elegir(leg) : elegir(raros.length ? raros : ts);
-  } else { datos.creditos += 20; return { txt:'+20 créditos', ic:'ticket', rar:'' }; }
-  const lista = datos.skins[pj] = datos.skins[pj] || [];
-  const nom = PERSONAJES.find(p=>p.id===pj).nombre;
-  if (lista.includes(skin)){ datos.creditos += 20; return { txt:`${nom} ${SKINS[skin].nombre} (repetido): +20 créditos`, ic:'@pizza', rar:SKINS[skin].rareza==='común'?'':SKINS[skin].rareza }; }
-  lista.push(skin);
-  return { txt:`¡Aspecto nuevo! ${nom} · ${SKINS[skin].nombre}`, pj, skin, rar:SKINS[skin].rareza==='común'?'':SKINS[skin].rareza };
+  if (res.skin || res.todos){ pity.asp = 0; if (res.rar === 'legendaria' || res.todos) pity.leg = 0; }
+  return res;
+}
+// vitrina: con monedas de aspecto te llevás el que quieras
+function comprarVitrina(pj, k){
+  const precio = PRECIO_VITRINA[SKINS[k].rareza === 'legendaria' ? 'legendaria' : 'rara']; cantinaEstado();
+  if (datos.monedas < precio || tieneAsp(pj, k)) return;
+  datos.monedas -= precio; (datos.skins[pj] = datos.skins[pj] || []).push(k); guardar(); renderCantina(); renderMenu(); sfx('cofre');
+  toast(`¡${SKINS[k].nombre} para ${PERSONAJES.find(p => p.id === pj).nombre}!`);
 }
 function tirar(n){
   if (datos.tickets < n){ toast('No te alcanzan los tickets. Se ganan jugando.'); return; }
@@ -4822,12 +4863,12 @@ function tirar(n){
   // la mejor rareza de la tirada decide cómo festeja la máquina
   const mejor = res.some(x => x.rar === 'legendaria') ? 'legendaria' : res.some(x => x.rar === 'rara') ? 'rara' : '';
   const destacado = res.find(x => x.rar === mejor) || res[0];
-  animarTirada(filas, mejor, icono(destacado));
+  animarTirada(filas, mejor, icono(destacado), res.map(x => x.rar).concat(nuevos.map(() => 'legendaria')));
   renderCantina(); renderMenu();
 }
 // la máquina gira: tres rodillos que frenan de a uno, y después salen los premios
 let tiradaEnCurso = false;
-function animarTirada(filas, mejor, icFinal){
+function animarTirada(filas, mejor, icFinal, rars){
   const box = $('#cantinaRes'), caja = $('#mCantina .caja');
   const pool = ['ticket','@pizza','@mate','cafe','certificado','@hoja'].map(k => icHTML(k)).concat(['🎁','⭐','🍀']);
   box.innerHTML = '<div class="tr-maquina"><div class="tr-rod"></div><div class="tr-rod"></div><div class="tr-rod"></div></div><div class="tr-lista"></div>';
@@ -4845,8 +4886,11 @@ function animarTirada(filas, mejor, icFinal){
     if (hechos.every(Boolean)){
       clearInterval(iv);
       if (mejor){ caja.classList.add('tr-' + mejor); confeti(box, mejor === 'legendaria' ? 40 : 18, mejor); sfx(mejor === 'legendaria' ? 'nivel' : 'cofre'); }
-      filas.forEach((f, k) => setTimeout(() => { lista.insertAdjacentHTML('beforeend', f); const el = lista.lastElementChild; if (el) el.classList.add('tr-sale'); }, 120*k));
-      setTimeout(() => { tiradaEnCurso = false; renderCantina(); }, 120*filas.length + 100);
+      // cartas boca abajo (las raras brillan) que se dan vuelta de a una
+      lista.innerHTML = filas.map((f, k) => `<div class="carta ${(rars||[])[k] || ''}">🎟️</div>`).join('');
+      const cartas = [...lista.querySelectorAll('.carta')], paso = filas.length > 1 ? 260 : 120;
+      cartas.forEach((c, k) => setTimeout(() => { c.outerHTML = filas[k].replace('class="premio', 'class="premio tr-sale'); if ((rars||[])[k]) sfx('nivel'); else if (k % 2 === 0) sfx('gema'); }, 350 + paso*k));
+      setTimeout(() => { tiradaEnCurso = false; renderCantina(); }, 350 + paso*filas.length + 300);
     }
   }, 60);
 }
@@ -4857,7 +4901,18 @@ function confeti(cont, n, tipo){
     c.style.setProperty('--dx', (Math.random()*80 - 40) + 'px'); cont.appendChild(c); setTimeout(() => c.remove(), 1600); }
 }
 function renderCantina(){
-  $('#cantinaTickets').innerHTML = `${icHTML('ticket')} <b style="color:var(--amarillo)">${datos.tickets}</b> tickets`;
+  const pity = cantinaEstado();
+  $('#cantinaTickets').innerHTML = `${icHTML('ticket')} <b style="color:var(--amarillo)">${datos.tickets}</b> tickets · 🪙 <b style="color:var(--amarillo)">${datos.monedas}</b> monedas${datos.boleto ? ' · 🎫 boleto dorado listo' : ''}`;
+  const todos = !aspectosGacha().some(a => !tieneAsp(a.pj, a.k));
+  const barra = (txt, n, max, col) => `<div class="pity"><span>${txt}</span><span class="pb"><span class="pf" style="width:${todos ? 100 : Math.round(Math.min(1, n/max)*100)}%;background:${col}"></span></span><small>${todos ? '✓' : Math.max(1, max - n)}</small></div>`;
+  $('#cantinaPity').innerHTML = barra('Aspecto seguro en', pity.asp, PITY_ASP, '#7ab8f0') + barra('Legendario seguro en', pity.leg, PITY_LEG, '#f5d547');
+  $('#cantinaMonedas').textContent = `(tenés ${datos.monedas})`;
+  $('#cantinaVitrina').innerHTML = aspectosGacha().map(a => { const leg = SKINS[a.k].rareza === 'legendaria', pr = PRECIO_VITRINA[leg ? 'legendaria' : 'rara'], tiene = tieneAsp(a.pj, a.k);
+    const base = SKINS[a.k].traje ? SPR_SKIN[a.k] : SPR_PJ[a.pj]; let img = ''; try { img = aplicarSkin((base || SPR_PJ[a.pj]).abajo[0], a.k).toDataURL(); } catch(_){}
+    return `<button class="vit ${leg ? 'leg' : ''} ${tiene ? 'tiene' : ''}" data-pj="${a.pj}" data-k="${a.k}" ${tiene || datos.monedas < pr ? 'disabled' : ''}>${img ? `<img src="${img}" alt="">` : ''}<b>${esc(SKINS[a.k].nombre)}</b><small>${tiene ? 'Ya lo tenés' : '🪙 ' + pr}</small></button>`; }).join('');
+  $('#cantinaVitrina').querySelectorAll('.vit').forEach(b => b.onclick = () => comprarVitrina(b.dataset.pj, b.dataset.k));
+  const tot = PROB_CANTINA.reduce((s, x) => s + x[1], 0);
+  $('#cantinaProbs').innerHTML = PROB_CANTINA.map(([n, p]) => `<div><span>${esc(n)}</span><b>${Math.round(p/tot*100)}%</b></div>`).join('') + `<div><span>Aspecto seguro</span><b>cada ${PITY_ASP}</b></div><div><span>Legendario seguro</span><b>cada ${PITY_LEG}</b></div><p>Mientras te falten aspectos, no te sale uno repetido.</p>`;
   $('#btnTirar1').disabled = tiradaEnCurso || datos.tickets < 1; $('#btnTirar10').disabled = tiradaEnCurso || datos.tickets < 10;
   $('#cantinaInicio').textContent = datos.inicio.length ? 'Guardado para la próxima partida: ' + datos.inicio.map(id => CONSUMIBLES[id].nombre).join(', ') : '';
   $('#cantinaSkins').innerHTML = PERSONAJES.map(p => {
