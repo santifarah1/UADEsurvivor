@@ -3364,8 +3364,8 @@ function spawns(dt){
   }
   G.spawnT -= dt;
   if (G.spawnT<=0){
-    // enemigos por segundo: ~1 al arrancar, ~3,4 a los 2 min, ~7 a los 5, ~13 a los 10 y ~23 a los 15 (tope)
-    const porSeg = Math.min(24, 0.95 + Math.min(G.t, 600)/50 + Math.max(0, G.t - 600)/30), n = 1 + Math.floor(G.t/150);
+    // enemigos por segundo: 1 al arrancar, ~2,2 a los 2 min, ~6 a los 5, ~12 a los 10 y ~23 a los 15 (tope). Antes se multiplicaba x5 entre el minuto 2 y el 5
+    const t_ = G.t, porSeg = t_ < 180 ? 1 + t_*t_/12000 : Math.min(24, 3.7 + (Math.min(t_, 600) - 180)/50 + Math.max(0, t_ - 600)/28), n = 1 + Math.floor(t_/150);
     G.spawnT = n/porSeg * (G.clima==='paro' ? 1.6 : 1);
     if (G.enemigos.length < 300){
       const pool = poolMinions(G.t/1.5);
