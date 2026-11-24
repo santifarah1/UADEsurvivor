@@ -349,6 +349,16 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 #slots button .k{position:absolute;left:3px;top:1px;font-size:9px;color:var(--tiza-2)}
 #slots button .dos{font-size:16px;letter-spacing:-4px}
 #habBtn,#pausaBtn,#slots button,#consBtns button{touch-action:none}
+body.bot-chico #habBtn,body.bot-chico #consBtns{transform:scale(.8);transform-origin:bottom right}body.bot-chico #slots{transform:scale(.8);transform-origin:bottom left}
+body.bot-grande #habBtn,body.bot-grande #consBtns{transform:scale(1.25);transform-origin:bottom right}body.bot-grande #slots{transform:scale(1.25);transform-origin:bottom left}
+body.zurdo #habBtn{right:auto;left:calc(14px + env(safe-area-inset-left))}body.zurdo #consBtns{right:auto;left:calc(14px + env(safe-area-inset-left))}
+body.zurdo #slots{left:auto;right:calc(10px + env(safe-area-inset-right))}
+body.zurdo.bot-chico #habBtn,body.zurdo.bot-chico #consBtns,body.zurdo.bot-grande #habBtn,body.zurdo.bot-grande #consBtns{transform-origin:bottom left}
+body.zurdo.bot-chico #slots,body.zurdo.bot-grande #slots{transform-origin:bottom right}
+.opc-h{font-size:14px;color:var(--amarillo);margin:10px 0 2px;text-align:left}
+#mOpc .opc{display:grid!important;grid-template-columns:1fr 1fr;gap:6px}#mOpc .opc>label,#mOpc .opc>.opc-h,#mOpc .opc>.opc-datos,#mOpc #opBorrar{grid-column:1/-1}#mOpc .opc>.btn{margin:0!important;padding:9px 8px;font-size:13px}
+@media (max-width:520px){#mOpc .opc{grid-template-columns:1fr}}
+.opc-datos{font-size:12px;text-align:left;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:6px 8px}.opc-datos div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.opc-datos b{color:var(--amarillo)}
 #habBtn{position:fixed;right:calc(14px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));width:74px;height:74px;background:rgba(10,10,16,.75);border:4px solid var(--violeta);z-index:6;overflow:hidden;font-size:32px;display:flex;align-items:center;justify-content:center;touch-action:none;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
 #habBtn.lista{box-shadow:0 0 0 4px rgba(180,140,224,.45),3px 3px 0 rgba(0,0,0,.4)}
 #habBtn i{position:absolute;inset:0;pointer-events:none}
@@ -600,6 +610,17 @@ body.en-campo #toast{bottom:auto;top:62px}
     <button class="btn sec" id="opDest"></button>
     <button class="btn sec" id="opNum"></button>
     <button class="btn sec" id="opCal"></button>
+    <h3 class="opc-h">Controles en el celular</h3>
+    <button class="btn sec" id="opBotones"></button>
+    <button class="btn sec" id="opJoy"></button>
+    <button class="btn sec" id="opZurdo"></button>
+    <h3 class="opc-h">Juego</h3>
+    <button class="btn sec" id="opApuntar"></button>
+    <button class="btn sec" id="opTexto"></button>
+    <button class="btn sec" id="opDalto"></button>
+    <h3 class="opc-h">Mis datos</h3>
+    <div id="opDatos" class="opc-datos"></div>
+    <button class="btn sec" id="opBorrar" style="border-color:#e8604c;color:#ffb0a0">🗑️ Borrar todo mi progreso</button>
   </div>
   <button class="btn" id="btnOpcOk">Listo</button>
 </div></div>
@@ -2634,6 +2655,8 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { if (MAPA[e.code]) teclas[MAPA[e.code]] = false; });
 addEventListener('focusin', e => { if (escribiendo(e)) for (const k in teclas) teclas[k] = false; });
 let joy = null;
+// joystick fijo: abajo, del lado contrario al botón del poder
+function centroJoyFijo(){ const izq = !datos.zurdo; return { x:izq ? 110 : innerWidth - 110, y:innerHeight - 160 }; }
 // botones de la partida con margen extra: si el dedo cae cerca, cuenta como el botón y no arma el joystick
 function botonCerca(x, y){
   const m = 18, ids = ['habBtn','pausaBtn','sonBtn','fullBtn'], els = ids.map(id => document.getElementById(id)).concat([...document.querySelectorAll('#slots button, #consBtns button')]);
@@ -2645,10 +2668,12 @@ cv.addEventListener('pointerdown', e => {
   if (!G || G.pausa) return;
   const b = botonCerca(e.clientX, e.clientY);
   if (b){ e.preventDefault(); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles:true, cancelable:true, pointerId:e.pointerId, pointerType:e.pointerType })); if (b.id === 'pausaBtn' || b.id === 'sonBtn' || b.id === 'fullBtn') b.click(); return; }
+  if (datos.joyFijo && esTactil()){ const c = centroJoyFijo(); if (Math.hypot(e.clientX - c.x, e.clientY - c.y) > 130) return;
+    joy = {id:e.pointerId, ox:c.x, oy:c.y, x:e.clientX, y:e.clientY, fijo:true}; try{cv.setPointerCapture(e.pointerId);}catch(_){} return; }
   joy = {id:e.pointerId, ox:e.clientX, oy:e.clientY, x:e.clientX, y:e.clientY}; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
 cv.addEventListener('pointermove', e => { if (joy && e.pointerId===joy.id){ joy.x=e.clientX; joy.y=e.clientY;
   // el centro del joystick persigue al dedo: cambiar de dirección es instantáneo
-  const dx = joy.x-joy.ox, dy = joy.y-joy.oy, l = Math.hypot(dx,dy); if (l > 45){ joy.ox = joy.x - dx/l*45; joy.oy = joy.y - dy/l*45; } } });
+  const dx = joy.x-joy.ox, dy = joy.y-joy.oy, l = Math.hypot(dx,dy); if (l > 45 && !joy.fijo){ joy.ox = joy.x - dx/l*45; joy.oy = joy.y - dy/l*45; } } });
 // ruedita del mouse: cambia de ataque
 let ruedaT = 0;
 cv.addEventListener('wheel', e => { if (!G || G.pausa || G.fin) return; e.preventDefault(); const t = performance.now(); if (t - ruedaT < 180) return; ruedaT = t;
@@ -2912,7 +2937,8 @@ function masCercanos(n, x, y, max){
   return lista.slice(0,n).map(a=>a[1]);
 }
 function anguloObjetivo(rango){
-  const j = G.jug, e = masCercanos(1, j.x, j.y, rango*rango)[0];
+  const j = G.jug; if (datos.apuntar === 'camino') return Math.atan2(j.dir.y, j.dir.x);
+  const e = masCercanos(1, j.x, j.y, rango*rango)[0];
   return e ? Math.atan2(e.y-j.y, e.x-j.x) : Math.atan2(j.dir.y, j.dir.x);
 }
 function actualizarArmas(dt){
@@ -3442,7 +3468,7 @@ function presentarJefe(def){
   if (im){ const k = Math.max(1, Math.floor(Math.min(c.width/im.width, c.height/im.height))); g.drawImage(im, (c.width-im.width*k)>>1, c.height-im.height*k, im.width*k, im.height*k); }
   $('#presentaNom').textContent = def.nombre; $('#presentaSub').textContent = (MATERIA[def.id] ? MATERIA[def.id] + ' · ' : '') + (def.dim || '');
   el.classList.remove('oculto','sale'); void el.offsetWidth; el.classList.add('entra');
-  clearTimeout(presentarJefe.t); presentarJefe.t = setTimeout(() => { el.classList.add('sale'); setTimeout(() => el.classList.add('oculto'), 400); }, 1700);
+  clearTimeout(presentarJefe.t); presentarJefe.t = setTimeout(() => { el.classList.add('sale'); setTimeout(() => el.classList.add('oculto'), 400); }, 1700 * velTexto());
 }
 function salirArena(gano){
   const j = G.jug, m = G.mapa, def = G.dim;
@@ -3517,7 +3543,7 @@ function anilloAvisado(e, n, vel, dmg, tipo, t){ t = t || PRE; avisoAnillo(e, t)
 function disparoG(x,y,a,vel,dmg,tipo,de,r){ disparoE(x,y,a,vel,dmg,tipo,de); const b = G.ebalas[G.ebalas.length-1]; b.r = r; return b; }
 function disparoE(x,y,a,vel,dmg,tipo,de){ G.ebalas.push({x,y,vx:Math.cos(a)*vel,vy:Math.sin(a)*vel,dmg,tipo,de,r:tipo==='fardo'?9:7,vida:5}); }
 function anillo(e,n,vel,dmg,tipo,off){ for (let i=0;i<n;i++) disparoE(e.x,e.y,off+i*Math.PI*2/n,vel,dmg,tipo,e.def.id); }
-function hablar(e, txt, dur){ e.frase = txt; e.fraseT = dur||2.6; }
+function hablar(e, txt, dur){ e.frase = txt; e.fraseT = (dur||2.6) * velTexto(); }
 
 function actualizarJefe(e, dt, dx, dy, d){
   const j = G.jug, def = e.def;
@@ -4156,13 +4182,14 @@ function dibujar(){
     const p = 1 - a.t/a.max;
     if (a.tipo==='circulo'){
       const x = bx_(a.x), y = by_(a.y), r = Math.round(a.r/K);
-      pElipse(x, y, r, Math.round(r*0.8), 'rgba(232,60,40,.18)');
-      pElipse(x, y, Math.max(1,Math.round(r*p)), Math.max(1,Math.round(r*0.8*p)), 'rgba(232,60,40,.32)');
-      pAnillo(x, y, r, 'rgba(232,60,40,.9)', 1, Math.round(r*0.8));
+      const ca = colAviso();
+      pElipse(x, y, r, Math.round(r*0.8), `rgba(${ca},.18)`);
+      pElipse(x, y, Math.max(1,Math.round(r*p)), Math.max(1,Math.round(r*0.8*p)), `rgba(${ca},.32)`);
+      pAnillo(x, y, r, `rgba(${ca},.9)`, 1, Math.round(r*0.8));
     } else {
       const x = bx_(a.x), y = by_(a.y), n = Math.round(a.len/K), g = Math.max(2,Math.round(a.ancho/K));
-      b.fillStyle = 'rgba(232,60,40,.2)'; lineaPix(x, y, a.a, n, g);
-      b.fillStyle = 'rgba(232,60,40,.38)'; lineaPix(x, y, a.a, Math.round(n*p), g);
+      b.fillStyle = `rgba(${colAviso()},.2)`; lineaPix(x, y, a.a, n, g);
+      b.fillStyle = `rgba(${colAviso()},.38)`; lineaPix(x, y, a.a, Math.round(n*p), g);
     }
   }
 
@@ -4428,6 +4455,7 @@ function dibujar(){
     pAnillo(Math.round(joy.ox/P), Math.round(joy.oy/P), Math.round(48/P), 'rgba(20,20,28,.55)', 2);
     pElipse(Math.round((joy.ox+dx*k)/P), Math.round((joy.oy+dy*k)/P), Math.round(18/P), Math.round(18/P), 'rgba(20,20,28,.45)');
   }
+  if (!joy && datos.joyFijo && esTactil() && !G.fin){ const c = centroJoyFijo(); bctx.globalAlpha = 0.45; pAnillo(Math.round(c.x/P), Math.round(c.y/P), Math.round(48/P), 'rgba(20,20,28,.55)', 2); pElipse(Math.round(c.x/P), Math.round(c.y/P), Math.round(18/P), Math.round(18/P), 'rgba(20,20,28,.4)'); bctx.globalAlpha = 1; }
   if (G.destello > 0) rect(0,0,BW,BH,`rgba(255,250,230,${Math.min(0.22, G.destello*2.5).toFixed(2)})`);
   if (G.flashMapa > 0) rect(0,0,BW,BH,`rgba(8,12,10,${Math.min(1, G.flashMapa/0.45).toFixed(2)})`);
   ctx.imageSmoothingEnabled = false;
@@ -6957,13 +6985,33 @@ if (ES_APP){ $('#fullBtn').style.display = 'none'; $('#btnFull').style.display =
 else if (ES_IOS && SIN_FS && !datos.tipIOS){ datos.tipIOS = 1; guardar(); setTimeout(consejoInicio, 2500); }
 $('#btnFull').onclick = alternarPantallaCompleta;
 $('#btnSonido').onclick = () => { audioInit(); setSonido(!datos.sonido); };
+const OPC_BOT = { chico:'chicos', normal:'normales', grande:'grandes' }, OPC_TXT = { lento:'lentos', normal:'normales', rapido:'rápidos' };
+function aplicarOpc(){
+  const b = document.body.classList;
+  b.remove('bot-chico','bot-grande'); if (datos.botones === 'chico' || datos.botones === 'grande') b.add('bot-' + datos.botones);
+  b.toggle('zurdo', !!datos.zurdo); b.toggle('dalto', !!datos.dalto);
+}
+const colAviso = a => (datos.dalto ? '200,90,255' : '232,60,40');
+const velTexto = () => datos.velTexto === 'lento' ? 1.6 : datos.velTexto === 'rapido' ? 0.7 : 1;
 function pintarOpc(){
+  $('#opBotones').textContent = 'Botones: ' + (OPC_BOT[datos.botones] || 'normales');
+  $('#opJoy').textContent = 'Joystick: ' + (datos.joyFijo ? 'fijo (siempre en el mismo lugar)' : 'flotante (donde apoyás el dedo)');
+  $('#opZurdo').textContent = 'Mano: ' + (datos.zurdo ? 'zurda (poder a la izquierda)' : 'diestra (poder a la derecha)');
+  $('#opApuntar').textContent = 'Apuntar: ' + (datos.apuntar === 'camino' ? 'hacia donde caminás' : 'al enemigo más cercano');
+  $('#opTexto').textContent = 'Carteles de los profes: ' + (OPC_TXT[datos.velTexto] || 'normales');
+  $('#opDalto').textContent = 'Modo daltónico: ' + (datos.dalto ? 'sí (avisos violetas)' : 'no');
+  const S = datos.stats || {}, nAsp = Object.values(datos.skins||{}).reduce((s, l) => s + l.length, 0);
+  $('#opDatos').innerHTML = `<div><span>Partidas jugadas</span><b>${(datos.partidas||[]).length}</b></div><div><span>Créditos · tickets · monedas</span><b>${datos.creditos} · ${datos.tickets||0} · ${datos.monedas||0}</b></div>
+    <div><span>Aspectos</span><b>${nAsp}</b></div><div><span>Logros</span><b>${Object.keys(datos.logros||{}).length} de ${LOGROS.length}</b></div>
+    <div><span>Animales en la estancia</span><b>${Object.values(datos.campo.animales).reduce((s, n) => s + n, 0)}</b></div><div><span>Tiradas en la cantina</span><b>${S.tiradas||0}</b></div>
+    <div><span>Progreso guardado</span><b>${Math.round(JSON.stringify(datos).length/1024)} KB, en este navegador</b></div>`;
   $('#opMus').value = Math.round(datos.volMus*100); $('#opFx').value = Math.round(datos.volFx*100);
   $('#opSac').textContent = 'Sacudida de pantalla: ' + (datos.sacudida ? 'sí' : 'no');
   $('#opDest').textContent = 'Destellos fuertes: ' + (datos.destellos ? 'sí' : 'suaves');
   $('#opNum').textContent = 'Números de daño: ' + (datos.numeros === false ? 'no' : 'sí');
   $('#opCal').textContent = 'Calidad: ' + (datos.calidad === 'baja' ? 'baja (para celus lentos)' : 'alta');
 }
+aplicarOpc();
 function abrirOpc(){ pintarOpc(); $('#mOpc').classList.remove('oculto'); }
 $('#btnOpc').onclick = abrirOpc;
 $('#btnDificil').onclick = () => { datos.dificil = !datos.dificil; guardar(); renderMenu(); };
@@ -6975,6 +7023,20 @@ $('#opMus').onchange = $('#opFx').onchange = () => { guardar(); sfx('nivel'); };
 $('#opSac').onclick = () => { datos.sacudida = !datos.sacudida; guardar(); pintarOpc(); };
 $('#opDest').onclick = () => { datos.destellos = !datos.destellos; guardar(); pintarOpc(); };
 $('#opNum').onclick = () => { datos.numeros = datos.numeros === false; guardar(); pintarOpc(); };
+$('#opBotones').onclick = () => { datos.botones = { chico:'normal', normal:'grande', grande:'chico' }[datos.botones || 'normal']; guardar(); aplicarOpc(); pintarOpc(); };
+$('#opJoy').onclick = () => { datos.joyFijo = !datos.joyFijo; guardar(); pintarOpc(); };
+$('#opZurdo').onclick = () => { datos.zurdo = !datos.zurdo; guardar(); aplicarOpc(); pintarOpc(); };
+$('#opApuntar').onclick = () => { datos.apuntar = datos.apuntar === 'camino' ? 'cerca' : 'camino'; guardar(); pintarOpc(); };
+$('#opTexto').onclick = () => { datos.velTexto = { lento:'normal', normal:'rapido', rapido:'lento' }[datos.velTexto || 'normal']; guardar(); pintarOpc(); };
+$('#opDalto').onclick = () => { datos.dalto = !datos.dalto; guardar(); aplicarOpc(); pintarOpc(); };
+{ let armado = 0; $('#opBorrar').onclick = () => {
+  if (G){ toast('Terminá la partida antes de borrar el progreso'); return; }
+  const b = $('#opBorrar');
+  if (Date.now() - armado > 4000){ armado = Date.now(); b.textContent = '⚠️ ¿Seguro? Tocá de nuevo para borrar TODO'; setTimeout(() => { if (Date.now() - armado >= 4000) b.textContent = '🗑️ Borrar todo mi progreso'; }, 4100); return; }
+  const nom = prompt('Último aviso: se borran créditos, estancia, aspectos y récords de este navegador. Escribí BORRAR para confirmar.');
+  if ((nom || '').trim().toUpperCase() !== 'BORRAR'){ toast('No se borró nada'); armado = 0; b.textContent = '🗑️ Borrar todo mi progreso'; return; }
+  try { localStorage.setItem(STORAGE_KEY + '-borrado-' + Date.now(), JSON.stringify(datos)); } catch(_){}
+  datos = completar(estadoInicial()); datos.temporada = TEMPORADA; guardar(); location.reload(); }; }
 $('#opCal').onclick = () => { datos.calidad = datos.calidad === 'baja' ? 'alta' : 'baja'; guardar(); pintarOpc(); dispatchEvent(new Event('resize')); };
 $('#btnKiosco').onclick = () => { renderKiosco(); $('#mKiosco').classList.remove('oculto'); };
 $('#btnCantina').onclick = () => { $('#cantinaRes').innerHTML = ''; renderCantina(); $('#mCantina').classList.remove('oculto'); };
