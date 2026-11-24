@@ -710,7 +710,7 @@ body.en-campo #toast{bottom:auto;top:62px}
   <p>El botón violeta de abajo a la derecha (o Espacio). Cada uno tiene la suya:</p>
   <div id="ayudaHabs"></div>
   <h3>Tipos</h3>
-  <p>Cada ataque tiene un tipo y es físico (FÍS) o especial (ESP). El Feo y el Conejo pegan más con los físicos; el Ruso y Pili, con los especiales. Cada enemigo también tiene tipo: si le pegás con un tipo eficaz, le hacés 60% más (números amarillos con "!"); si es poco eficaz, 40% menos (números grises). Abajo a la izquierda te dice qué tenés cerca, y los slots muestran ▲ si convienen y ▼ si no.</p>
+  <p>Cada ataque tiene un tipo y es físico (FÍS) o especial (ESP). El Feo y el Conejo pegan más con los físicos; el Ruso y Picher, con los especiales. Cada enemigo también tiene tipo: si le pegás con un tipo eficaz, le hacés 60% más (números amarillos con "!"); si es poco eficaz, 40% menos (números grises). Abajo a la izquierda te dice qué tenés cerca, y los slots muestran ▲ si convienen y ▼ si no.</p>
   <div id="ayudaTipos"></div>
   <h3>Consumibles</h3>
   <p>Caen de los cofres y, muy de vez en cuando, de cualquier enemigo. Llevás hasta 2 y los usás con los botones celestes de la derecha (o con 5 y 6): mate cocido, apunte robado, café doble y certificado médico.</p>
@@ -776,7 +776,7 @@ const PERSONAJES = [
   { id:'conejo', nombre:'El Conejo', real:'Joaquín Goicoechea', arma:'neumatico', hab:'clasico', bonus:'+15% de velocidad', stats:{vel:1.15, fis:1.2, esp:0.9},
     look:{piel:'#f0c6a0', pelo:'#7a5230', ropa:'#3f8f5a', orejas:true},
     desc:'Fierrero: fanático del automovilismo y los autos clásicos. Tira neumáticos que se llevan puesto todo.' },
-  { id:'pili',   nombre:'Pili',      real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar · +15 de vida', stats:{iman:1.4, vida:15, fis:0.9, esp:1.2},
+  { id:'pili',   nombre:'Picher',    real:'Pili',               arma:'apuntes',  hab:'pizzas',  bonus:'+40% de alcance al juntar · +15 de vida', stats:{iman:1.4, vida:15, fis:0.9, esp:1.2},
     look:{piel:'#f3cfb0', pelo:'#8a4b2a', ropa:'#8e5bb5', largo:true},
     desc:'La única del grupo que estudia posta, y enamorada de Italia. Sus apuntes van solos al enemigo más cercano.' },
 ];
@@ -806,7 +806,7 @@ const ARMAS = {
   boleadoras:  { nombre:'Boleadoras',    ic:'🪢', desc:'Le pegan a uno y saltan al siguiente, y al siguiente.', evo:'tresmarias', pasiva:'lentes' },
 };
 const EVOS = {
-  resumen: { nombre:'Resumen de Pili', ic:'📚', desc:'Muchos apuntes que persiguen y atraviesan.' },
+  resumen: { nombre:'Resumen de Picher', ic:'📚', desc:'Muchos apuntes que persiguen y atraviesan.' },
   ronda:   { nombre:'Ronda de mate',   ic:'🫖', desc:'Seis mates, más grandes y más rápidos.' },
   vicio:   { nombre:'Noche de vicio',  ic:'🕹️', desc:'Ráfagas en abanico que atraviesan.' },
   mateada: { nombre:'Mateada eterna',  ic:'🌊', desc:'Tres charcos enormes que duran un montón.' },
@@ -1114,7 +1114,7 @@ const LOGROS = [
   { id:'carino',    nombre:'Con cariño, eh',             desc:'Ganale a Gustavo.',                              ok:s => s.legs && s.legs.gustavo },
   { id:'consejo',   nombre:'Pasó por el consejo',        desc:'Ganale a Claudio.',                              ok:s => s.legs && s.legs.claudio },
   { id:'mariano',   nombre:'¿Mariano existe?',           desc:'Ganale a Mariano.',                              ok:s => s.legs && s.legs.mariano },
-  { id:'bloqueados',nombre:'Bloqueados',                 desc:'Con Pili, bloqueá a Diego y a Pato.',            ok:s => s.bloqueados },
+  { id:'bloqueados',nombre:'Bloqueados',                 desc:'Con Picher, bloqueá a Diego y a Pato.',            ok:s => s.bloqueados },
   { id:'integrador',nombre:'Leyenda',                    desc:'Llegá al minuto 30 con Tato persiguiéndote.',            ok:s => s.integrador },
   { id:'promo',     nombre:'Promoción completa',         desc:'Recibite con los cuatro.',                       ok:s => s.ganoPj && ['ruso','feo','conejo','pili'].every(k => s.ganoPj[k]) },
   { id:'arca',      nombre:'ARCA te fundió',             desc:'Que ARCA te cobre 200 créditos en total.',       ok:s => (s.arca||0)>=200 },
@@ -3458,7 +3458,7 @@ function laPili(){ return G.coop ? jugadoresVivos().find(p => (p.pjId || G.pj.id
 function traerPesados(){
   const p = posBorde(), f = 1 + G.t/400;
   ['diego','pato'].forEach((id, i) => { crearSemi({ id, t:0, hp:Math.round(650*f), vel:108 + i*6, r:15 }); const e = G.enemigos[G.enemigos.length-1]; e.pesado = true; e.x = p.x + i*40; e.y = p.y; e.orb = i*Math.PI; });
-  sfx('grieta'); presentarJefe({ id:'diego', nombre:'Diego y Pato', dim:'No la dejan en paz a Pili' });
+  sfx('grieta'); presentarJefe({ id:'diego', nombre:'Diego y Pato', dim:'No la dejan en paz a Picher' });
 }
 function actualizarPesado(e, dt){
   // van atrás de Pili, dan vueltas alrededor y le llenan el celular de mensajes
@@ -6373,7 +6373,7 @@ const CONSEJOS = ['Moverte es lo único que hacés: los ataques salen solos.', '
   'Tocá cualquier cosa del dibujo de tu estancia: los animales tienen nombre.', 'Una vez por semana podés llevar un animal a la Expo Rural.'];
 let consejoN = Math.floor(Math.random()*14), consejoT = 0;
 function rotarConsejo(){ const el = $('#titConsejo'); el.classList.add('fuera'); setTimeout(() => { el.textContent = '💡 ' + CONSEJOS[consejoN++ % CONSEJOS.length]; el.classList.remove('fuera'); }, 400); }
-const FRASES_CARGA = ['Cebando el primer mate…','Buscando los apuntes de Pili…','Despertando al Conejo…','Calentando la pava…',
+const FRASES_CARGA = ['Cebando el primer mate…','Buscando los apuntes de Picher…','Despertando al Conejo…','Calentando la pava…',
   'Imprimiendo los TPs…','Esperando que aparezca Mariano…','Contando hectáreas en Angola…','Buscando la credencial para pasar por seguridad…','Peinando al Feo… (no hubo caso)'];
 const tit = { listo:false, cerrado:false, t:0, prog:0, frase:0, fraseT:0 };
 function cerrarTitulo(){
