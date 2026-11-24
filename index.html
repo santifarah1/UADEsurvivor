@@ -352,7 +352,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .vida .b i.baja{background:linear-gradient(180deg,#ffb0a0 0,#e8604c 50%,#a8382a 100%);animation:latidoVida .7s ease-in-out infinite}@keyframes latidoVida{50%{filter:brightness(1.5)}}
 .vida .t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;text-shadow:1px 1px 0 #000}
 .hud-kills{font-size:12px;background:rgba(10,10,16,.75);border:2px solid #000;padding:1px 6px;font-variant-numeric:tabular-nums}
-#pausaBtn,#sonBtn,#fullBtn{pointer-events:auto;width:38px;height:34px;background:rgba(10,10,16,.8);border:2px solid #000;font-size:15px;font-weight:700}
+#pausaBtn,#sonBtn,#fullBtn,#chatBtn{pointer-events:auto;width:38px;height:34px;background:rgba(10,10,16,.8);border:2px solid #000;font-size:15px;font-weight:700}
 .jefe-barra{margin:4px auto 0;width:min(440px,86vw);text-align:center}
 .jefe-barra .nom{font-weight:700;font-size:14px;margin-bottom:2px;text-shadow:2px 2px 0 #000;color:var(--amarillo)}
 .jefe-barra .b{height:10px;background:#1a0e0e;border:2px solid #000}
@@ -367,6 +367,12 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 #slots button .k{position:absolute;left:3px;top:1px;font-size:9px;color:var(--tiza-2)}
 #slots button .dos{font-size:16px;letter-spacing:-4px}
 #habBtn,#pausaBtn,#slots button,#consBtns button{touch-action:none}
+#chatBtn{touch-action:none;color:#fff;padding:0}
+#chatMenu{position:fixed;right:calc(10px + env(safe-area-inset-right));top:calc(50px + env(safe-area-inset-top));z-index:9;display:grid;grid-template-columns:1fr 1fr;gap:4px;background:rgba(10,10,16,.9);border:3px solid #000;padding:6px;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+#chatMenu button{font:inherit;font-size:13px;font-weight:700;color:#fff;background:#1f3326;border:2px solid #000;padding:7px 10px;text-align:left;min-width:96px;touch-action:none}
+#chatMenu button small{color:var(--tiza-2);font-size:10px;margin-right:5px}#chatMenu button:active{background:#2e4a36}
+.mp-ping{font-size:11px;background:rgba(10,10,16,.75);border:2px solid #000;padding:1px 6px;color:var(--tiza-2)}.mp-ping.bien{color:#7ed492}.mp-ping.medio{color:#f5d547}.mp-ping.mal{color:#e8604c}
+#mpReco{position:fixed;left:50%;top:38%;transform:translateX(-50%);z-index:8;background:rgba(10,10,16,.9);border:3px solid var(--amarillo);padding:8px 14px;font-weight:700;pointer-events:none}
 .tuto-paso{position:fixed;left:50%;top:calc(56px + env(safe-area-inset-top));transform:translateX(-50%);z-index:7;pointer-events:none;width:min(420px,80vw);background:rgba(12,20,14,.9);border:3px solid var(--amarillo);padding:6px 10px 8px;text-align:center;box-shadow:3px 3px 0 rgba(0,0,0,.45)}
 #nubeInfo{text-align:left;font-size:13px;margin-bottom:4px}.nube-cod b{color:var(--amarillo);letter-spacing:1px}#nubeInfo small{color:var(--tiza-2);font-size:12px}
 #btnCopiarCod{width:auto;margin-left:6px;padding:2px 7px;font-size:11px;background:rgba(0,0,0,.35);border:2px solid var(--borde);color:var(--tiza)}
@@ -526,14 +532,16 @@ body.en-campo #toast{bottom:auto;top:62px}
     <div class="hud-tiempo"><span id="hudTiempo">0:00</span><span class="hud-dim" id="hudDim"></span></div>
     <div class="hud-der">
       <div class="hud-buffs" id="hudBuffs"></div>
-      <span class="hud-kills" id="hudKills">0 ✗</span>
-      <div style="display:flex;gap:4px"><button id="fullBtn" class="hudBtn" aria-label="Pantalla completa"><img class="pxic uic" data-ic="ui:pantalla" alt=""></button><button id="sonBtn" class="hudBtn" aria-label="Sonido"><img class="pxic uic" data-ic="ui:son" alt=""></button><button id="pausaBtn" aria-label="Pausa"><img class="pxic uic" data-ic="ui:pausa" alt=""></button></div>
+      <span class="hud-kills" id="hudKills">0 ✗</span><span id="mpPing" class="mp-ping oculto"></span>
+      <div style="display:flex;gap:4px"><button id="chatBtn" class="hudBtn oculto" aria-label="Frases rápidas">💬</button><button id="fullBtn" class="hudBtn" aria-label="Pantalla completa"><img class="pxic uic" data-ic="ui:pantalla" alt=""></button><button id="sonBtn" class="hudBtn" aria-label="Sonido"><img class="pxic uic" data-ic="ui:son" alt=""></button><button id="pausaBtn" aria-label="Pausa"><img class="pxic uic" data-ic="ui:pausa" alt=""></button></div>
     </div>
   </div>
   <div class="jefe-barra oculto" id="jefeBarra"><div class="nom" id="jefeNom"></div><div class="b"><i id="jefeHp"></i></div></div>
 </div>
 <div id="cercaTipo" class="oculto"></div>
 <div id="mpEspera" class="oculto"></div>
+<div id="chatMenu" class="oculto"></div>
+<div id="mpReco" class="oculto"></div>
 <div id="consejo" class="oculto"></div>
 <div id="cartelMapa" class="oculto"><small id="cmSub"></small><b id="cmNom"></b></div>
 <div id="presenta" class="oculto"><div class="pr-franja"><canvas id="presentaCv" width="100" height="100"></canvas><div class="pr-tx"><small>JEFE</small><b id="presentaNom"></b><span id="presentaSub"></span></div></div></div>
@@ -2697,6 +2705,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (!$('#mPausa').classList.contains('oculto')){ if (e.code==='Enter'){ e.preventDefault(); reanudar(); } if (e.code==='KeyP'||e.code==='Escape') reanudar(); return; }
+  if (G.coop){ const f = /^F([1-8])$/.exec(e.code); if (f){ e.preventDefault(); mandarEmote(+f[1] - 1); return; } if (e.code==='KeyT'){ e.preventDefault(); abrirChat(); return; } }
   if (e.code==='Space' || e.code==='KeyF'){ e.preventDefault(); usarHabilidad(); }
   if (/^Digit[1-4]$/.test(e.code)) elegirSlot(+e.code.slice(5)-1);
   if (e.code==='Digit5' || e.code==='KeyZ') usarConsumible(0);
@@ -4642,6 +4651,7 @@ function dibujar(){
   if (G.examen) cartel8('EXAMEN SORPRESA · ' + Math.max(0, Math.ceil(G.examen.t)), BW>>1, 46, '#e8604c');
   for (const it of G.items) if (it.tipo==='regalo') flecha(bx_(it.x), by_(it.y), '#7ed492', it.id==='ternero' ? 'TERNERO' : 'SEMILLA');
   { const L = lugarProximo(); if (L) flecha(bx_(L.x), by_(L.y), '#7ed4c0', L.nom); }
+  dibujarEmotes();
   if (G.coop) for (const p of otrosVisibles()) if (p && !p.fuera) flecha(bx_(p.x), by_(p.y), p.muerto ? '#e8604c' : '#7ed492', normTxt(p.nombre || 'COMPA').slice(0,10).toUpperCase() + (p.muerto ? ' !' : ''));
   if (joy){
     const dx = joy.x-joy.ox, dy = joy.y-joy.oy, l = Math.hypot(dx,dy), k = l>45 ? 45/l : 1;
@@ -4710,7 +4720,7 @@ function renderHud(){
   if ($('#xpNiv').dataset.n !== String(j.nivel)){ if ($('#xpNiv').dataset.n){ const x = $('.xp'); x.classList.remove('sube'); void x.offsetWidth; x.classList.add('sube'); } $('#xpNiv').dataset.n = j.nivel; $('#xpNiv').textContent = 'NIVEL ' + j.nivel; }
   $('#hudTiempo').textContent = fmtT(G.t);
   $('#hudDim').textContent = G.dios ? (G.t < G.dios.fin ? 'DIOS · leyenda en ' + fmtT(Math.max(0, G.dios.fin - G.t)) : 'DIOS · aguantá todo lo que puedas') : G.dim ? 'Dimensión: ' + G.dim.dim : (G.clima!=='normal' ? CLIMAS[G.clima].nombre : '');
-  $('#hudKills').textContent = G.kills + ' ✗';
+  $('#hudKills').textContent = G.kills + ' ✗'; $('#chatBtn').classList.toggle('oculto', !G.coop); pintarPing();
   const pv = Math.max(0, j.hp/j.maxHp), hb = $('#hpBar');
   hb.style.width = (pv*100) + '%'; hb.classList.toggle('baja', pv<0.35);
   $('#hpTx').textContent = Math.ceil(Math.max(0,j.hp)) + ' / ' + Math.round(j.maxHp);
@@ -6500,7 +6510,7 @@ function enviador(minMs){
   };
   return (p, d) => { pendiente = [p, d]; salir(); };
 }
-const mpSnap = enviador(140), mpInput = enviador(90), mpHb = enviador(1000);
+const mpSnap = enviador(100), mpInput = enviador(70), mpHb = enviador(1000);
 const RTC_OK = !!window.RTCPeerConnection && !/nortc/.test(location.hash);
 const RTC_CFG = { iceServers:[{ urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302'] }] };
 MP.pcs = {}; MP.canal = null; MP.rtcCierres = [];
@@ -6574,6 +6584,14 @@ function estadoConexion(id){
   const r = MP.pcs[id]; return r && abierto(r.rap) ? 'directa' : 'por internet';
 }
 const mpOn = () => !!(G && G.coop);
+// suavizado de red: se mide cada cuánto llegan los datos y cada cosa recorre el tramo en ese tiempo (sin saltos ni frenadas)
+const MPI = { gap:{} };
+function mpGap(clave, ahora){ const g = MPI.gap[clave] || (MPI.gap[clave] = { ult:0, ema:60 }); if (g.ult){ const d = Math.min(450, ahora - g.ult); g.ema = g.ema*0.8 + d*0.2; } g.ult = ahora; return Math.max(30, Math.min(380, g.ema)); }
+function nuevoObjetivo(o, x, y, ahora, dur){
+  if (o.it0 === undefined || Math.abs(x - o.x) + Math.abs(y - o.y) > 520){ o.x = x; o.y = y; }   // primera vez o teletransporte: directo
+  o.ax = o.x; o.ay = o.y; o.bx = x; o.by = y; o.it0 = ahora; o.idur = dur; o.tx = x; o.ty = y;
+}
+function interpolar(o, ahora){ if (o.it0 === undefined) return; const a = Math.min(1.15, (ahora - o.it0)/o.idur); o.x = o.ax + (o.bx - o.ax)*a; o.y = o.ay + (o.by - o.ay)*a; }
 const r1 = v => Math.round(v);
 
 /* ---------- jugadores en la partida (anfitrión) ---------- */
@@ -6617,12 +6635,12 @@ function actualizarOtros(dt){
   const ahora = performance.now();
   for (const o of G.otros){
     const p = o.jug;
-    if (!o.fuera && ahora - o.ultVisto > 20000){ o.fuera = true; p.muerto = true; mostrarBanner(o.nombre + ' se desconectó'); }
+    if (!o.fuera && ahora - o.ultVisto > 25000){ o.fuera = true; p.muerto = true; mostrarBanner(o.nombre + ' se desconectó'); }
     if (o.fuera) continue;
     p.nivel = G.jugLocal.nivel;
     const inp = o.input;
     if (inp && !p.muerto){
-      p.x = inp.x; p.y = inp.y; p.mov = !!inp.m; p.mira = inp.mi || 1; p.dir = { x:inp.dx||0, y:inp.dy||0 };
+      interpolar(p, ahora); p.mov = !!inp.m; p.mira = inp.mi || 1; p.dir = { x:inp.dx||0, y:inp.dy||0 };
       if (p.mov) p.paso += dt*11;
       if (typeof inp.s === 'number' && p.slots[inp.s]) p.activo = inp.s;
       if (inp.md) p.inv = Math.max(p.inv, 0.15);
@@ -6660,16 +6678,23 @@ function aplicarEleccionRemota(o, el){
 
 /* ---------- foto del estado que manda el anfitrión ---------- */
 let uidN = 0;
-function armarSnapshot(){
+// zona que le importa a un invitado: lo que entra en su pantalla y un margen (si está caído, también lo de sus compañeros)
+function zonaDe(os){
+  const cs = []; for (const o of os){ const inp = o.input || {}, mx = Math.max(1250, (inp.vw||1600)/2 + 380), my = Math.max(950, (inp.vh||1000)/2 + 380);
+    cs.push([o.jug.x, o.jug.y, mx, my]); if (o.jug.muerto) for (const p of jugadoresVivos()) cs.push([p.x, p.y, mx, my]); }
+  return (x, y) => { for (const c of cs) if (Math.abs(x - c[0]) < c[2] && Math.abs(y - c[1]) < c[3]) return true; return false; };
+}
+function armarSnapshot(cerca){
   const lim = (arr, n) => arr.length > n ? arr.slice(arr.length - n) : arr;
+  const zf = cerca ? (arr => arr.filter(o => cerca(o.x, o.y))) : (arr => arr);
   const jefe = G.jefe && G.jefe.hp>0 ? { n:$('#jefeNom').textContent || G.jefe.def.nombre, p:+barraJefe(G.jefe).toFixed(3) } : null;
   const J = todosLosJugadores().map(p => {
     const o = G.otros.find(x => x.jug===p), hab = o ? o.hab : G;
     return [p.mpId || MP.yo, r1(p.x), r1(p.y), r1(p.hp), r1(p.maxHp), p.mira||1, p.mov?1:0, p.muerto?1:0, p.inv>0?1:0, p.pjId || G.pj.id, p.skin || datos.skinSel[G.pj.id] || 'normal', p.nombre || datos.jugador || '', +(p.reviveT||0).toFixed(1), hab.buff>0?1:0, r1((p.dir||{}).x*10||0), r1((p.dir||{}).y*10||0)];
   });
   const B = {};
-  for (const o of G.otros){ const p = o.jug; B[o.id] = { s:p.slots.map(sl => sl.map(w => [w.id, w.nivel, w.evo?1:0])), a:p.activo, pa:p.pasivas, bu:p.buffs, v:r1(p.st.vel), im:r1(p.st.iman), hc:+p.st.habCd.toFixed(3) }; }
-  const E = G.enemigos.filter(e => e.hp>0).slice(0, 260).map(e => {
+  for (const o of G.otros){ const p = o.jug; B[o.id] = { s:p.slots.map(sl => sl.map(w => [w.id, w.nivel, w.evo?1:0])), a:p.activo, pa:p.pasivas, bu:p.buffs, v:r1(p.st.vel), im:r1(p.st.iman), hc:+p.st.habCd.toFixed(3), pt:(o.input && o.input.t) || 0 }; }
+  const E = G.enemigos.filter(e => e.hp>0 && (e.jefe || !cerca || cerca(e.x, e.y))).slice(0, 260).map(e => {
     if (!e.uid) e.uid = ++uidN;
     const code = e.leg ? 'L' + e.def.id : e.semi ? 'S' + e.id : e.tipo;
     const fl = (e.shiny?1:0) | (e.invisible?2:0) | (e.lento>0?4:0) | (e.escudo>0?8:0) | (e.flash>0?16:0) | (e.atk>0?32:0) | (e.pose==='d'?64:0) | (e.entrada>0?128:0) | (e.cargaT>0?256:0) | (e.fase2?512:0) | (e.arrod>0?1024:0) | (e.pesado?2048:0) | (e.elite?4096:0);
@@ -6682,23 +6707,23 @@ function armarSnapshot(){
     t:+G.t.toFixed(2), n:G.jugLocal.nivel, xp:r1(G.jugLocal.xp), xn:r1(G.jugLocal.xpNext), k:G.kills, jm:G.jefesMuertos,
     esc:G.escenario, zl:[r1(zonaLibre.x), r1(zonaLibre.y)], cl:G.clima, dim:G.dim ? G.dim.id : null, lg:G.legsCoop||0,
     ban:[G.bannerSeq||0, G.bannerTxt||''], pa:G.mpPausa || [], jefe, J, B, E,
-    P:lim(G.balas, 160).map(b => [b.tipo, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), +(b.rot||0).toFixed(2), b.homing?1:0, b.id%97]),
-    Q:lim(G.ebalas, 160).map(b => [b.tipo, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy)]),
+    P:lim(zf(G.balas), 160).map(b => [b.tipo, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), +(b.rot||0).toFixed(2), b.homing?1:0, b.id%97]),
+    Q:lim(zf(G.ebalas), 160).map(b => [b.tipo, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy)]),
     C:G.charcos.map(c => [r1(c.x), r1(c.y), r1(c.r), +c.vida.toFixed(2), c.id%97]),
-    Gm:lim(G.gemas, 260).map(g => [r1(g.x), r1(g.y), g.v]),
+    Gm:lim(zf(G.gemas), 260).map(g => [r1(g.x), r1(g.y), g.v]),
     I:G.items.map(i => [i.tipo, r1(i.x), r1(i.y), i.id||'']),
     A:G.avisos.map(a => [a.tipo, r1(a.x), r1(a.y), r1(a.r||0), +(a.a||0).toFixed(2), r1(a.len||0), r1(a.ancho||0), +a.t.toFixed(2), +a.max.toFixed(2)]),
-    T:lim(G.textos, 40).map(t => [r1(t.x), r1(t.y), t.txt, t.color, +t.vida.toFixed(2)]),
-    F:lim(G.efectos, 40).map(f => Object.assign({}, f, { x:r1(f.x||0), y:r1(f.y||0) })),
+    T:lim(zf(G.textos), 40).map(t => [r1(t.x), r1(t.y), t.txt, t.color, +t.vida.toFixed(2)]),
+    F:lim(zf(G.efectos), 40).map(f => Object.assign({}, f, { x:r1(f.x||0), y:r1(f.y||0) })),
     R:G.rayos.map(r => [r1(r.x), r1(r.y), +r.a.toFixed(3), r1(r.len), r1(r.ancho), +r.vida.toFixed(2), r.max]),
     K:G.cortes.map(c => [r1(c.x), r1(c.y), c.lado, r1(c.largo), r1(c.alto), +c.vida.toFixed(2), c.max]),
     Au:vh.autos.map(a => [r1(a.x), r1(a.y), r1(a.vx||0)]), Ce:vh.cebadas.map(c => [r1(c.x), r1(c.y), +c.ang.toFixed(2)]),
     Pz:(G.pizzas||[]).map(p => [r1(p.x), r1(p.y), +p.t.toFixed(2), +p.max.toFixed(2), p.giro]),
-    Ma:lim(G.marcas||[], 120).map(m => [r1(m.x), r1(m.y), +m.vida.toFixed(1)]), Mn:(G.manchas||[]).map(m => [r1(m.x), r1(m.y), +m.vida.toFixed(1)]),
+    Ma:lim(zf(G.marcas||[]), 120).map(m => [r1(m.x), r1(m.y), +m.vida.toFixed(1)]), Mn:(G.manchas||[]).map(m => [r1(m.x), r1(m.y), +m.vida.toFixed(1)]),
     Ar:vis.auras.map(a => [r1(a.x), r1(a.y), r1(a.rad), a.evo?1:0, a.pulso>0?1:0]), Te:vis.termos.map(t => [t.evo?1:0, t.pos.map(p => [r1(p.x), r1(p.y)])]), Dr:vis.drones.map(d => [r1(d.x), r1(d.y)]),
     gr:G.grieta ? [r1(G.grieta.x), r1(G.grieta.y), G.grieta.def.id, r1(G.grieta.vida)] : null, im:G.imanT>0?1:0,
-    Bm:(G.bombas||[]).map(b => [r1(b.x), r1(b.y), +b.t.toFixed(2), b.max]), Nb:lim(G.nubes||[], 60).map(n => [r1(n.x), r1(n.y), +n.vida.toFixed(1), n.max]), Ps:(G.pasadas||[]).map(p => [r1(p.x), r1(p.y), p.vx]), Ju:(G.juicios||[]).map(k => [r1(k.x), r1(k.y), +k.t.toFixed(2), k.max]),
-    ds:G.dios ? [r1(G.dios.fin), 0] : null, pr:G.presSeq ? [G.presSeq, G.presDef] : null,
+    Bm:(G.bombas||[]).map(b => [r1(b.x), r1(b.y), +b.t.toFixed(2), b.max]), Nb:lim(zf(G.nubes||[]), 60).map(n => [r1(n.x), r1(n.y), +n.vida.toFixed(1), n.max]), Ps:(G.pasadas||[]).map(p => [r1(p.x), r1(p.y), p.vx]), Ju:(G.juicios||[]).map(k => [r1(k.x), r1(k.y), +k.t.toFixed(2), k.max]),
+    ds:G.dios ? [r1(G.dios.fin), 0] : null, pr:G.presSeq ? [G.presSeq, G.presDef] : null, em:G.emotes ? Object.fromEntries(Object.entries(G.emotes).map(([id, e]) => [id, [e.i, e.n]])) : null,
   };
 }
 function visualesArmas(){
@@ -6753,6 +6778,7 @@ function aplicarSnapshot(S){
   if ((S.lg||0) > MP.legsVistos){ G.vinGuardado = (G.vinGuardado||0) + (S.lg - MP.legsVistos); MP.legsVistos = S.lg; j.hp = j.maxHp; }
   if (S.ban && S.ban[0] !== MP.bannerSeq){ MP.bannerSeq = S.ban[0]; if (S.ban[1]){ G.banner = { t:2.4 }; const bb = $('#banner'); bb.textContent = S.ban[1]; bb.style.opacity = 1; } }
   // jugadores
+  const ahoraS = performance.now(), durS = mpGap('snap', ahoraS);
   const prev = {}; for (const p of (G.otrosVis||[])) prev[p.mpId] = p;
   G.otrosVis = [];
   for (const f of S.J){
@@ -6765,7 +6791,7 @@ function aplicarSnapshot(S){
       continue;
     }
     const p = prev[id] || { mpId:id, x, y, paso:0, dir:{x:1,y:0} };
-    p.tx = x; p.ty = y; p.hp = hp; p.maxHp = maxHp; p.mira = mira; p.mov = !!mov; p.muerto = !!muerto; p.inv = inv ? 0.1 : 0; p.pjId = pjId; p.skin = skin; p.nombre = nombre; p.reviveT = rev;
+    nuevoObjetivo(p, x, y, ahoraS, durS); p.hp = hp; p.maxHp = maxHp; p.mira = mira; p.mov = !!mov; p.muerto = !!muerto; p.inv = inv ? 0.1 : 0; p.pjId = pjId; p.skin = skin; p.nombre = nombre; p.reviveT = rev;
     if (dx || dy) p.dir = { x:dx/10, y:dy/10 };
     G.otrosVis.push(p);
   }
@@ -6780,7 +6806,9 @@ function aplicarSnapshot(S){
       recalcular(); renderSlots(); renderPasivas();
     }
     j.st.vel = b.v; j.st.iman = b.im; j.st.habCd = b.hc;
+    if (b.pt){ const rtt = Date.now() - b.pt; MP.ping = MP.ping ? MP.ping*0.85 + rtt*0.15 : rtt; }
   }
+  if (S.em) for (const id in S.em){ if (id === MP.yo) continue; const [i, n] = S.em[id]; MP.emVistos = MP.emVistos || {}; if (MP.emVistos[id] !== n){ MP.emVistos[id] = n; ponerEmote(id, i); } }
   // enemigos
   const ePrev = {}; for (const e of G.enemigos) ePrev[e.uid] = e;
   G.enemigos = S.E.map(f => {
@@ -6792,7 +6820,7 @@ function aplicarSnapshot(S){
       else if (code[0]==='S' && SEMI_DEF[code.slice(1)]){ e.semi = true; e.jefe = true; e.id = code.slice(1); e.def = SEMI_DEF[e.id]; e.r = 16; }
       else { e.tipo = MINIONS[code] ? code : 'tp'; e.r = MINIONS[e.tipo].r; }
     }
-    e.tx = x; e.ty = y; e.mira = mira; e.shiny = !!(fl&1); e.invisible = !!(fl&2); e.lento = fl&4 ? 0.1 : 0; e.escudo = fl&8 ? 1 : 0; e.flash = fl&16 ? 0.05 : 0; e.atk = fl&32 ? 0.1 : 0; e.pose = fl&64 ? 'd' : 'c'; e.entrada = fl&128 ? 1 : 0; e.cargaT = fl&256 ? 0.1 : 0; e.fase2 = !!(fl&512); e.arrod = fl&1024 ? 1 : 0; e.pesado = !!(fl&2048); e.elite = !!(fl&4096); if (e.arrod){ e.atk = 0.1; e.pose = 'e'; }
+    nuevoObjetivo(e, x, y, ahoraS, durS); e.mira = mira; e.shiny = !!(fl&1); e.invisible = !!(fl&2); e.lento = fl&4 ? 0.1 : 0; e.escudo = fl&8 ? 1 : 0; e.flash = fl&16 ? 0.05 : 0; e.atk = fl&32 ? 0.1 : 0; e.pose = fl&64 ? 'd' : 'c'; e.entrada = fl&128 ? 1 : 0; e.cargaT = fl&256 ? 0.1 : 0; e.fase2 = !!(fl&512); e.arrod = fl&1024 ? 1 : 0; e.pesado = !!(fl&2048); e.elite = !!(fl&4096); if (e.arrod){ e.atk = 0.1; e.pose = 'e'; }
     if (e.jefe){ e.maxHp = 1; e.hp = pct; e.frase = frase || ''; e.fraseT = frase ? 1 : 0; } else e.hp = 1;
     return e;
   });
@@ -6844,9 +6872,9 @@ function actualizarEspejo(dt){
   const vivo = (G.otrosVis||[]).find(p => !p.muerto);
   if (j.muerto && vivo){ cam.x = suave(cam.x, vivo.x, Math.min(1, dt*4)); cam.y = suave(cam.y, vivo.y, Math.min(1, dt*4)); } else { cam.x = j.x; cam.y = j.y; }
   // suavizado de lo que viene del anfitrión
-  const k = Math.min(1, dt*12);
-  for (const p of (G.otrosVis||[])){ const ox = p.x; p.x = suave(p.x, p.tx, k); p.y = suave(p.y, p.ty, k); if (Math.abs(p.x-ox) > 0.3) p.paso += dt*11; }
-  for (const e of G.enemigos){ const ox = e.x, oy = e.y; e.x = suave(e.x, e.tx, k); e.y = suave(e.y, e.ty, k); if (Math.abs(e.x-ox) + Math.abs(e.y-oy) > 0.2) e.paso += dt*8; if (e.flash>0) e.flash -= dt; }
+  const ahoraI = performance.now();
+  for (const p of (G.otrosVis||[])){ const ox = p.x, oy = p.y; interpolar(p, ahoraI); if (Math.abs(p.x-ox) + Math.abs(p.y-oy) > 0.3) p.paso += dt*11; }
+  for (const e of G.enemigos){ const ox = e.x, oy = e.y; interpolar(e, ahoraI); if (Math.abs(e.x-ox) + Math.abs(e.y-oy) > 0.2) e.paso += dt*8; if (e.flash>0) e.flash -= dt; }
   if (!enPausa){ for (const b of G.balas){ b.x += b.vx*dt; b.y += b.vy*dt; }
   for (const b of G.ebalas){ b.x += b.vx*dt; b.y += b.vy*dt; } }
   for (const t of G.textos){ t.vida -= dt; t.y -= 40*dt; }
@@ -6859,20 +6887,50 @@ function actualizarEspejo(dt){
   if (G.pops) { for (const q of G.pops) q.t -= dt; G.pops = G.pops.filter(q => q.t > 0); }
   for (const e of G.enemigos){ if (e.tembT>0) e.tembT -= dt; }
   // mando lo mío
-  const miInput = { x:r1(j.x), y:r1(j.y), m:j.mov?1:0, mi:j.mira||1, dx:+(j.dir.x||0).toFixed(2), dy:+(j.dir.y||0).toFixed(2), s:j.activo, h:MP.habN, md:hayModalAbierto()?1:0, t:Date.now() };
+  const miInput = { x:r1(j.x), y:r1(j.y), m:j.mov?1:0, mi:j.mira||1, dx:+(j.dir.x||0).toFixed(2), dy:+(j.dir.y||0).toFixed(2), s:j.activo, h:MP.habN, md:hayModalAbierto()?1:0, t:Date.now(), vw:Math.round(VW), vh:Math.round(VH), em:MP.emN ? [MP.emN, MP.emI] : 0 };
   MP.inT = (MP.inT||0) - dt;
   if (MP.canal && abierto(MP.canal.rap)){ if (MP.inT <= 0){ MP.inT = 0.033; mandar(MP.canal.rap, { k:'i', d:miInput }); } }
   else mpInput(`salas/${MP.sala}/inputs/${MP.yo}`, miInput);
   revisarVinculoGuardado();
   if (G.pendientes>0 && !hayModalAbierto() && !G.fin) mostrarNivel();
   G.hudT -= dt; if (G.hudT<=0){ G.hudT = 0.1; renderHud(); renderTipoCerca(); }
-  if (performance.now() - MP.ultSnap > 12000 && !G.fin){ mostrarBanner('Se cortó la conexión con el anfitrión'); mpTerminarInvitado(false); }
+  { const sin = performance.now() - MP.ultSnap; const rec = sin > 2500 && !G.fin; if (rec !== !!MP.reconectando){ MP.reconectando = rec; $('#mpReco').classList.toggle('oculto', !rec); }
+    if (rec) $('#mpReco').textContent = `Reconectando con el anfitrión… ${Math.max(0, Math.ceil((20000 - sin)/1000))}`;
+    if (sin > 20000 && !G.fin){ $('#mpReco').classList.add('oculto'); mostrarBanner('Se cortó la conexión con el anfitrión'); mpTerminarInvitado(false); } }
 }
 function mpEnviarEleccion(o){
   if (!MP.sala) return;
   MP.eleN++;
   const el = Object.assign({}, o, { n:MP.eleN });
   if (!(MP.canal && abierto(MP.canal.conf) && mandar(MP.canal.conf, { k:'e', d:el }))) NET.post(`salas/${MP.sala}/elecciones/${MP.yo}`, el);
+}
+
+/* ---------- frases rápidas entre compañeros ---------- */
+const FRASES_MP = ['¡Vení!', '¡Ayuda!', '¡Bien ahí!', '¡El cofre!', '¡Cuidado!', 'Voy', 'Gracias', 'Jaja'];
+function jugadorPorId(id){
+  if (id === MP.yo) return G.espejo ? G.jug : (G.jugLocal || G.jug);
+  if (G.espejo) return (G.otrosVis||[]).find(p => p.mpId === id);
+  const o = (G.otros||[]).find(x => x.id === id); return o && o.jug;
+}
+function ponerEmote(id, i){ if (!G || !FRASES_MP[i]) return; G.emotes = G.emotes || {}; const n = ((G.emotes[id] && G.emotes[id].n) || 0) + 1; G.emotes[id] = { i, n, t:performance.now() }; if (id !== MP.yo) sfx('gema'); }
+function mandarEmote(i){
+  if (!G || !G.coop || !FRASES_MP[i]) return; const ahora = performance.now(); if (ahora - (MP.emT||0) < 900) return; MP.emT = ahora;
+  ponerEmote(MP.yo, i); MP.emN = (MP.emN||0) + 1; MP.emI = i; cerrarChat();
+}
+function abrirChat(){ const m = $('#chatMenu'); if (!m.classList.contains('oculto')){ cerrarChat(); return; } m.innerHTML = FRASES_MP.map((f, i) => `<button data-i="${i}"><small>${i < 8 && !esTactil() ? 'F' + (i+1) : ''}</small>${esc(f)}</button>`).join(''); m.querySelectorAll('button').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); mandarEmote(+b.dataset.i); })); m.classList.remove('oculto'); }
+function cerrarChat(){ const m = $('#chatMenu'); if (m) m.classList.add('oculto'); }
+function dibujarEmotes(){
+  if (!G || !G.coop || !G.emotes) return; const ahora = performance.now();
+  for (const id in G.emotes){ const e = G.emotes[id], edad = (ahora - e.t)/1000; if (edad > 2.6) continue; const p = jugadorPorId(id); if (!p) continue;
+    const sube = Math.min(1, edad*6), y = by_(p.y) - 60 - Math.round(sube*4);
+    cartel8(FRASES_MP[e.i].toUpperCase(), bx_(p.x), y, id === MP.yo ? '#f5d547' : '#7ed492'); }
+}
+function pintarPing(){
+  const el = $('#mpPing'); if (!el) return; if (!G || !G.coop){ el.classList.add('oculto'); return; }
+  el.classList.remove('oculto');
+  if (G.host){ el.textContent = 'Anfitrión'; el.className = 'mp-ping'; return; }
+  const ms = Math.round(MP.ping || 0), dir = estadoConexion(MP.yo) === 'directa';
+  el.textContent = `${ms ? ms + ' ms' : '…'}${dir ? '' : ' · internet'}`; el.className = 'mp-ping ' + (ms < 120 ? 'bien' : ms < 250 ? 'medio' : 'mal');
 }
 
 /* ---------- arrancar y terminar ---------- */
@@ -6897,13 +6955,17 @@ function mpIniciarAnfitrion(){
   }));
   NET.put(`salas/${MP.sala}/info/estado`, 'jugando');
 }
-function recibirInput(id, inp){ const o = G.otros.find(x => x.id===id); if (o && inp){ o.input = inp; o.ultVisto = performance.now(); } }
+function recibirInput(id, inp){ const o = G.otros.find(x => x.id===id); if (!o || !inp) return; const ahora = performance.now();
+  if (o.input && inp.t && o.input.t && inp.t < o.input.t) return;          // llegó uno viejo: se ignora
+  if (!o.jug.muerto && (!o.input || inp.x !== o.input.x || inp.y !== o.input.y)) nuevoObjetivo(o.jug, inp.x, inp.y, ahora, mpGap('in' + id, ahora));
+  if (inp.em && inp.em[0] !== (o.emVisto||0)){ o.emVisto = inp.em[0]; ponerEmote(id, inp.em[1]); }
+  o.input = inp; o.ultVisto = ahora; }
 function mpIniciarInvitado(){
   const yo = MP.jugadores[MP.yo] || {};
   acostarPantalla(); nuevaPartida(yo.pj || pjSel);
   G.coop = true; G.espejo = true; G.cons = []; renderCons();
   G.jug.nombre = datos.jugador; G.otrosVis = []; G.tObj = 0;
-  MP.ultSnap = performance.now(); MP.legsVistos = 0; MP.habN = 0; MP.presVisto = undefined; MP.firmaB = ''; MP.ultT = undefined;
+  MP.ping = 0; MP.emN = 0; MP.emVistos = {}; MP.reconectando = false; MPI.gap = {}; MP.ultSnap = performance.now(); MP.legsVistos = 0; MP.habN = 0; MP.presVisto = undefined; MP.firmaB = ''; MP.ultT = undefined;
   MP.cierres.push(NET.escuchar(`salas/${MP.sala}/estado`, (path, data) => {
     if (path === '/') aplicarSnapshot(data);
   }));
@@ -6920,19 +6982,19 @@ function mpTick(dt){
     G.snapT -= dt; G.snapFbT = (G.snapFbT||0) - dt;
     if (!(G.snapT > 0)){
       G.snapT = 0.05;
-      let snap = null, faltan = false;
+      const porInternet = [];
       for (const o of G.otros){
         if (o.fuera) continue;
         const r = MP.pcs[o.id];
-        if (r && abierto(r.rap)){ snap = snap || armarSnapshot(); const txt = JSON.stringify({ k:'s', d:snap }); try { if (txt.length < 60000) r.rap.send(txt); else if (abierto(r.conf)) r.conf.send(txt); } catch(e){ faltan = true; } }
-        else faltan = true;
+        if (r && abierto(r.rap)){ const txt = JSON.stringify({ k:'s', d:armarSnapshot(zonaDe([o])) }); try { if (txt.length < 60000) r.rap.send(txt); else if (abierto(r.conf)) r.conf.send(txt); } catch(e){ porInternet.push(o); } }
+        else porInternet.push(o);
       }
-      if (faltan && G.snapFbT <= 0){ G.snapFbT = 0.14; mpSnap(`salas/${MP.sala}/estado`, snap || armarSnapshot()); }
+      if (porInternet.length && G.snapFbT <= 0){ G.snapFbT = 0.1; mpSnap(`salas/${MP.sala}/estado`, armarSnapshot(zonaDe(porInternet))); }
     }
   }
 }
 function mpCerrar(){
-  rtcCerrar();
+  rtcCerrar(); cerrarChat(); const rc = $('#mpReco'); if (rc) rc.classList.add('oculto'); MP.reconectando = false;
   for (const c of MP.cierres) try { c(); } catch(_){}
   MP.cierres = [];
   if (MP.hb){ clearInterval(MP.hb); MP.hb = null; }
@@ -7527,6 +7589,7 @@ $('#btnPegar').onclick = () => {
 $('#fileImport').onchange = e => { const f = e.target.files[0]; if (f) leerImport(f); e.target.value = ''; };
 document.querySelectorAll('[data-cerrar]').forEach(b => b.onclick = () => b.closest('.modal').classList.add('oculto'));
 // pausa con pointerdown: en el iPhone el "click" no llega si ya tenés otro dedo apoyado (el del joystick)
+$('#chatBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); abrirChat(); });
 $('#pausaBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G) (G.pausa ? reanudar() : pausar()); $('#pausaBtn').dataset.t = Date.now(); });
 $('#pausaBtn').onclick = () => { if (Date.now() - (+$('#pausaBtn').dataset.t || 0) < 600) return; G && (G.pausa ? reanudar() : pausar()); };
 $('#habBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); usarHabilidad(); });
