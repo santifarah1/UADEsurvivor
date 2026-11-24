@@ -4625,10 +4625,6 @@ function dibujar(){
   if (!G.dim && datos.minimapa !== false) dibujarMiniMapa(j);
   // élites con truco: cartelito arriba
   for (const e of G.enemigos) if (e.truco && e.hp > 0 && enPantalla(e, 10)) cartel8('ÉLITE · ' + ({ escudo:'ESCUDO', divide:'SE DIVIDE', charco:'CHARCOS' })[e.truco], bx_(e.x), by_(e.y) - Math.round(e.r*2.6/K) - 14, '#ff7a5a');
-  // la debilidad del enemigo más cercano: un cuadradito del color del tipo que le pega más
-  if (!G.dim){ const e = masCercanos(1, j.x, j.y, 240*240)[0], te = e && tipoDe(e);
-    if (te){ const at = Object.keys(EFICACIA).find(a => EFICACIA[a].eficaz.includes(te)); if (at){ const x = bx_(e.x), y = by_(e.y) - Math.round(e.r*2.2/K) - 6, col = TIPOS_ATK[at].color;
-      rect(x - 3, y - 3, 7, 7, '#15151c'); rect(x - 2, y - 2, 5, 5, col); rect(x - 1, y - 6, 3, 2, '#15151c'); } } }
   // aviso de ola: el borde de la pantalla por donde entra se pone rojo y titila
   if (G.avisoBorde){ const ab = G.avisoBorde, ca = typeof colAviso === 'function' ? colAviso() : '232,60,40', al = (0.25 + 0.25*Math.sin(G.t*14)) * Math.min(1, (ab.max - ab.t)*3);
     const cx = Math.cos(ab.a), cy = Math.sin(ab.a), ex = BW/2 + cx*BW/2, ey = BH/2 + cy*BH/2;
