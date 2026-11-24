@@ -5185,10 +5185,11 @@ const LOTES = [
   { l:[1018, 252], t:[1091, 218], b:[1115, 308] },
 ];
 // cada especie vive en su lugar fijo: [x, y del pie, ancho, alto]
-const CORRALES = {"corral": [156, 646, 180, 112], "redil": [377, 650, 146, 105], "establo": [559, 654, 124, 127], "gallinero": [276, 433, 125, 95], "chiquero": [581, 432, 127, 97], "canil": [130, 390, 118, 90]};
+const CORRALES = {"corral": [156, 646, 180, 112], "redil": [780, 168, 146, 105], "establo": [718, 514, 124, 127], "gallinero": [276, 433, 125, 95], "chiquero": [581, 432, 127, 97], "canil": [130, 390, 118, 90]};
 // qué obra necesita cada animal (las vacas viven en el potrero grande)
 const CASA_ANIMAL = { chancho:'chiquero', oveja:'redil', gallina:'gallinero', caballo:'establo', perro:'canil', galgo:'canil', dogo:'canil', salchicha:'canil', callejero:'canil', siberiano:'canil', golden:'canil' };
-const LUGAR = { tractor:[78, 318], camioneta:[335, 341], molino:[563, 188], tanque:[599, 214], tambo:[0,0] };
+// todo en su lugar fijo: en el potrero solo lo de las vacas (corral, engorde y mixer)
+const LUGAR = { tractor:[78, 318], camioneta:[335, 341], molino:[563, 188], tanque:[599, 214], tambo:[0,0], silos:[656, 228], cosechadora:[1061, 629], mixer:[262, 546], feedlot:[390, 650], galpon:[485, 252] };
 const ARROYO = [[650, 650], [806, 585], [910, 520], [988, 494], [1079, 455], [1131, 364], [1170, 306], [1300, 273], [1331, 266]];
 function dentroPoly(P, x, y){ let d = false; for (let i=0, j=P.length-1; i<P.length; j=i++){ const [xi,yi] = P[i], [xj,yj] = P[j]; if ((yi>y) !== (yj>y) && x < (xj-xi)*(y-yi)/(yj-yi)+xi) d = !d; } return d; }
 function enCorral(x, y){ return !dentroPoly(POT_P, x, y); }
@@ -5198,12 +5199,12 @@ function zonaAnimal(k, i){
   const casa = CASA_ANIMAL[k], c = campoDatos();
   if (!casa && VACUNOS.includes(k) && c.edificios && c.edificios.corral && (i % 3 === 0)){ const [x, y, w, h] = CORRALES.corral; return { x0:x - w*0.24, x1:x + w*0.24, y0:y - h*0.5, y1:y - h*0.16 }; }
   if (casa && casa !== 'canil' && c.edificios && c.edificios[casa]){ const [x, y, w, h] = CORRALES[casa];
-    if (casa === 'establo'){ const ov = CORRALES.redil; return { x0:ov[0] + ov[2]/2 + 10, x1:x - w/2 - 4, y0:y - 44, y1:y - 8 }; }   // los caballos, entre el corral de ovejas y el establo
+    if (casa === 'establo') return { x0:x - w/2 - 46, x1:x - w/2 - 8, y0:y - 40, y1:y - 6 };   // los caballos, al costado del establo
     return { x0:x - w*0.26, x1:x + w*0.26, y0:y - h*0.5, y1:y - h*0.14 }; }
   return null;
 }
 function libreEnPotrero(x, y){ if (!dentroPoly(POT_P, x, y)) return false;
-  for (const k of ['corral','redil','establo']){ const [cx, cy, w, h] = CORRALES[k]; if (x > cx - w/2 - 6 && x < cx + w/2 + 6 && y > cy - h - 4 && y < cy + 8) return false; } return true; }
+  for (const [cx, cy, w, h] of [CORRALES.corral, LUGAR.feedlot.concat([125, 72]), LUGAR.mixer.concat([87, 52])]){ if (x > cx - w/2 - 6 && x < cx + w/2 + 6 && y > cy - h - 4 && y < cy + 8) return false; } return true; }
 function enCorral(x, y){ return !libreEnPotrero(x, y); }
 function lugarAnimal(k, i){
   const z = zonaAnimal(k, i); if (z) return [rnd(z.x0, z.x1), rnd(z.y0, z.y1)];
@@ -5266,7 +5267,8 @@ function dibujarCampo(dt){
   const edif = (k, spr, fr) => { if (!e[k]) return; const [x, y] = posEdif(c, k), z = ESC_OBRA[k] || 1;
     cosas.push({ y, f:() => { const im = imgC(spr||k, fr||0); if (!im) return; const w = Math.round(im.width*z), h = Math.round(im.height*z);
       g.drawImage(im, Math.round(x - w/2), y - h, w, h); campoHits.push({ x0:x - w/2 - 3, y0:y - h - 3, x1:x + w/2 + 3, y1:y + 3, tipo:'edif', ref:k, cx:x, cy:y - h }); } }); };
-  edif('galpon'); edif('silos'); edif('cosechadora'); edif('tractor'); edif('camioneta'); edif('feedlot'); edif('mixer');
+  if (e.galpon) campoHits.push({ x0:412, y0:128, x1:558, y1:256, tipo:'edif', ref:'galpon', cx:485, cy:128 });
+  edif('silos'); edif('cosechadora'); edif('tractor'); edif('camioneta'); edif('feedlot'); edif('mixer');
   // molino y tanque ya están pintados en el mapa: si son tuyos, se pueden tocar
   if (e.molino) campoHits.push({ x0:LUGAR.molino[0]-30, y0:LUGAR.molino[1]-120, x1:LUGAR.molino[0]+30, y1:LUGAR.molino[1]+4, tipo:'edif', ref:'molino', cx:LUGAR.molino[0], cy:LUGAR.molino[1]-120 });
   if (e.tanque) campoHits.push({ x0:LUGAR.tanque[0]-26, y0:LUGAR.tanque[1]-58, x1:LUGAR.tanque[0]+26, y1:LUGAR.tanque[1]+4, tipo:'edif', ref:'tanque', cx:LUGAR.tanque[0], cy:LUGAR.tanque[1]-58 });
@@ -5361,7 +5363,7 @@ function spriteCanil(){ if (canilC) return canilC; const c = document.createElem
   for (const [x, col] of [[18,'#a8442a'],[54,'#7a5a3a']]){ P(x, 22, 26, 24, col); P(x+8, 32, 10, 14, '#2a1a10');
     for (let k=0;k<14;k++){ P(x-2+k, 22-k*0.7|0, 2, 2, '#3a3a40'); P(x+28-k, 22-k*0.7|0, 2, 2, '#3a3a40'); } }
   P(44, 52, 6, 3, '#3a6ab0'); P(36, 54, 6, 3, '#b03a3a'); return canilC = c; }
-const MOVIBLES = { galpon:0, silos:4, cosechadora:2, mixer:3, feedlot:1 };
+const MOVIBLES = {};
 // las obras del mapa viejo se agrandan para ir con el dibujo del mapa nuevo
 const ESC_OBRA = { galpon:1.5, silos:1.6, cosechadora:1.5, mixer:1.4, feedlot:1.2, tractor:1.3, camioneta:1.3 };
 const ANCHO_OBRA = { galpon:118, silos:82, cosechadora:111, mixer:87, feedlot:125 };
