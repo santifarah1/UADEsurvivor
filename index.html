@@ -4130,6 +4130,75 @@ function actualizar(dt){
    ========================================================= */
 let OX = 0, OY = 0;
 const bx_ = x => Math.round(x/K) - OX, by_ = y => Math.round(y/K) - OY;
+// ---- mini-mapa: el terreno se dibuja aparte (unas 6 veces por segundo) y encima van las cosas que se mueven ----
+const MM = { R:1100, can:null, cx:0, cy:0, t:-9, esc:'', M:0 };
+const MM_COL = {
+  facu:{ piso:'#4b4e57', pasillo:'#686c76', obs:'#2a2c33', borde:'#8a8f9c' },
+  aula:{ piso:'#6b5238', pasillo:'#8a8478', obs:'#3a2a1c', borde:'#b49a74' },
+  campo:{ piso:'#4d7a3c', pasillo:'#5b8a46', obs:'#2c4a22', borde:'#9cc67a' } };
+function mmTerreno(M){
+  const esc = G.escenario, col = MM_COL[esc] || MM_COL.facu, j = G.jug, R = MM.R, k = M/2/R;
+  if (!MM.can || MM.M !== M){ MM.can = document.createElement('canvas'); MM.can.width = MM.can.height = M; MM.M = M; }
+  const g = MM.can.getContext('2d'), x0 = j.x - R, y0 = j.y - R, S = CH*K;
+  MM.cx = j.x; MM.cy = j.y; MM.t = G.t; MM.esc = esc;
+  g.fillStyle = col.piso; g.fillRect(0, 0, M, M);
+  const W = v => (v)*k;                                     // de mundo a píxel del mapa
+  const c0x = Math.floor(x0/S), c1x = Math.floor((x0 + 2*R)/S), c0y = Math.floor(y0/S), c1y = Math.floor((y0 + 2*R)/S);
+  if (esc === 'campo'){
+    // el campo: se mira píxel por píxel qué hay (agua, barro, camino)
+    const TC = { agua:'#3f7fc0', puente:'#9a7448', camino:'#b89a62', barro:'#6b5a36' };
+    for (let py=0; py<M; py++) for (let px=0; px<M; px++){ const t = terreno('campo', x0 + (px + 0.5)/k, y0 + (py + 0.5)/k); if (t){ g.fillStyle = TC[t]; g.fillRect(px, py, 1, 1); } }
+    // alambrados
+    g.fillStyle = '#c9b48a'; for (const yf of lineasCerca(y0, y0 + 2*R)){ const yy = Math.round(W(yf - y0)); for (let px=0; px<M; px+=2) if (!hueco(x0 + px/k, yf)) g.fillRect(px, yy, 1, 1); }
+  } else {
+    // facu y aulas: pasillos más claros, aulas y patios del color del piso
+    g.fillStyle = col.pasillo;
+    for (let cx=c0x; cx<=c1x; cx++) for (let cy=c0y; cy<=c1y; cy++){
+      const pas = esc === 'aula' ? esPasilloAula(cx, cy) : esPasilloFacu(cx, cy); if (!pas) continue;
+      g.fillRect(Math.floor(W(cx*S - x0)), Math.floor(W(cy*S - y0)), Math.ceil(S*k) + 1, Math.ceil(S*k) + 1); }
+    // charcos
+    g.fillStyle = '#5f8fb8';
+    for (let cx=c0x; cx<=c1x; cx++) for (let cy=c0y; cy<=c1y; cy++){ const m = mojadoDe(esc, cx, cy); if (m) g.fillRect(Math.round(W(cx*S + m.x*K - x0)) - 1, Math.round(W(cy*S + m.y*K - y0)) - 1, 2, 2); }
+  }
+  // cosas que chocan (muebles, galpones, árboles…)
+  g.fillStyle = col.obs;
+  for (let cx=c0x; cx<=c1x; cx++) for (let cy=c0y; cy<=c1y; cy++) for (const o of obstaculos(esc, cx, cy)){ if (o.pasa) continue;
+    g.fillRect(Math.floor(W(o.x - x0)), Math.floor(W(o.y - y0)), Math.max(1, Math.round(W(o.w))), Math.max(1, Math.round(W(o.h)))); }
+  // lagunas
+  g.fillStyle = '#4f9ad8'; for (const l of lagunasCerca(j.x, j.y, R*1.5)){ const lx = W(l.x - x0), ly = W(l.y - y0), r = Math.max(2, W(LAG.r)); g.beginPath(); g.arc(lx, ly, r, 0, Math.PI*2); g.fill(); }
+}
+function dibujarMiniMapa(j){
+  const M = Math.max(40, Math.min(64, Math.round(BH*0.22))), mx = BW - M - 6, my = Math.round(Math.min(BH*0.24, 96/P)), R = MM.R, k = M/2/R;
+  const esc = G.escenario, col = MM_COL[esc] || MM_COL.facu;
+  if (!MM.can || MM.M !== M || MM.esc !== esc || G.t - MM.t > 0.16 || G.t < MM.t || Math.hypot(j.x - MM.cx, j.y - MM.cy) > 0.8/k) mmTerreno(M);
+  const b = bctx, ox = Math.round((MM.cx - j.x)*k), oy = Math.round((MM.cy - j.y)*k);   // el terreno se corre entre redibujos para que no salte
+  // marco: sombra, borde oscuro y borde claro, como el resto del HUD
+  rect(mx - 2, my - 2, M + 6, M + 6, 'rgba(0,0,0,.35)'); rect(mx - 3, my - 3, M + 6, M + 6, '#15151c'); rect(mx - 2, my - 2, M + 4, M + 4, col.borde);
+  b.save(); b.beginPath(); b.rect(mx, my, M, M); b.clip();
+  b.globalAlpha = 0.92; b.fillStyle = col.piso; b.fillRect(mx, my, M, M); b.drawImage(MM.can, mx + ox, my + oy); b.globalAlpha = 1;
+  const c0x = mx + M/2, c0y = my + M/2;
+  const aMapa = (x, y) => [c0x + (x - j.x)*k, c0y + (y - j.y)*k];
+  // lo que se ve en pantalla
+  b.strokeStyle = 'rgba(255,255,255,.35)'; b.lineWidth = 1; const vw = BW*K*k, vh = BH*K*k; b.strokeRect(Math.round(c0x - vw/2) + 0.5, Math.round(c0y - vh/2) + 0.5, Math.round(vw), Math.round(vh));
+  // enemigos: puntitos rojos (los comunes), más grandes los élites
+  b.fillStyle = 'rgba(240,80,60,.9)'; let n = 0;
+  for (const e of G.enemigos){ if (e.hp <= 0 || e.jefe) continue; const [x, y] = aMapa(e.x, e.y); if (x < mx || y < my || x >= mx + M || y >= my + M) continue; if (++n > 400) break; b.fillRect(Math.floor(x), Math.floor(y), 1, 1); }
+  b.restore();
+  // marcadores: si están lejos quedan pegados al borde
+  const punto = (x, y, c, t, borde) => { let [px, py] = aMapa(x, y); const dx = px - c0x, dy = py - c0y, l = Math.max(Math.abs(dx), Math.abs(dy)), lim = M/2 - 2;
+    if (l > lim){ px = c0x + dx*lim/l; py = c0y + dy*lim/l; } px = Math.round(px); py = Math.round(py);
+    rect(px - (t>>1) - 1, py - (t>>1) - 1, t + 2, t + 2, borde || '#15151c'); rect(px - (t>>1), py - (t>>1), t, t, c); };
+  const L = lugarProximo(); if (L){ const parp = Math.floor(G.t*2) % 2; punto(L.x, L.y, parp ? '#9fd0f0' : '#ffffff', 3); }
+  for (const it of G.items){ if (it.tipo === 'cofre') punto(it.x, it.y, '#f5d547', 3); else if (it.tipo === 'puerta') punto(it.x, it.y, '#ffffff', 3); else if ((typeof EVENTOS_MAPA !== 'undefined' && EVENTOS_MAPA.includes(it.tipo)) || it.tipo === 'regalo') punto(it.x, it.y, '#9fd0f0', 2); }
+  for (const e of G.enemigos) if ((e.semi || e.truco) && e.hp > 0) punto(e.x, e.y, '#ff5a3a', 3);
+  if (G.grieta) punto(G.grieta.x, G.grieta.y, Math.floor(G.t*4)%2 ? '#b48ce0' : '#ffffff', 4);
+  if (G.jefe && G.jefe.hp > 0) punto(G.jefe.x, G.jefe.y, Math.floor(G.t*5)%2 ? '#e8604c' : '#ffd0c8', 5, '#000');
+  for (const o of (G.otros||[])) if (o.jug && !o.fuera) punto(o.jug.x, o.jug.y, '#6fc3ff', 3);
+  // vos: una flechita que apunta para donde caminás
+  const d = j.dir && (j.dir.x || j.dir.y) ? j.dir : { x:0, y:1 }, an = Math.atan2(d.y, d.x), cx = Math.round(c0x) + 0.5, cy = Math.round(c0y) + 0.5;
+  b.save(); b.translate(cx, cy); b.rotate(an); b.beginPath(); b.moveTo(4, 0); b.lineTo(-3, -3); b.lineTo(-1.5, 0); b.lineTo(-3, 3); b.closePath();
+  b.fillStyle = '#15151c'; b.lineWidth = 2; b.strokeStyle = '#15151c'; b.stroke(); b.fillStyle = '#7ed492'; b.fill(); b.restore();
+}
 function rect(x,y,w,h,c){ bctx.fillStyle = c; bctx.fillRect(x,y,w,h); }
 function pElipse(cx,cy,rx,ry,c){
   bctx.fillStyle = c; rx = Math.max(1,Math.round(rx)); ry = Math.max(1,Math.round(ry));
@@ -4538,15 +4607,8 @@ function dibujar(){
   if (G.jefe) flecha(bx_(G.jefe.x), by_(G.jefe.y), '#e8604c', G.jefe.def.nombre.split(',')[0].split(' ')[0].toUpperCase());
   for (const e of G.enemigos) if (e.eco) flecha(bx_(e.x), by_(e.y), '#e8604c', e.def.nombre.split(',')[0].split(' ').pop().toUpperCase());
   if (G.grieta) flecha(bx_(G.grieta.x), by_(G.grieta.y), '#b48ce0', 'GRIETA ' + Math.max(0, Math.ceil(G.grieta.vida)));
-  // mini-mapa: lo importante alrededor tuyo (en las dimensiones no hace falta)
-  if (!G.dim && datos.minimapa !== false){ const M = 40, mx = BW - M - 4, my = Math.round(Math.min(BH*0.24, 96/P)), R = 1500, k = M/2/R, c0x = mx + M/2, c0y = my + M/2;
-    b.globalAlpha = 0.78; rect(mx - 1, my - 1, M + 2, M + 2, '#15151c'); rect(mx, my, M, M, '#1f3326'); b.globalAlpha = 1;
-    const punto = (x, y, col, t) => { let dx = (x - j.x)*k, dy = (y - j.y)*k; const l = Math.max(Math.abs(dx), Math.abs(dy)); if (l > M/2 - 2){ dx *= (M/2 - 2)/l; dy *= (M/2 - 2)/l; } rect(Math.round(c0x + dx) - (t>>1), Math.round(c0y + dy) - (t>>1), t, t, col); };
-    let n = 0; for (const e of G.enemigos){ if (e.hp <= 0 || e.jefe || e.semi || e.truco) continue; if (++n % 3) continue; const dx = (e.x - j.x)*k, dy = (e.y - j.y)*k; if (Math.abs(dx) < M/2 && Math.abs(dy) < M/2) rect(Math.round(c0x + dx), Math.round(c0y + dy), 1, 1, 'rgba(232,96,76,.7)'); }
-    for (const it of G.items){ if (it.tipo === 'cofre') punto(it.x, it.y, '#f5d547', 3); else if (it.tipo === 'puerta') punto(it.x, it.y, '#ffffff', 3); else if (EVENTOS_MAPA.includes(it.tipo) || it.tipo === 'regalo') punto(it.x, it.y, '#9fd0f0', 3); }
-    for (const e of G.enemigos) if (e.semi || e.truco) punto(e.x, e.y, '#ff5a3a', 3);
-    if (G.grieta) punto(G.grieta.x, G.grieta.y, Math.floor(G.t*4)%2 ? '#b48ce0' : '#ffffff', 4);
-    rect(Math.round(c0x) - 1, Math.round(c0y) - 1, 3, 3, '#7ed492'); }
+  // mini-mapa: un plano de verdad de lo que tenés alrededor (en las dimensiones no hace falta)
+  if (!G.dim && datos.minimapa !== false) dibujarMiniMapa(j);
   // élites con truco: cartelito arriba
   for (const e of G.enemigos) if (e.truco && e.hp > 0 && enPantalla(e, 10)) cartel8('ÉLITE · ' + ({ escudo:'ESCUDO', divide:'SE DIVIDE', charco:'CHARCOS' })[e.truco], bx_(e.x), by_(e.y) - Math.round(e.r*2.6/K) - 14, '#ff7a5a');
   // la debilidad del enemigo más cercano: un cuadradito del color del tipo que le pega más
