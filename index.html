@@ -7433,7 +7433,7 @@ async function subirCuenta(forzar){
 }
 function usarDeCuenta(rem){
   const nuevo = migrar(JSON.parse(rem.d)); nuevo.cuentaUid = CUENTA.user.uid; nuevo.cuentaT = rem.t; nuevo.cuentaFirma = null;
-  datos = nuevo; datos.cuentaFirma = firmaTxt(copiaCuenta()); guardarLocal(); CUENTA.conflicto = null;
+  datos = nuevo; datos.cuentaFirma = firmaTxt(copiaCuenta()); guardarLocal(); CUENTA.conflicto = null; CUENTA.estado = 'Al día';
   try { renderMenu(); } catch(_){} pintarCuenta(); toast('Listo: estás usando el progreso de tu cuenta');
 }
 function usarDeAca(){ datos.cuentaUid = CUENTA.user.uid; datos.cuentaFirma = null; CUENTA.conflicto = null; guardarLocal(); subirCuenta(true); toast('Listo: tu cuenta ahora tiene el progreso de este dispositivo'); }
