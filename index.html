@@ -95,6 +95,8 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .lib-it{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.25);border:3px solid rgba(0,0,0,.35);padding:6px 8px;margin-bottom:5px;text-align:left}
 .lib-it .lib-dib{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}.lib-it img{max-width:40px;max-height:40px;image-rendering:pixelated}
 .lib-it b{font-size:13px}.lib-it small{display:block;color:var(--tiza-2);font-size:11px;line-height:1.35}.lib-it.no{opacity:.55}
+.lv-extra{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}.lv-extra .btn{width:auto;margin:0;padding:7px 12px;font-size:13px}.lv-extra span{font-size:11px;color:var(--tiza-2);flex:1;min-width:160px;text-align:left}
+.op-v{position:relative}.op-v .vetar{position:absolute;top:-8px;right:-8px;z-index:2;width:26px;height:26px;padding:0;background:#3a1a1a;border:2px solid #e8604c;color:#ffb0a0;font-size:13px;line-height:20px;box-shadow:2px 2px 0 rgba(0,0,0,.5)}.op-v .op{width:100%}
 .premio{width:92px;background:rgba(0,0,0,.35);border:3px solid var(--borde);padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700}
 .premio .ic{font-size:26px;line-height:30px;height:30px;display:flex;align-items:center}.premio .ic .pxic{width:30px;height:30px}
 .premio.gira .ic{animation:ruleta .08s steps(1) infinite}@keyframes ruleta{50%{transform:translateY(-4px);opacity:.6}}
@@ -564,7 +566,7 @@ body.en-campo #toast{bottom:auto;top:62px}
 
 <!-- MODALES -->
 <div id="girar" class="oculto"><div class="cel"></div><h2>Girá el celu</h2><p class="sub">UADE Survivor se juega con el teléfono acostado.<br>La partida queda en pausa hasta que lo gires.</p></div>
-<div class="modal oculto" id="mLevel"><div class="caja"><h2 id="lvTitulo">¡Subiste de nivel!</h2><p class="sub">Elegí una mejora</p><div class="opciones" id="opciones"></div></div></div>
+<div class="modal oculto" id="mLevel"><div class="caja"><h2 id="lvTitulo">¡Subiste de nivel!</h2><p class="sub">Elegí una mejora</p><div class="opciones" id="opciones"></div><div class="lv-extra"><button class="btn sec" id="btnReroll"></button><span id="lvDesc"></span></div></div></div>
 
 <div class="modal oculto" id="mVinculo"><div class="caja"><h2>✨ ¡Vínculo!</h2><p class="sub" id="vinSub">Elegí dos ataques para fusionarlos en un solo slot: van a salir juntos.</p>
   <div class="opciones" id="vinOpciones"></div>
@@ -3214,6 +3216,8 @@ function posBorde(){
   const a = Math.random()*Math.PI*2, R = Math.hypot(VW/2, VH/2) + 40, vs = G.coop ? jugadoresVivos() : [], c = vs.length ? vs[Math.floor(Math.random()*vs.length)] : G.jug;
   return { x:c.x+Math.cos(a)*R, y:c.y+Math.sin(a)*R };
 }
+const OLAS_TEMA = { papeles:['Se viene una ola de papeles', ['tp','falta','parcial','formulario']], bichos:['Se viene una nube de bichos', ['langosta','paloma','dron']],
+  gente:['Se viene la asamblea', ['delegado','hippie','ayudante','arca']], campo:['Se viene la hacienda', ['vaca','toro','garrapata']] };
 function spawns(dt){
   // legendarios: se abre una grieta
   if (!G.dim && !G.grieta && G.proxLeg < JEFES.length && G.t >= G.grietaT){
@@ -3260,6 +3264,18 @@ function spawns(dt){
       for (let i=-4;i<=4;i++){ const v = crearMinion('vaca', G.jug.x+Math.cos(a)*R+px_*i*45, G.jug.y+Math.sin(a)*R+py_*i*45); if (v) v.vel *= 2.2; }
     }
   }
+  // élites con truco (desde los 2 minutos): escudo, se divide o deja charcos
+  G.eliteT = (G.eliteT ?? 120) - dt;
+  if (G.eliteT <= 0){ G.eliteT = rnd(75, 110); const p = posBorde(), el = crearMinion(elegir(poolMinions(G.t/1.5)), p.x, p.y);
+    if (el && !el.shiny){ const tr = elegir(['escudo','divide','charco']); el.elite = true; el.truco = tr; el.hp *= 7; el.maxHp *= 7; el.dmg *= 1.5; el.r *= 1.35; el.xp *= 8;
+      if (tr === 'escudo'){ el.escudoMax = el.maxHp*0.35; el.escudo = el.escudoMax; }
+      mostrarBanner('¡Un élite! ' + ({ escudo:'Tiene escudo que se recarga', divide:'Al morir se divide en tres', charco:'Deja charcos que lastiman' })[tr] + ' · da cofre'); } }
+  // olas temáticas, avisadas por el borde de la pantalla por donde entran
+  G.temaT = (G.temaT ?? 170) - dt;
+  if (G.temaT <= 0 && !G.avisoBorde){ G.temaT = rnd(140, 180); const t = elegir(Object.keys(OLAS_TEMA)); G.avisoBorde = { a:Math.random()*Math.PI*2, t:2.2, max:2.2, tema:t }; mostrarBanner('¡Atención! ' + OLAS_TEMA[t][0] + ' (mirá el borde rojo)'); sfx('grieta'); }
+  if (G.avisoBorde){ const ab = G.avisoBorde; ab.t -= dt;
+    if (ab.t <= 0){ G.avisoBorde = null; const [ , pool] = OLAS_TEMA[ab.tema], n = 16 + Math.floor(G.t/40), R = Math.hypot(VW/2, VH/2) + 40, j = G.jug;
+      for (let i=0;i<n;i++){ const a = ab.a + (i/(n-1) - 0.5)*1.1; crearMinion(elegir(pool), j.x + Math.cos(a)*(R + rnd(0,60)), j.y + Math.sin(a)*(R + rnd(0,60))); } } }
   // semana de parciales
   G.oleadaT -= dt;
   if (G.oleadaT<=0){
@@ -3691,6 +3707,8 @@ function actualizarEnemigos(dt){
     if (e.leg) actualizarJefe(e, dt, dx, dy, d);
     else if (e.semi) actualizarSemi(e, dt, dx, dy, d);
     else {
+      if (e.truco === 'escudo' && e.escudo < e.escudoMax){ e.escRec = (e.escRec||0) + dt; if (e.escRec > 6){ e.escRec = 0; e.escudo = e.escudoMax; texto(e.x, e.y - e.r - 14, 'ESCUDO', '#9fd0f0'); } }
+      if (e.truco === 'charco'){ e.charT = (e.charT||0) - dt; if (e.charT <= 0){ e.charT = 0.7; (G.zonas = G.zonas || []).push({ x:e.x, y:e.y, r:14, max:34, vida:4, total:4, tick:0.6, dmg:6, de:'elite' }); } }
       actualizarMinion(e, dt, dx, dy, d);
       // rodear: si se trabó contra algo, camina de costado un rato
       if (e.rodeoT > 0){ e.rodeoT -= dt; const v = (e.vel||60); e.x += e.rdx*v*dt; e.y += e.rdy*v*dt; }
@@ -3789,6 +3807,13 @@ function morirEnemigo(e){
     return;
   }
   particulas(e.x, e.y - e.r*0.6, COLOR_TIPO[tipoDe(e)] || '#e8e2d0', Math.min(10, 4 + (e.xp||1)*2)); sfx('muere');
+  // combo: bajas seguidas sin cortar más de 2,5 s
+  G.combo = G.t - (G.comboT||-9) < 2.5 ? (G.combo||0) + 1 : 1; G.comboT = G.t; G.comboMax = Math.max(G.comboMax||0, G.combo);
+  if (G.combo % 25 === 0){ const j = G.jug, n = Math.min(12, 3 + G.combo/25*2); for (let i=0;i<n;i++) G.gemas.push({ x:j.x + rnd(-60,60), y:j.y + rnd(-60,60), v:2 + Math.floor(G.combo/50) }); texto(j.x, j.y - 56, '¡COMBO ×' + G.combo + '!', '#ff9a3a'); sfx('cofre'); }
+  if (e.truco){
+    G.items.push({ x:e.x, y:e.y, tipo:'cofre', id:'el'+Math.floor(G.t*10) }); for (let i=0;i<6;i++) G.gemas.push({ x:e.x+rnd(-30,30), y:e.y+rnd(-30,30), v:5 });
+    if (e.truco === 'divide') for (let k=0;k<3;k++){ const h = crearMinion(e.tipo, e.x + rnd(-24,24), e.y + rnd(-24,24)); if (h){ h.hp = h.maxHp = e.maxHp/6; h.r = Math.max(7, e.r*0.6); } }
+    mostrarBanner('¡Élite abajo! Ahí tenés un cofre'); }
   // "pop": la silueta blanca se infla y desaparece (se nota cada muerte)
   if (!e.jefe && (G.pops = G.pops || []).length < 40){ const sp = spriteDeEnemigo(e); if (sp && sp.fa) G.pops.push({ im: e.mira < 0 && sp.fai ? sp.fai : sp.fa, x:e.x, y:e.y + e.r*0.9, t:0.14 }); }
   if ((e.xp||1) >= 5) impacto(0.025);
@@ -3836,7 +3861,7 @@ function actualizarPeligros(dt){
   G.juicios = G.juicios.filter(k => k.t > -0.45);
   for (const b of G.bombas){ b.t -= dt; if (b.t<=0){ pegar(b.x, b.y, 40, 16, b.de); G.efectos.push({ tipo:'humo', x:b.x, y:b.y, vida:0.7, t:0.7 }); G.sacudon = Math.max(G.sacudon, 0.08); } }
   G.bombas = G.bombas.filter(b => b.t>0);
-  for (const z of (G.zonas||[])){ z.vida -= dt; z.r = Math.min(z.max, z.r + 22*dt); z.tick -= dt; if (z.tick <= 0 && z.vida < z.total - 0.6){ z.tick = 0.5; pegar(z.x, z.y, z.r*0.85, 7, 'veterinaria'); } }
+  for (const z of (G.zonas||[])){ z.vida -= dt; z.r = Math.min(z.max, z.r + 22*dt); z.tick -= dt; if (z.tick <= 0 && z.vida < z.total - 0.6){ z.tick = 0.5; pegar(z.x, z.y, z.r*0.85, z.dmg || 7, z.de || 'veterinaria'); } }
   if (G.zonas) G.zonas = G.zonas.filter(z => z.vida > 0);
   for (const p of G.pasadas){ p.vida -= dt; p.x += p.vx*dt; p.gotaT -= dt; if (p.gotaT<=0 && !fueraArena(p.x, p.y, 0)){ p.gotaT = 0.16; G.nubes.push({ x:p.x, y:p.y+18, vida:3.4, max:3.4 }); } }
   G.pasadas = G.pasadas.filter(p => p.vida>0);
@@ -3880,7 +3905,7 @@ function actualizarGemas(dt){
     if (quien){
       if (it.tipo==='puerta'){ it.tomado = true; cruzarPuerta(it.id); continue; }
       if (it.tipo==='regalo'){ if (quien!==j) continue; it.tomado = true; recibirRegalo(it.id, it.x, it.y); continue; }
-      if (it.tipo==='foto' || it.tipo==='mesa'){ if (quien!==j) continue; it.tomado = true; tocarEvento(it); continue; }
+      if (EVENTOS_MAPA.includes(it.tipo)){ if (quien!==j) continue; it.tomado = true; if (it.tipo === 'domi'){ it.tomado = true; } tocarEvento(it); continue; }
       if (it.tipo==='cons' && quien!==j) continue;
       if (quien!==j && (it.tipo==='bizcochito' || it.tipo==='cofre')){ it.tomado = true; quien.hp = Math.min(quien.maxHp, quien.hp + (it.tipo==='cofre' ? 40 : 30)); if (it.tipo==='cofre') G.pendientes++; texto(quien.x, quien.y-30, it.tipo==='cofre' ? '¡COFRE!' : '+30', '#7ed492'); continue; }
       it.tomado = true;
@@ -3933,7 +3958,7 @@ function actualizar(dt){
   j.mov = l>0.05;
   if (j.mov){ j.dir = {x:ix/l, y:iy/l}; if (Math.abs(ix)>0.1) j.mira = Math.sign(ix); j.paso += dt*11; }
   if (j.tramite > 0) j.tramite -= dt;
-  const vel = j.st.vel * (j.tramite > 0 ? 0.3 : 1) * (G.buff>0 ? 1.3 : 1) * (!G.dim && G.clima==='lluvia' ? 0.95 : !G.dim && G.clima==='calor' ? 0.88 : 1) * terrenoJug(j.x, j.y);
+  const vel = j.st.vel * (j.tramite > 0 ? 0.3 : 1) * (G.cafeT > 0 ? 1.3 : 1) * (G.buff>0 ? 1.3 : 1) * (!G.dim && G.clima==='lluvia' ? 0.95 : !G.dim && G.clima==='calor' ? 0.88 : 1) * terrenoJug(j.x, j.y);
   const px0 = j.x, py0 = j.y;
   j.x += ix*vel*dt; j.y += iy*vel*dt;
   if (G.dim) limitarArena(j, j.r);
@@ -4197,7 +4222,7 @@ function dibujar(){
     if (it.tipo==='cofre'){ const ci = imgMapa(Math.floor(G.t*3 + it.x)%6===0 ? 'cofre#1' : 'cofre') || fx('cofre',0,SPR.cofre); centrado(ci, bx_(it.x), by_(it.y) - 3); if (Math.floor(G.t*4)%3===0) rect(bx_(it.x)+8, by_(it.y)-12, 1, 1, '#ffffff'); }
     else if (it.tipo==='puerta') dibujarPuerta(it);
     else if (it.tipo==='regalo') dibujarRegalo(it);
-    else if (it.tipo==='foto' || it.tipo==='mesa') dibujarEvento(it);
+    else if (EVENTOS_MAPA.includes(it.tipo)) dibujarEvento(it);
     else centrado(fx('biz',0,SPR.biz), bx_(it.x), by_(it.y));
   }
   for (const g of G.gemas){
@@ -4310,6 +4335,8 @@ function dibujar(){
   }
   for (const n of (G.nubes||[])){ const im = imgMapa('jf_humo'); if (!im) continue; const p = n.vida/(n.max||3.4);
     b.globalAlpha = Math.min(0.55, p*0.9); const w = Math.round(im.width*0.8); b.drawImage(im, bx_(n.x)-(w>>1), by_(n.y)-(w>>1)*0.7, w, Math.round(im.height*0.8)); b.globalAlpha = 1; }
+  for (const [z, col] of [[G.domi, '216,195,240'], [G.aula, '126,212,146']]){ if (!z) continue; const x = bx_(z.x), y = by_(z.y), r = Math.round((z === G.aula ? 130 : 120)/K);
+    b.globalAlpha = 0.16; pElipse(x, y, r, Math.round(r*0.7), `rgb(${col})`); b.globalAlpha = 0.7 + 0.25*Math.sin(G.t*5); pAnillo(x, y, r, `rgb(${col})`, 1, Math.round(r*0.7)); b.globalAlpha = 1; }
   for (const z of (G.zonas||[])){ const x = bx_(z.x), y = by_(z.y), r = Math.round(z.r/K), a = Math.min(1, z.vida/0.6, (z.total - z.vida)/0.6);
     b.globalAlpha = 0.28*a; pElipse(x, y, r, Math.max(2, Math.round(r*0.62)), '#8fd16b'); b.globalAlpha = 0.75*a; pAnillo(x, y, r, '#5a9a3a', 1, Math.max(2, Math.round(r*0.62)));
     for (let k=0;k<4;k++){ const q = (G.t*0.8 + k*0.25 + z.x*0.001) % 1; rect(Math.round(x + Math.cos(k*1.7 + z.x)*r*0.5), Math.round(y - q*8 + Math.sin(k*2.3)*r*0.3), 2, 2, '#c9f0a8'); }
@@ -4415,10 +4442,35 @@ function dibujar(){
   if (G.jefe) flecha(bx_(G.jefe.x), by_(G.jefe.y), '#e8604c', G.jefe.def.nombre.split(',')[0].split(' ')[0].toUpperCase());
   for (const e of G.enemigos) if (e.eco) flecha(bx_(e.x), by_(e.y), '#e8604c', e.def.nombre.split(',')[0].split(' ').pop().toUpperCase());
   if (G.grieta) flecha(bx_(G.grieta.x), by_(G.grieta.y), '#b48ce0', 'GRIETA ' + Math.max(0, Math.ceil(G.grieta.vida)));
+  // mini-mapa: lo importante alrededor tuyo (en las dimensiones no hace falta)
+  if (!G.dim && datos.minimapa !== false){ const M = 40, mx = BW - M - 4, my = Math.round(Math.min(BH*0.24, 96/P)), R = 1500, k = M/2/R, c0x = mx + M/2, c0y = my + M/2;
+    b.globalAlpha = 0.78; rect(mx - 1, my - 1, M + 2, M + 2, '#15151c'); rect(mx, my, M, M, '#1f3326'); b.globalAlpha = 1;
+    const punto = (x, y, col, t) => { let dx = (x - j.x)*k, dy = (y - j.y)*k; const l = Math.max(Math.abs(dx), Math.abs(dy)); if (l > M/2 - 2){ dx *= (M/2 - 2)/l; dy *= (M/2 - 2)/l; } rect(Math.round(c0x + dx) - (t>>1), Math.round(c0y + dy) - (t>>1), t, t, col); };
+    let n = 0; for (const e of G.enemigos){ if (e.hp <= 0 || e.jefe || e.semi || e.truco) continue; if (++n % 3) continue; const dx = (e.x - j.x)*k, dy = (e.y - j.y)*k; if (Math.abs(dx) < M/2 && Math.abs(dy) < M/2) rect(Math.round(c0x + dx), Math.round(c0y + dy), 1, 1, 'rgba(232,96,76,.7)'); }
+    for (const it of G.items){ if (it.tipo === 'cofre') punto(it.x, it.y, '#f5d547', 3); else if (it.tipo === 'puerta') punto(it.x, it.y, '#ffffff', 3); else if (EVENTOS_MAPA.includes(it.tipo) || it.tipo === 'regalo') punto(it.x, it.y, '#9fd0f0', 3); }
+    for (const e of G.enemigos) if (e.semi || e.truco) punto(e.x, e.y, '#ff5a3a', 3);
+    if (G.grieta) punto(G.grieta.x, G.grieta.y, Math.floor(G.t*4)%2 ? '#b48ce0' : '#ffffff', 4);
+    rect(Math.round(c0x) - 1, Math.round(c0y) - 1, 3, 3, '#7ed492'); }
+  // élites con truco: cartelito arriba
+  for (const e of G.enemigos) if (e.truco && e.hp > 0 && enPantalla(e, 10)) cartel8('ÉLITE · ' + ({ escudo:'ESCUDO', divide:'SE DIVIDE', charco:'CHARCOS' })[e.truco], bx_(e.x), by_(e.y) - Math.round(e.r*2.6/K) - 14, '#ff7a5a');
+  // la debilidad del enemigo más cercano: un cuadradito del color del tipo que le pega más
+  if (!G.dim){ const e = masCercanos(1, j.x, j.y, 240*240)[0], te = e && tipoDe(e);
+    if (te){ const at = Object.keys(EFICACIA).find(a => EFICACIA[a].eficaz.includes(te)); if (at){ const x = bx_(e.x), y = by_(e.y) - Math.round(e.r*2.2/K) - 6, col = TIPOS_ATK[at].color;
+      rect(x - 3, y - 3, 7, 7, '#15151c'); rect(x - 2, y - 2, 5, 5, col); rect(x - 1, y - 6, 3, 2, '#15151c'); } } }
+  // aviso de ola: el borde de la pantalla por donde entra se pone rojo y titila
+  if (G.avisoBorde){ const ab = G.avisoBorde, ca = typeof colAviso === 'function' ? colAviso() : '232,60,40', al = (0.25 + 0.25*Math.sin(G.t*14)) * Math.min(1, (ab.max - ab.t)*3);
+    const cx = Math.cos(ab.a), cy = Math.sin(ab.a), ex = BW/2 + cx*BW/2, ey = BH/2 + cy*BH/2;
+    const gr = b.createRadialGradient(ex, ey, 0, ex, ey, Math.max(BW, BH)*0.45); gr.addColorStop(0, `rgba(${ca},${al.toFixed(2)})`); gr.addColorStop(1, `rgba(${ca},0)`); b.fillStyle = gr; b.fillRect(0, 0, BW, BH);
+    const fx_ = Math.round(BW/2 + cx*(BW/2 - 22)), fy_ = Math.round(BH/2 + cy*(BH/2 - 22)); if (Math.floor(G.t*6) % 2) cartel8('¡!', fx_, fy_, `rgb(${ca})`); }
+  // combo
+  if ((G.combo||0) >= 10 && G.t - G.comboT < 2.5){ const q = 1 - (G.t - G.comboT)/2.5; b.globalAlpha = 0.5 + 0.5*q; cartel8('COMBO ×' + G.combo, BW>>1, BH - 40, G.combo >= 50 ? '#ff7a3a' : '#f5d547'); b.globalAlpha = 1; }
   for (const e of G.enemigos) if (e.semi) flecha(bx_(e.x), by_(e.y), '#f5a35a', e.def.nombre.split(' ').pop().toUpperCase());
   for (const it of G.items) if (it.tipo==='cofre') flecha(bx_(it.x), by_(it.y), '#f5d547', 'COFRE');
   for (const it of G.items) if (it.tipo==='puerta') flecha(bx_(it.x), by_(it.y), '#f2efe6', 'PUERTA');
-  for (const it of G.items) if (it.tipo==='foto' || it.tipo==='mesa') flecha(bx_(it.x), by_(it.y), '#9fd0f0', it.tipo==='foto' ? 'FOTOCOPIADORA' : 'EXAMEN');
+  for (const it of G.items) if (EVENTOS_MAPA.includes(it.tipo)) flecha(bx_(it.x), by_(it.y), '#9fd0f0', EVENTO_NOM[it.tipo]);
+  if (G.domi){ const x = G.domi; cartel8('DOMICILIARIO · ' + Math.max(0, Math.ceil(x.t)) + (Math.hypot(G.jug.x - x.x, G.jug.y - x.y) < 120 ? '' : ' · ¡VOLVÉ!'), BW>>1, 46, '#d8c3f0'); flecha(bx_(x.x), by_(x.y), '#d8c3f0', 'PARCIAL'); }
+  if (G.aula) cartel8('HORA LIBRE · ' + Math.max(0, Math.ceil(G.aula.t)), BW>>1, 46, '#7ed492');
+  if (G.cafeT > 0) cartel8('CAFÉ · ' + Math.ceil(G.cafeT), BW>>1, G.domi || G.aula || G.examen ? 60 : 46, '#e8964a');
   if (G.examen) cartel8('EXAMEN SORPRESA · ' + Math.max(0, Math.ceil(G.examen.t)), BW>>1, 46, '#e8604c');
   for (const it of G.items) if (it.tipo==='regalo') flecha(bx_(it.x), by_(it.y), '#7ed492', it.id==='ternero' ? 'TERNERO' : 'SEMILLA');
   { const L = lugarProximo(); if (L) flecha(bx_(L.x), by_(L.y), '#7ed4c0', L.nom); }
@@ -4563,9 +4615,10 @@ function opcionesNivel(){
   for (const w of armas){ const d = ARMAS[w.id]; if (!w.evo && w.nivel>=5 && d.evo && j.pasivas[d.pasiva]) ops.push({tipo:'evo', id:w.id}); }
   const resto = [];
   for (const w of armas) if (!w.evo && w.nivel<5) resto.push({tipo:'armaUp', id:w.id, peso:10});
-  if (j.slots.length<4) for (const id in ARMAS) if (!armas.some(w=>w.id===id)) resto.push({tipo:'arma', id, peso:6});
+  const vet = G.vetados || [];
+  if (j.slots.length<4) for (const id in ARMAS) if (!armas.some(w=>w.id===id) && !vet.includes('arma:'+id)) resto.push({tipo:'arma', id, peso:6});
   const np = Object.keys(j.pasivas).length;
-  for (const id in PASIVAS){ const l = j.pasivas[id]||0; if (l>0 && l<5) resto.push({tipo:'pasiva', id, peso:8}); else if (l===0 && np<4) resto.push({tipo:'pasiva', id, peso:5}); }
+  for (const id in PASIVAS){ const l = j.pasivas[id]||0; if (l>0 && l<5) resto.push({tipo:'pasiva', id, peso:8}); else if (l===0 && np<4 && !vet.includes('pasiva:'+id)) resto.push({tipo:'pasiva', id, peso:5}); }
   const bfs = Object.keys(BUFFS).filter(id => ((j.buffs||{})[id]||0) < topeBuff());
   for (let k=0;k<2 && bfs.length;k++){ const id = bfs.splice(Math.floor(Math.random()*bfs.length),1)[0]; resto.push({tipo:'buff', id, peso:7}); }
   const out = ops.slice(0,3);
@@ -4577,8 +4630,9 @@ function opcionesNivel(){
   if (!out.length) out.push({tipo:'cura'}, {tipo:'plata'});
   return out;
 }
-function mostrarNivel(){
-  G.pausa = !G.coop; joy = null; sfx('nivel'); animar('brillo', G.jug.x, G.jug.y-20, 0.6, 2);
+function mostrarNivel(sinSonido){
+  G.pausa = !G.coop; joy = null; if (!sinSonido){ sfx('nivel'); animar('brillo', G.jug.x, G.jug.y-20, 0.6, 2); }
+  if (G.rerolls == null){ G.rerolls = 2; G.descartes = 3; G.vetados = []; }
   const j = G.jug, ops = opcionesNivel();
   const html = ops.map((o,i) => {
     let ic, nom, desc, tag = '', cls = '';
@@ -4589,12 +4643,17 @@ function mostrarNivel(){
     else if (o.tipo==='buff'){ const f = BUFFS[o.id], l = (j.buffs||{})[o.id]||0; ic = icHTML(f.ic); nom = f.nombre; desc = f.desc; tag = `<span class="tag stat">STAT ×${l+1}${l+1>=topeBuff() ? ' MÁX' : ''}</span>`; }
     else if (o.tipo==='cura'){ ic = icHTML('@mate'); nom = 'Mate con bizcochitos'; desc = 'Recuperás 40 de vida'; }
     else { ic = '🪙'; nom = 'Beca'; desc = '+25 créditos'; }
-    return `<button class="op ${cls}" data-i="${i}"><span class="num">${i+1}</span><span class="ic">${ic}</span><span class="tx"><b>${esc(nom)}${tag}</b><small>${esc(desc)}</small></span></button>`;
+    const vetable = !G.coop && G.descartes > 0 && (o.tipo === 'arma' || o.tipo === 'pasiva');
+    return (vetable ? `<div class="op-v"><button class="vetar" data-v="${o.tipo}:${o.id}" title="No me lo ofrezcas más">✕</button>` : '') + `<button class="op ${cls}" data-i="${i}"><span class="num">${i+1}</span><span class="ic">${ic}</span><span class="tx"><b>${esc(nom)}${tag}</b><small>${esc(desc)}</small></span></button>` + (vetable ? '</div>' : '');
   }).join('');
   $('#lvTitulo').textContent = '¡Nivel ' + j.nivel + '!';
   const cont = $('#opciones'); cont.innerHTML = html; delete cont.dataset.usado;
   cont.querySelectorAll('.op').forEach(b => b.onclick = () => { if ($('#mLevel').classList.contains('oculto') || cont.dataset.usado) return; cont.dataset.usado = 1; elegirOpcion(ops[+b.dataset.i]); });
   $('#mLevel').classList.toggle('coop', !!G.coop); $('#mLevel').classList.remove('oculto');
+  const rr = $('#btnReroll'); rr.style.display = G.coop ? 'none' : ''; rr.disabled = G.rerolls <= 0; rr.textContent = `🔄 Otras opciones (${G.rerolls})`;
+  rr.onclick = () => { if (G.rerolls <= 0 || cont.dataset.usado) return; G.rerolls--; sfx('gema'); mostrarNivel(true); };
+  $('#lvDesc').textContent = G.coop ? '' : `✕ descarta un ataque o pasiva para siempre en esta partida (te quedan ${G.descartes})`;
+  cont.querySelectorAll('.vetar').forEach(b => b.onclick = ev => { ev.stopPropagation(); if (G.descartes <= 0) return; G.descartes--; G.vetados.push(b.dataset.v); sfx('golpe'); mostrarNivel(true); });
 }
 function elegirOpcion(o){
   if (G.espejo) mpEnviarEleccion(o);
@@ -5843,13 +5902,25 @@ function revisarEventosMapa(dt){
     if (x.olaT <= 0 && x.t > 3){ x.olaT = 6; const n = 8 + Math.floor(G.t/120); for (let k=0;k<n;k++){ const a = k*Math.PI*2/n + Math.random()*0.3; crearMinion(G.t > 600 ? 'recu' : 'parcial', G.jug.x + Math.cos(a)*360, G.jug.y + Math.sin(a)*360); } }
     if (x.t <= 0){ G.examen = null; const j = G.jug; G.items.push({ x:j.x + 40, y:j.y + 10, tipo:'cofre', id:'ex'+Math.floor(G.t) }); mostrarBanner('¡Aprobaste el examen sorpresa! Ahí tenés un cofre'); sfx('nivel'); }
     return; }
+  if (G.cafeT > 0) G.cafeT -= dt;
+  if (G.domi){ const x = G.domi, j = G.jug, adentro = Math.hypot(j.x - x.x, j.y - x.y) < 120; if (adentro) x.t -= dt; x.olaT -= dt;
+    if (x.olaT <= 0){ x.olaT = 5; for (let k=0;k<6;k++){ const a = Math.random()*Math.PI*2; crearMinion(elegir(['tp','falta','parcial']), x.x + Math.cos(a)*380, x.y + Math.sin(a)*380); } }
+    if (x.t <= 0){ G.domi = null; G.items.push({ x:x.x, y:x.y + 20, tipo:'cofre', id:'dom'+Math.floor(G.t) }); for (let i=0;i<10;i++) G.gemas.push({ x:x.x+rnd(-40,40), y:x.y+rnd(-40,40), v:4 }); mostrarBanner('¡Entregaste el parcial domiciliario! Cofre y conocimiento'); sfx('nivel'); } }
+  if (G.aula){ const x = G.aula, j = G.jug; x.t -= dt;
+    for (const e of G.enemigos){ if (e.jefe || e.semi) continue; const dx = e.x - x.x, dy = e.y - x.y, d = Math.hypot(dx, dy) || 1; if (d < 130){ e.x = x.x + dx/d*130; e.y = x.y + dy/d*130; } }
+    if (Math.hypot(j.x - x.x, j.y - x.y) < 120 && j.hp < j.maxHp) j.hp = Math.min(j.maxHp, j.hp + 4*dt);
+    if (x.t <= 0){ G.aula = null; mostrarBanner('Se terminó la hora libre: el aula se llenó de nuevo'); } }
   G.mapaEvT = (G.mapaEvT ?? 95) - dt;
-  if (G.mapaEvT > 0 || G.items.some(i => i.tipo === 'foto' || i.tipo === 'mesa')) return;
+  if (G.mapaEvT > 0 || G.domi || G.aula || G.items.some(i => EVENTOS_MAPA.includes(i.tipo))) return;
   G.mapaEvT = rnd(110, 150);
-  const tipo = (G.mapaEvN = (G.mapaEvN||0) + 1) % 2 ? 'foto' : 'mesa', j = G.jug, a = Math.random()*Math.PI*2, r = rnd(450, 650);
+  const tipo = EVENTOS_MAPA[(G.mapaEvN = (G.mapaEvN||0) + 1) % EVENTOS_MAPA.length], j = G.jug, a = Math.random()*Math.PI*2, r = rnd(450, 650);
   const it = { x:j.x + Math.cos(a)*r, y:j.y + Math.sin(a)*r, tipo }; chocar(it, 24); G.items.push(it);
-  mostrarBanner(tipo === 'foto' ? 'Hay una fotocopiadora libre: te fotocopia un ataque (seguí la flecha)' : 'Una mesa de examen: si te animás, aguantá el examen sorpresa y hay cofre');
+  mostrarBanner(EVENTO_TXT[tipo]);
 }
+const EVENTOS_MAPA = ['foto','mesa','cafe','domi','aula'];
+const EVENTO_TXT = { foto:'Hay una fotocopiadora libre: te fotocopia un ataque (seguí la flecha)', mesa:'Una mesa de examen: si te animás, aguantá el examen sorpresa y hay cofre',
+  cafe:'La máquina de café anda: 30 segundos a toda velocidad', domi:'Un parcial domiciliario tirado: cuidalo 20 segundos parado cerca y hay cofre', aula:'Un aula vacía: adentro no entra nadie un rato y te recuperás' };
+const EVENTO_NOM = { foto:'FOTOCOPIADORA', mesa:'EXAMEN', cafe:'CAFÉ', domi:'DOMICILIARIO', aula:'AULA LIBRE' };
 function tocarEvento(it){
   const j = G.jug;
   if (it.tipo === 'foto'){
@@ -5858,6 +5929,9 @@ function tocarEvento(it){
     else { G.pendientes++; texto(it.x, it.y - 40, 'mejora extra', '#9fd0f0'); }
     animar('brillo', it.x, it.y - 20, 0.6, 2); sfx('nivel'); return;
   }
+  if (it.tipo === 'cafe'){ G.cafeT = 30; texto(it.x, it.y - 40, '¡CAFÉ! +30% velocidad', '#e8964a'); animar('brillo', it.x, it.y - 20, 0.6, 2); sfx('nivel'); return; }
+  if (it.tipo === 'domi'){ G.domi = { t:20, olaT:1, x:it.x, y:it.y }; mostrarBanner('¡Cuidá el parcial! Quedate cerca 20 segundos'); sfx('jefe'); return; }
+  if (it.tipo === 'aula'){ G.aula = { t:18, x:it.x, y:it.y }; mostrarBanner('Hora libre: en el aula no entra nadie por 18 segundos'); sfx('nivel'); return; }
   G.examen = { t:25, olaT:0, x:it.x, y:it.y }; sfx('jefe'); mostrarBanner('¡EXAMEN SORPRESA! Aguantá 25 segundos'); G.sacudon = 0.3;
 }
 function dibujarEvento(it){
@@ -5866,6 +5940,13 @@ function dibujarEvento(it){
   if (it.tipo === 'foto'){
     rect(x-11, y-22, 22, 22, '#15151c'); rect(x-10, y-21, 20, 20, '#d9d5cc'); rect(x-10, y-21, 20, 4, '#a7a39a'); rect(x-8, y-14, 16, 3, '#2b2b2b');
     rect(x-6, y-26+sal, 12, 5, '#ffffff'); rect(x-5, y-25+sal, 6, 1, '#9a978e'); rect(x+4, y-9, 3, 2, Math.floor(G.t*4)%2 ? '#5ad95a' : '#2f6f2f');
+  } else if (it.tipo === 'cafe'){
+    rect(x-9, y-26, 18, 26, '#15151c'); rect(x-8, y-25, 16, 24, '#7a2525'); rect(x-6, y-23, 12, 7, '#2b2b2b'); rect(x-5, y-22, 9, 1, '#e6c35c'); rect(x-4, y-12, 8, 5, '#1b1b1b');
+    rect(x-2, y-11, 4, 3, '#f2efe6'); for (let k=0;k<2;k++){ const q = (G.t*1.2 + k*0.5) % 1; bctx.globalAlpha = 1 - q; rect(x - 1 + k*2, y - 16 - Math.round(q*10), 1, 2, '#ffffff'); bctx.globalAlpha = 1; }
+  } else if (it.tipo === 'domi'){
+    rect(x-10, y-16, 20, 14, '#15151c'); rect(x-9, y-15, 18, 12, '#d8c3f0'); rect(x-7, y-12, 12, 1, '#6b5a8a'); rect(x-7, y-9, 9, 1, '#6b5a8a'); rect(x+3, y-18+sal, 6, 6, '#e8604c'); rect(x+5, y-17+sal, 2, 3, '#ffffff');
+  } else if (it.tipo === 'aula'){
+    rect(x-16, y-24, 32, 16, '#15151c'); rect(x-15, y-23, 30, 13, '#2f5a3a'); rect(x-12, y-20, 14, 1, '#e8e4d8'); rect(x-12, y-17, 9, 1, '#e8e4d8'); rect(x-10, y-6, 8, 5, '#b07a46'); rect(x+3, y-6, 8, 5, '#b07a46');
   } else {
     rect(x-14, y-14, 28, 5, '#15151c'); rect(x-13, y-13, 26, 3, '#b07a46'); rect(x-12, y-9, 2, 9, '#6b4423'); rect(x+10, y-9, 2, 9, '#6b4423');
     rect(x-6, y-17+sal, 12, 4, '#f2efe6'); rect(x-5, y-16+sal, 8, 1, '#e8604c'); rect(x+4, y-19+sal, 1, 5, '#f5d547');
