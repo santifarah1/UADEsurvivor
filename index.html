@@ -388,6 +388,7 @@ textarea{user-select:text;-webkit-user-select:text;font-family:monospace}
 .campo-hoja{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:var(--pizarra);border:4px solid #000;box-shadow:0 0 0 3px var(--borde),6px 6px 0 rgba(0,0,0,.5),0 0 0 100vmax rgba(8,14,10,.55);animation:hojaSube .18s ease-out}
 .campo-hoja .campo-tabs{display:none}
 body.en-campo #toast{bottom:auto;top:62px}
+.sub.feria{background:rgba(245,213,71,.12);border:2px dashed var(--amarillo);padding:5px 8px;text-align:left}.niv-corral{font-size:11px;color:var(--amarillo);margin-top:2px}
 .campo-botones{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .campo-botones .cb{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:20px;line-height:1;padding:6px 8px;min-width:62px;position:relative}.campo-botones .cb span{font-size:11px}
 .campo-botones .cb .aviso{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#e8604c;color:#fff;font-size:12px;line-height:18px;text-align:center;border:2px solid #15151c}
@@ -958,6 +959,8 @@ const CAMPO_ANIMALES = {
   siberiano: { nombre:'Siberiano',    precio:200, prod:0, desc:'En las partidas va dejando escarcha atrás tuyo: frena y lastima a los que te persiguen. Uno solo.', max:1, spr:'perro_siberiano' },
   golden:    { nombre:'Golden retriever', precio:220, prod:0, desc:'En las partidas, cuando te queda poca vida, te lame y te cura un 25% (cada 30 s). Uno solo.', max:1, spr:'perro_golden' },
   callejero: { nombre:'Callejero',    precio:60,  prod:0, desc:'Lo adoptaste. En las partidas cada tanto desentierra un bizcochito que te cura. Uno solo.', max:1, spr:'perro_callejero' },
+  vaca_dorada:    { nombre:'Vaca dorada',    precio:400, prod:15, desc:'Solo en la feria de los sábados. Leche de oro: 15 créditos por hora. Una sola.', max:1, feria:true, spr:'vaca_dorada' },
+  caballo_blanco: { nombre:'Caballo blanco', precio:350, prod:4,  desc:'Solo en la feria de los sábados. 4 créditos por hora y +3% de velocidad en las partidas. Uno solo.', max:1, feria:true, spr:'caballo_blanco' },
   novillo: { nombre:'Novillo',       precio:0,   prod:0,  desc:'Ternero que ya creció. Se engorda para vender.', noCompra:true, spr:'novillo' },
 };
 const CAMPO_CULTIVOS = {
@@ -968,7 +971,7 @@ const CAMPO_CULTIVOS = {
   maiz:    { nombre:'Maíz',    precio:40, horas:3,   venta:140 },
 };
 // precios base de venta (el mercado los mueve día a día)
-const VENTA_HACIENDA = { holando:60, angus:75, ternero:45, toro:110, oveja:35, chancho:45, gallina:15, caballo:100, perro:0, galgo:0, dogo:0, salchicha:0, callejero:0, siberiano:0, golden:0, novillo:240 };
+const VENTA_HACIENDA = { holando:60, angus:75, ternero:45, toro:110, oveja:35, chancho:45, gallina:15, caballo:100, vaca_dorada:300, caballo_blanco:260, perro:0, galgo:0, dogo:0, salchicha:0, callejero:0, siberiano:0, golden:0, novillo:240 };
 const LEGUMINOSAS = ['soja','alfalfa'], GRAMINEAS = ['trigo','maiz'];
 const NIVELES_CAMPO = [
   { nombre:'Chacra',            lotes:4, potrero:0,  precio:0 },
@@ -1108,6 +1111,11 @@ function normCampo(c){
   if (typeof c.nacidos !== 'number') c.nacidos = 0;
   if (!c.deco || typeof c.deco !== 'object') c.deco = {};
   if (typeof c.semillas !== 'number' || !isFinite(c.semillas) || c.semillas < 0) c.semillas = 0;
+  if (!c.cuidado || typeof c.cuidado !== 'object') c.cuidado = {};
+  for (const k in c.animales) if (c.animales[k] > 0 && typeof c.cuidado[k] !== 'number') c.cuidado[k] = Date.now();
+  if (!c.nivCorral || typeof c.nivCorral !== 'object') c.nivCorral = {};
+  if (typeof c.huevos !== 'number' || !isFinite(c.huevos)) c.huevos = 0;
+  if (typeof c.ultHuevo !== 'number') c.ultHuevo = Date.now();
   return c;
 }
 // v10: se sacaron los aspectos de filtro (foto vieja, turno noche, game boy, negativo, dorado). Cada uno se devuelve como un ticket.
@@ -4931,7 +4939,19 @@ function perroRaza(raza, i){
     const col = lum < 0.45 ? mez(D, M, (lum-0.13)/0.32) : mez(M, L, Math.min(1, (lum-0.45)/0.4)); px_[k] = col[0]; px_[k+1] = col[1]; px_[k+2] = col[2]; }
   g.putImageData(d, 0, 0); return razaC[key] = c;
 }
+const recolorC = {};
+function recolor(base, pal, key){
+  if (recolorC[key]) return recolorC[key]; if (!base) return null;
+  const c = document.createElement('canvas'); c.width = base.width; c.height = base.height; const g = c.getContext('2d'); g.drawImage(base, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height), q = d.data, hx = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  const [D, M, L] = pal.map(hx), mez = (a, b, f) => a.map((v, k) => Math.round(v + (b[k]-v)*f));
+  for (let k=0; k<q.length; k+=4){ if (q[k+3] < 200) continue; const lum = (q[k]*0.3 + q[k+1]*0.59 + q[k+2]*0.11)/255; if (lum < 0.12) continue;
+    const col = lum < 0.5 ? mez(D, M, (lum-0.12)/0.38) : mez(M, L, Math.min(1, (lum-0.5)/0.4)); q[k] = col[0]; q[k+1] = col[1]; q[k+2] = col[2]; }
+  g.putImageData(d, 0, 0); return recolorC[key] = c;
+}
 const imgC = (k, i) => {
+  if (k === 'vaca_dorada') return recolor(imgC('holando', i), ['#7a5410','#d9a52a','#fff0a0'], 'vd' + (i||0));
+  if (k === 'caballo_blanco') return recolor(imgC('caballo', i), ['#8a8478','#d8d4cc','#ffffff'], 'cb' + (i||0));
   if (k === 'mixer') return imgMapa(i ? 'jf_mixer#1' : 'jf_mixer') || imgMapa('jf_mixer');
   if ((k === 'lg_establo' || k === 'lg_canil') && !IMG_C[k]) return imgC('cartel');
   if (k.startsWith('perro_') && !IMG_C[k]) return perroRaza(k.slice(6), i||0);
@@ -4939,13 +4959,21 @@ const imgC = (k, i) => {
   const l = IMG_C[k]; if (!l) return null; const im = l[Math.min(i||0, l.length-1)]; return im && im.complete && im.naturalWidth ? im : null; };
 function bonusCampo(){
   const c = datos.campo, e = c.edificios, cab = Math.min(3, c.animales.caballo||0);
-  return { vel:(e.camioneta?1.05:1) * (1 + 0.02*cab), habCd:e.tractor?0.9:1, xp:e.molino?1.05:1 };
+  return { vel:(e.camioneta?1.05:1) * (1 + 0.02*cab) * (c.animales.caballo_blanco ? 1.03 : 1), habCd:e.tractor?0.9:1, xp:e.molino?1.05:1 };
 }
 function capacidadPotrero(){ return (datos.campo.edificios.corral ? 14 : 10) + NIVELES_CAMPO[datos.campo.nivel||0].potrero; }
 function totalAnimales(){ return Object.values(datos.campo.animales).reduce((s,n) => s+n, 0); }
+// ánimo: si los cuidaste hace poco producen más; si hace mucho que nadie los cuida, menos
+const HS_FELIZ = 3, HS_TRISTE = 10;
+function animo(k, c){ c = c || datos.campo; const t = (c.cuidado||{})[k]; if (typeof t !== 'number') return 'normal'; const h = (Date.now() - t)/3600000; return h < HS_FELIZ ? 'feliz' : h > HS_TRISTE ? 'triste' : 'normal'; }
+const multAnimo = k => ({ feliz:1.15, triste:0.8, normal:1 })[animo(k)];
+// mejoras de los corrales: cada nivel suma 15% a lo que producen los de adentro
+const CORRAL_DE = { gallina:'gallinero', chancho:'chiquero', oveja:'redil', caballo:'establo', caballo_blanco:'establo', holando:'corral', angus:'corral', toro:'corral', ternero:'corral', vaca_dorada:'corral' };
+const PRECIO_NIVEL = [0, 0, 250, 600];
+const multCorral = k => { const cr = CORRAL_DE[k], n = cr && datos.campo.edificios[cr] ? (datos.campo.nivCorral[cr] || 1) : 1; return 1 + 0.15*(n - 1); };
 function produccionHora(){
   const c = datos.campo; let p = 0;
-  for (const k in c.animales) p += (CAMPO_ANIMALES[k] ? CAMPO_ANIMALES[k].prod : 0) * c.animales[k] * (k==='holando' && c.edificios.tambo ? 1.6 : 1);
+  for (const k in c.animales) p += (CAMPO_ANIMALES[k] ? CAMPO_ANIMALES[k].prod : 0) * c.animales[k] * (k==='holando' && c.edificios.tambo ? 1.6 : 1) * multAnimo(k) * multCorral(k);
   if (c.deco && c.deco.colmenas) p += 3;
   let m = 1; if (c.animales.perro) m += 0.10; if (c.edificios.corral) m += 0.25; if (c.edificios.tanque) m += 0.10; if (c.rollos > 0) m += 0.20;
   const cl = climaCampo(); if (cl.id==='sequia' && !c.edificios.tanque) m -= 0.25;
@@ -4959,7 +4987,7 @@ function horasCultivo(cu){ const cl = climaCampo(); return CAMPO_CULTIVOS[cu].ho
 // ---- mercado: un precio por cada seis horas, igual para todos (sale de la fecha) ----
 const VENTANA = 6*3600000;
 function indiceMercado(cat, off){ const w = Math.floor(Date.now()/VENTANA) + (off||0); let h = hashT(w*31 + cat.length*7, cat.charCodeAt(0)*13 + cat.charCodeAt(cat.length-1)); return 0.72 + (h % 1000)/1000*0.66; }
-function precioHacienda(k){ return Math.round((VENTA_HACIENDA[k]||0) * indiceMercado('hacienda') * (k==='novillo' ? indiceMercado('novillo')/1.05 : 1)); }
+function precioHacienda(k){ return Math.round((VENTA_HACIENDA[k]||0) * (esFeria() ? 1.3 : 1) * indiceMercado('hacienda') * (k==='novillo' ? indiceMercado('novillo')/1.05 : 1)); }
 function precioGrano(k){ return Math.round(CAMPO_CULTIVOS[k].venta * indiceMercado(k)); }
 function flecha_(cat){ const a = indiceMercado(cat), b = indiceMercado(cat, -1); return a > b*1.04 ? '<span class="fl" style="color:var(--verde)">▲ sube</span>' : a < b*0.96 ? '<span class="fl" style="color:#e8604c">▼ baja</span>' : '<span class="fl" style="color:var(--tiza-2)">= estable</span>'; }
 function proxCambio(){ return fmtHoras((VENTANA - Date.now()%VENTANA)/3600000); }
@@ -4971,6 +4999,7 @@ const CLIMA_CAMPO = [
   { id:'sequia', nombre:'Sequía', desc:'los animales producen 25% menos (el tanque australiano lo evita)', ic:'☀️' },
   { id:'normal', nombre:'Día de campo normal', desc:'', ic:'⛅' },
 ];
+const esFeria = () => window.__feria != null ? window.__feria : new Date().getDay() === 6;
 function climaCampo(){ const d = Math.floor(Date.now()/86400000); return CLIMA_CAMPO[hashT(d*17+3, 91) % CLIMA_CAMPO.length]; }
 // ---- crías, novillos y rollos (todo en tiempo real) ----
 function procesarCampo(){
@@ -5022,7 +5051,7 @@ function abrirCampo(){
   $('#menu').classList.add('oculto'); $('#campo').classList.remove('oculto'); document.body.classList.add('en-campo');
   $('#campoNombre').value = datos.campo.nombre;
   normPos(datos.campo); campoVisita = null; campoColocar = null; $('#campo').classList.remove('visitando'); $('#campoHoja').classList.add('oculto'); cerrarPop(); avisoCampo(null);
-  armarAnimalesCampo(); renderCampo(); $('#campoMover').classList.remove('fuera'); requestAnimationFrame(() => verEnCampo(430, 330)); revisarLangostas(); revisarMates(); publicarEstancia();
+  armarAnimalesCampo(); renderCampo(); $('#campoMover').classList.remove('fuera'); requestAnimationFrame(() => verEnCampo(430, 330)); revisarLangostas(); revisarMates(); revisarNotas(); publicarEstancia();
 }
 function cerrarCampo(){ document.body.classList.remove('en-campo'); if (campoVisita) volverDeVisita(); campoColocar = null; cerrarPop(); avisoCampo(null); publicarEstancia(); $('#campo').classList.add('oculto'); $('#menu').classList.remove('oculto'); renderMenu(); }
 function miniCanvas(k, i, max){
@@ -5062,7 +5091,7 @@ function renderCampo(){
     mark('encargo', c.enc && !c.enc.cobrado && c.enc.hecho); mark('cultivos', c.lotes.some(l => l && avanceLote(l) >= 1)); }
   if (campoTab==='encargo'){ /* solo el encargo, arriba */ } else if (campoTab==='animales'){
     const cap = capacidadPotrero(), tot = totalAnimales();
-    panel.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:4px 0 8px">Potrero: ${tot} de ${cap} animales</p>`);
+    panel.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:4px 0 8px">Potrero: ${tot} de ${cap} animales</p>` + (esFeria() ? '<p class="sub feria">🎪 <b>Hoy es la feria del sábado:</b> la hacienda se vende 30% más cara y hay un vendedor con la vaca dorada y el caballo blanco.</p>' : ''));
     const vacas = (c.animales.holando||0) + (c.animales.angus||0), toros = c.animales.toro||0;
     const repro = toros ? (vacas ? `Con ${toros} toro${toros>1?'s':''} nace un ternero cada ${fmtHoras(12/Math.min(vacas, toros*25))}.` : 'Tenés toro: comprá vacas para que nazcan terneros.') : (vacas ? 'Sin toro no nacen terneros: comprá uno (1 toro cada 25 vacas).' : '');
     const engorde = c.edificios.feedlot ? 4 : 8;
@@ -5070,6 +5099,7 @@ function renderCampo(){
     for (const k in CAMPO_ANIMALES){
       const a = CAMPO_ANIMALES[k], n = c.animales[k]||0, tope = a.max ? n>=a.max : tot>=cap;
       if (a.noCompra && !n) continue;
+      if (a.feria && !n && !esFeria()) continue;
       const acc = [];
       const falta = faltaCasa(k);
       if (!a.noCompra) acc.push(falta ? { txt:`Falta ${CAMPO_EDIFICIOS[falta].nombre.toLowerCase()}`, off:true, fn:() => {} } : { txt:`Comprar ${a.precio}`, off:tope || datos.creditos<a.precio, fn:() => comprarAnimal(k) });
@@ -5118,14 +5148,22 @@ function renderCampo(){
       const e = CAMPO_EDIFICIOS[k], tiene = !!c.edificios[k], falta = e.req && !c.edificios[e.req];
       const spr = k==='tambo' ? 'tanque' : SPR_LUGAR[k] || k;
       item(spr, 0, e.nombre, esc(e.desc) + (falta ? ` <i>(primero el ${CAMPO_EDIFICIOS[e.req].nombre.toLowerCase()})</i>` : ''),
-        tiene && MOVIBLES[k] !== undefined ? [{ txt:'Mover de lugar', fn:() => empezarColocar(k) }] : [{ txt: tiene ? 'Ya lo tenés' : `Comprar ${e.precio}`, off: tiene || falta || datos.creditos<e.precio, fn:() => comprarEdificio(k) }]);
+        tiene && MOVIBLES[k] !== undefined ? [{ txt:'Mover de lugar', fn:() => empezarColocar(k) }] : tiene && CORRALES[k] && k !== 'canil' ? [nivelBoton(k)] : [{ txt: tiene ? 'Ya lo tenés' : `Comprar ${e.precio}`, off: tiene || falta || datos.creditos<e.precio, fn:() => comprarEdificio(k) }],
+        tiene && CORRALES[k] && k !== 'canil' ? `<div class="niv-corral">${'★'.repeat(datos.campo.nivCorral[k]||1)}${'☆'.repeat(3 - (datos.campo.nivCorral[k]||1))} · +${15*((datos.campo.nivCorral[k]||1)-1)}% a los de adentro</div>` : '');
     }
   }
 }
 function gastar(n){ if (datos.creditos < n) return false; datos.creditos -= n; return true; }
 // ¿le falta a este animal su lugar? (los que ya tenías antes siguen en el potrero)
 function faltaCasa(k){ const casa = CASA_ANIMAL[k]; return casa && !datos.campo.edificios[casa] ? casa : null; }
-function comprarAnimal(k){ const a = CAMPO_ANIMALES[k]; if (faltaCasa(k)){ toast('Primero construí: ' + CAMPO_EDIFICIOS[faltaCasa(k)].nombre); return; } if (!gastar(a.precio)) return; juntarCampo(true); datos.campo.animales[k] = (datos.campo.animales[k]||0)+1; if (k==='ternero') datos.campo.crias.push(Date.now()); guardar(); armarAnimalesCampo(); renderCampo(); toast(`${a.nombre} al potrero`); }
+function tirarPalito(a){ const ang = Math.random()*Math.PI*2, d = rnd(70, 120); a.palito = { x0:a.x, y0:a.y, x:a.x + Math.cos(ang)*d, y:a.y + Math.sin(ang)*d*0.6, t:0, fase:0 }; sfx('gema'); }
+// los huevos se acumulan en el gallinero (uno por gallina cada 2,5 h, hasta 12) y se juntan tocándolos
+function acumularHuevos(){ const c = datos.campo, ng = c.animales.gallina || 0; if (!ng || !c.edificios.gallinero){ c.ultHuevo = Date.now(); return; }
+  const cada = 2.5*3600000/ng, n = Math.floor((Date.now() - c.ultHuevo)/cada); if (n > 0){ c.huevos = Math.min(12, c.huevos + n); c.ultHuevo = c.huevos >= 12 ? Date.now() : c.ultHuevo + n*cada; } }
+function juntarHuevo(i, x, y){ const c = datos.campo; if (c.huevos <= 0) return; c.huevos--; const v = 6; datos.creditos += v; guardar();
+  campoFx.push({ tipo:'moneda', x0:x, y0:y, t:0, d:0.7 }); campoFx.push({ tipo:'txt', txt:'+' + v, x0:x, y0:y - 6, t:0, d:1 }); sfx('gema'); $('#campoCred').textContent = datos.creditos; }
+function cuidar(k, x, y){ const c = datos.campo; c.cuidado[k] = Date.now(); guardar(); for (let n=0;n<4;n++) campoFx.push({ tipo:'corazon', x0:x + (n-1.5)*7, y0:y, t:-n*0.1, d:1.1 }); sfx('gema'); renderCampo(); }
+function comprarAnimal(k){ const a = CAMPO_ANIMALES[k]; datos.campo.cuidado = datos.campo.cuidado || {}; if (typeof datos.campo.cuidado[k] !== 'number') datos.campo.cuidado[k] = Date.now(); if (faltaCasa(k)){ toast('Primero construí: ' + CAMPO_EDIFICIOS[faltaCasa(k)].nombre); return; } if (!gastar(a.precio)) return; juntarCampo(true); datos.campo.animales[k] = (datos.campo.animales[k]||0)+1; if (k==='ternero') datos.campo.crias.push(Date.now()); guardar(); armarAnimalesCampo(); renderCampo(); toast(`${a.nombre} al potrero`); }
 function rotacion(i, k){ const p = datos.campo.previos[i]; if (!p) return 1; if (p === k) return 0.8; if (LEGUMINOSAS.includes(p) && GRAMINEAS.includes(k)) return 1.25; return 1; }
 function sembrar(i,k){ const cu = CAMPO_CULTIVOS[k]; if (!gastar(cu.precio)) return; const sem = (datos.campo.semillas||0) > 0; if (sem) datos.campo.semillas--; datos.campo.lotes[i] = { c:k, t0:Date.now(), r:rotacion(i,k) }; if (sem) datos.campo.lotes[i].s = 1.5; guardar(); renderCampo(); if (sem) toast('Sembraste con semilla criolla: rinde 50% más'); else toast(`Sembraste ${cu.nombre.toLowerCase()}`); }
 function rindeLote(l){ return (l.r || 1) * (l.s || 1) * (datos.campo.edificios.silos ? 1.5 : 1); }
@@ -5146,6 +5184,8 @@ function venderAnimal(k){
   revisarLogros(); guardar(); armarAnimalesCampo(); renderCampo(); toast(`Vendiste: ${CAMPO_ANIMALES[k].nombre} +${v}`);
 }
 function ampliarCampo(){ const c = datos.campo, sig = NIVELES_CAMPO[(c.nivel||0)+1]; if (!sig || !gastar(sig.precio)) return; juntarCampo(true); c.nivel++; normCampo(c); guardar(); renderCampo(); toast(`¡Ahora sos ${sig.nombre}! +lotes y +potrero`); }
+function nivelBoton(k){ const n = datos.campo.nivCorral[k] || 1; if (n >= 3) return { txt:'★★★ Al máximo', off:true, fn:() => {} };
+  const pr = PRECIO_NIVEL[n + 1]; return { txt:`Mejorar a ★${n + 1} · ${pr}`, off:datos.creditos < pr, fn:() => { if (!gastar(pr)) return; datos.campo.nivCorral[k] = n + 1; guardar(); renderCampo(); sfx('cofre'); toast(`${CAMPO_EDIFICIOS[k].nombre} ahora es nivel ${n + 1}: los de adentro producen ${15*n}% más`); } }; }
 function comprarEdificio(k){ const e = CAMPO_EDIFICIOS[k]; if (datos.campo.edificios[k] || !gastar(e.precio)) return; juntarCampo(true); datos.campo.edificios[k] = true; normPos(datos.campo); guardar(); if (e.lugar) armarAnimalesCampo(); renderCampo(); toast(`¡${e.nombre} nuevo!`); if (MOVIBLES[k] !== undefined) empezarColocar(k); }
 function juntarCampo(silencioso){
   const ac = acumulado();
@@ -5187,14 +5227,14 @@ const LOTES = [
 // cada especie vive en su lugar fijo: [x, y del pie, ancho, alto]
 const CORRALES = {"corral": [156, 646, 180, 112], "redil": [780, 168, 146, 105], "establo": [718, 514, 124, 127], "gallinero": [276, 433, 125, 95], "chiquero": [581, 432, 127, 97], "canil": [130, 390, 118, 90]};
 // qué obra necesita cada animal (las vacas viven en el potrero grande)
-const CASA_ANIMAL = { chancho:'chiquero', oveja:'redil', gallina:'gallinero', caballo:'establo', perro:'canil', galgo:'canil', dogo:'canil', salchicha:'canil', callejero:'canil', siberiano:'canil', golden:'canil' };
+const CASA_ANIMAL = { caballo_blanco:'establo', chancho:'chiquero', oveja:'redil', gallina:'gallinero', caballo:'establo', perro:'canil', galgo:'canil', dogo:'canil', salchicha:'canil', callejero:'canil', siberiano:'canil', golden:'canil' };
 // todo en su lugar fijo: en el potrero solo lo de las vacas (corral, engorde y mixer)
 const LUGAR = { tractor:[78, 318], camioneta:[335, 341], molino:[563, 188], tanque:[599, 214], tambo:[0,0], silos:[656, 228], cosechadora:[1061, 629], mixer:[262, 546], feedlot:[390, 650], galpon:[485, 252] };
 const ARROYO = [[650, 650], [806, 585], [910, 520], [988, 494], [1079, 455], [1131, 364], [1170, 306], [1300, 273], [1331, 266]];
 function dentroPoly(P, x, y){ let d = false; for (let i=0, j=P.length-1; i<P.length; j=i++){ const [xi,yi] = P[i], [xj,yj] = P[j]; if ((yi>y) !== (yj>y) && x < (xj-xi)*(y-yi)/(yj-yi)+xi) d = !d; } return d; }
 function enCorral(x, y){ return !dentroPoly(POT_P, x, y); }
 // zona donde camina cada animal: adentro de su corral (si lo tiene) o en el potrero
-const VACUNOS = ['holando','angus','ternero','toro','novillo'];
+const VACUNOS = ['holando','angus','ternero','toro','novillo','vaca_dorada'];
 function zonaAnimal(k, i){
   const casa = CASA_ANIMAL[k], c = campoDatos();
   if (!casa && VACUNOS.includes(k) && c.edificios && c.edificios.corral && (i % 3 === 0)){ const [x, y, w, h] = CORRALES.corral; return { x0:x - w*0.24, x1:x + w*0.24, y0:y - h*0.5, y1:y - h*0.16 }; }
@@ -5237,7 +5277,7 @@ function dibujarCampo(dt){
   if ($('#campo').classList.contains('oculto')) return;
   campoT += dt;
   const c = campoDatos(), e = c.edificios, g = cxC; g.imageSmoothingEnabled = false;
-  campoHits = []; campoBurb = []; if (!campoVisita) normPos(c);
+  campoHits = []; campoBurb = []; campoHuevos = []; campoTristes = []; if (!campoVisita) normPos(c);
   const noche = nocheDe(horaCampo()), duermen = noche > 0.7;
   const fondo = imgC('fondo2') || imgC('fondo');
   if (fondo) g.drawImage(fondo, 0, 0); else { g.fillStyle = '#6f9a3a'; g.fillRect(0, 0, CAMPO_W, CAMPO_H); }
@@ -5247,6 +5287,14 @@ function dibujarCampo(dt){
     const x = Math.round(a[0] + (b[0]-a[0])*f + Math.sin(campoT*3+k)*1.5), y = Math.round(a[1] + (b[1]-a[1])*f);
     g.fillStyle = 'rgba(230,248,255,.85)'; g.fillRect(x, y, 2 + (k%2), 1);
   }
+  // el clima en el piso: charcos con la lluvia, pasto seco con la sequía, escarcha con la helada
+  { const cl = campoVisita ? { id:'normal' } : climaCampo();
+    if (cl.id !== 'normal') for (let i=0; i<22; i++){ const z = hashT(i*53 + 11, 77), r = 10 + (z >>> 20) % 14;
+      let x, y; if (cl.id === 'lluvia' || i % 2){ const cam = z % CAMINOS.length, pt = puntoCamino(cam, ((z >>> 6) % 1000)/1000*LARGO_CAM[cam]); x = pt[0]; y = pt[1] + 4; } else { x = POT.x0 + 30 + (z >>> 4) % Math.max(1, POT.x1 - POT.x0 - 60); y = POT.y0 + 30 + (z >>> 12) % Math.max(1, POT.y1 - POT.y0 - 60); if (!dentroPoly(POT_P, x, y)) continue; }
+      if (cl.id === 'lluvia'){ g.fillStyle = 'rgba(90,140,190,.45)'; g.beginPath(); g.ellipse(x, y, r, r*0.45, 0, 0, Math.PI*2); g.fill();
+        const q = (campoT*0.9 + i*0.37) % 1; g.strokeStyle = `rgba(220,240,255,${(0.7*(1-q)).toFixed(2)})`; g.lineWidth = 1; g.beginPath(); g.ellipse(x, y, r*q, r*0.45*q, 0, 0, Math.PI*2); g.stroke(); }
+      else if (cl.id === 'sequia'){ g.fillStyle = 'rgba(214,180,90,.32)'; g.beginPath(); g.ellipse(x, y, r*2.2, r, 0, 0, Math.PI*2); g.fill(); }
+      else if (cl.id === 'helada'){ g.fillStyle = 'rgba(235,245,255,.35)'; g.beginPath(); g.ellipse(x, y, r*1.8, r*0.8, 0, 0, Math.PI*2); g.fill(); } } }
   // lotes que no son tuyos todavía
   for (let i=c.lotes.length; i<LOTES.length; i++){ const L = LOTES[i], r = [L.l, L.t, [L.t[0]+L.b[0]-L.l[0], L.t[1]+L.b[1]-L.l[1]], L.b];
     g.fillStyle = 'rgba(20,24,14,.45)'; g.beginPath(); g.moveTo(...r[0]); for (const p of r.slice(1)) g.lineTo(...p); g.closePath(); g.fill(); }
@@ -5277,7 +5325,7 @@ function dibujarCampo(dt){
     if (!tiene && campoVisita) continue;
     const [, , , hh] = CORRALES[k];
     cosas.push({ y:tiene && IMG_C[spr] ? y - hh*0.55 : y - hh*0.3, f:() => {
-      if (tiene && IMG_C[spr]){ dibAncla(spr, 0, x, y); hitAncla(spr, 0, x, y, 'edif', k); return; }
+      if (tiene && IMG_C[spr]){ dibAncla(spr, 0, x, y); hitAncla(spr, 0, x, y, 'edif', k); const nv = (c.nivCorral||{})[k] || 1; if (nv > 1){ const ti = txtImg('★'.repeat(nv), '#f5d547', '#15151c'); g.drawImage(ti, Math.round(x - ti.width/2), Math.round(y - hh - 6)); } return; }
       if (tiene){ const py = Math.round(y - hh*0.3); cartelCampo(g, x, py, CAMPO_EDIFICIOS[k].nombre.toUpperCase()); campoHits.push({ x0:x - 34, y0:py - 48, x1:x + 34, y1:py + 4, tipo:'edif', ref:k, cx:x, cy:py - 44 }); return; }   // todavía sin dibujo propio
       const py = Math.round(y - hh*0.3), cart = imgC('cartel');
       cartelCampo(g, x, py, CAMPO_EDIFICIOS[k].nombre.toUpperCase());
@@ -5289,6 +5337,15 @@ function dibujarCampo(dt){
   for (const a of campoAnim){
     const zona = zonaAnimal(a.k, a.i), vel = a.k==='gallina' ? 9 : 7;
     a.t -= dt;
+    if (a.palito){   // persigue el palito y lo trae
+      const pl = a.palito; pl.t += dt; const vuelo = Math.min(1, pl.t/0.6), px_ = pl.x0 + (pl.x - pl.x0)*vuelo, py_ = pl.y0 + (pl.y - pl.y0)*vuelo - Math.sin(vuelo*Math.PI)*30;
+      const ob = pl.fase === 0 ? { x:pl.x, y:pl.y } : { x:pl.x0, y:pl.y0 }, dx = ob.x - a.x, dy = ob.y - a.y, dd = Math.hypot(dx, dy);
+      if (pl.t > 0.35){ const v = 60*dt; if (dd > 3){ a.x += dx/dd*Math.min(v, dd); a.y += dy/dd*Math.min(v, dd); a.dir = dx > 0 ? 1 : -1; a.paso += dt*10; }
+        else if (pl.fase === 0) pl.fase = 1; else { a.palito = null; cuidar(a.k, a.x, a.y - 20); } }
+      const fr = Math.floor(a.paso) % 2, spr = CAMPO_ANIMALES[a.k].spr || a.k, conPalo = pl.fase === 1;
+      cosas.push({ y:a.y, f:() => { dibAncla(spr, fr, a.x, a.y, a.dir < 0); hitAncla(spr, fr, a.x, a.y, 'animal', a);
+        const sx = conPalo ? a.x + a.dir*9 : px_, sy = conPalo ? a.y - 9 : py_; g.fillStyle = '#6b4423'; g.fillRect(Math.round(sx) - 5, Math.round(sy), 10, 2); g.fillStyle = '#9a6a3a'; g.fillRect(Math.round(sx) - 5, Math.round(sy), 10, 1); } });
+      continue; }
     if (a.cam !== undefined){   // perro: pasea por el camino, de ida y vuelta, y cada tanto se sienta
       if (duermen){ a.come = true; }
       else { if (a.t <= 0){ a.come = Math.random() < 0.3; a.t = a.come ? rnd(1.5, 3.5) : rnd(3, 7); if (!a.come && Math.random() < 0.35) a.vaS = a.vaS ? -a.vaS : -1; }
@@ -5311,11 +5368,12 @@ function dibujarCampo(dt){
     cosas.push({ y:a.y, f:() => { dibAncla(spr, fr, a.x, a.y, a.dir < 0); hitAncla(spr, fr, a.x, a.y, 'animal', a); } });
   }
   cosas.push({ y:413, f:() => { cartelCampo(g, 429, 413, normTxt(c.nombre).slice(0,16)); campoHits.push({ x0:399, y0:371, x1:459, y1:415, tipo:'cartel', cx:429, cy:371 }); } });
+  if (esFeria() && !campoVisita) cosas.push({ y:CORRALES.chiquero[1] - 40, f:() => cartelCampo(g, 470, CORRALES.chiquero[1] - 40, '🎪 FERIA HOY'.replace('🎪 ', '')) });
   // el personaje elegido pasea por el patio de la casa
   { const v = campoVis, pjV = campoVisita ? c.pj : visitantePJ(), h = hojaPJ(pjV);
     v.t -= dt; if (v.t <= 0){ v.t = rnd(2, 5); v.para = Math.random() < 0.4; v.dir = Math.random() < 0.5 ? 1 : -1; }
     if (!v.para){ v.x += v.dir*14*dt; if (v.x < 143){ v.x = 143; v.dir = 1; } if (v.x > 390){ v.x = 390; v.dir = -1; } }
-    if (h && h.der){ const fr = v.para ? (h.abajo || h.der)[0] : h.der[Math.floor(campoT*7) % h.der.length], im = aplicarSkin(fr, campoVisita ? 'normal' : datos.skinSel[pjV]);
+    if (h && h.der){ const fr = v.para ? (h.abajo || h.der)[0] : h.der[Math.floor(campoT*7) % h.der.length], im = aplicarSkin(fr, campoVisita ? (c.skin || 'normal') : datos.skinSel[pjV]);
       cosas.push({ y:v.y, f:() => { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(Math.round(v.x - 6), v.y - 1, 12, 2);
         if (!v.para && v.dir < 0){ g.save(); g.translate(Math.round(v.x + im.width/2), v.y - im.height); g.scale(-1, 1); g.drawImage(im, 0, 0); g.restore(); } else g.drawImage(im, Math.round(v.x - im.width/2), v.y - im.height);
         campoHits.push({ x0:v.x - im.width/2 - 3, y0:v.y - im.height - 3, x1:v.x + im.width/2 + 3, y1:v.y + 3, tipo:'vis', cx:v.x, cy:v.y - im.height });
@@ -5326,6 +5384,13 @@ function dibujarCampo(dt){
     g.globalAlpha = 1 - p; g.drawImage(txtImg('z', '#e8f2ff', null), Math.round(a.x + 4 + p*6), Math.round(a.y - hh - 4 - p*12)); g.globalAlpha = 1; });
   dibLangostas(g, dt);
   cieloCampo(g, c);
+  // huevos en el gallinero
+  if (!campoVisita && e.gallinero){ if (campoT - (campoAcum.h||-9) > 2){ campoAcum.h = campoT; acumularHuevos(); }
+    const [gx, gy, gw, gh] = CORRALES.gallinero; for (let i=0; i<datos.campo.huevos; i++){ const z = hashT(i*31 + 7, 19), x = Math.round(gx - gw*0.28 + (z % 100)/100*gw*0.56), y = Math.round(gy - gh*0.32 + ((z >>> 8) % 100)/100*gh*0.2);
+      g.fillStyle = '#15151c'; g.fillRect(x-2, y-3, 5, 5); g.fillStyle = '#f4e3c3'; g.fillRect(x-1, y-3, 3, 4); g.fillRect(x-2, y-2, 5, 2); g.fillStyle = '#ffffff'; g.fillRect(x-1, y-2, 1, 1); campoHuevos.push({ x, y, i }); } }
+  // los tristes piden atención: globito con "?"
+  if (!campoVisita) for (const a of campoAnim){ if (animo(a.k) !== 'triste' || a.i > 2) continue; const im = imgC(CAMPO_ANIMALES[a.k] && CAMPO_ANIMALES[a.k].spr || a.k, 0), x = Math.round(a.x), y = Math.round(a.y - (im ? im.height : 18) - 12 + Math.sin(campoT*4 + a.i)*1.5);
+    g.fillStyle = '#15151c'; g.fillRect(x-5, y-5, 11, 10); g.fillStyle = '#bfe3ff'; g.fillRect(x-4, y-4, 9, 8); g.fillStyle = '#15151c'; g.fillRect(x-1, y+5, 3, 2); g.drawImage(txtImg('?', '#2b4a6b', null), x - 2, y - 3); campoTristes.push({ x, y, a }); }
   // lo producido, en globitos arriba de los animales: se junta tocando
   if (!campoVisita){
     if (campoT - campoAcum.t > 1) campoAcum = { t:campoT, n:acumulado().creditos };
@@ -5336,6 +5401,7 @@ function dibujarCampo(dt){
   // monedas que vuelan al contador y números
   campoFx = campoFx.filter(f => (f.t += dt) < f.d);
   for (const f of campoFx){ if (f.t < 0) continue; const p = f.t/f.d;
+    if (f.tipo==='corazon'){ g.globalAlpha = 1 - p; const x = Math.round(f.x0), y = Math.round(f.y0 - p*22); g.fillStyle = '#e8604c'; g.fillRect(x-2, y, 2, 2); g.fillRect(x+1, y, 2, 2); g.fillRect(x-2, y+1, 5, 2); g.fillRect(x-1, y+3, 3, 1); g.fillRect(x, y+4, 1, 1); g.globalAlpha = 1; continue; }
     if (f.tipo==='moneda'){ const e2 = p*p, vi = vistaCampo(), x = f.x0 + (vi.x1 - 30 - f.x0)*e2, y = f.y0 + (vi.y0 + 8 - f.y0)*e2 - Math.sin(p*Math.PI)*30; px(g, Math.round(x)-1, Math.round(y)-1, 3, 3, '#f5d547'); px(g, Math.round(x)-1, Math.round(y)-1, 1, 1, '#fff6c8'); }
     else { g.globalAlpha = Math.min(1, (1-p)*3); const ti = txtImg(f.txt, '#f5d547', '#15151c'); g.drawImage(ti, Math.round(f.x0 - ti.width), Math.round(f.y0 - p*18), ti.width*2, ti.height*2); g.globalAlpha = 1; } }
   // ubicando una obra: se marcan los lugares donde entra
@@ -5445,7 +5511,7 @@ function nombreAnimal(k, i, c){ c = c || campoDatos(); const pr = c && c.nombres
   const l = NOMBRES_AN[k] || ['Sin nombre']; return l[i % l.length] + (i >= l.length ? ' ' + (Math.floor(i / l.length) + 1) : ''); }
 
 // ---- estado de la escena ----
-let campoHits = [], campoBurb = [], campoFx = [], campoColocar = null, campoLang = null, campoVisita = null, campoAcum = { t:-9, n:0 };
+let campoHuevos = [], campoTristes = [], campoHits = [], campoBurb = [], campoFx = [], campoColocar = null, campoLang = null, campoVisita = null, campoAcum = { t:-9, n:0 };
 const campoDatos = () => campoVisita ? campoVisita.d : datos.campo;
 function idEstancia(){ if (!datos.idEst) { datos.idEst = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); guardar(); } return datos.idEst; }
 function hitAncla(spr, fr, cx, piso, tipo, ref){ const im = imgC(spr, fr); if (!im) return; campoHits.push({ x0:cx - im.width/2 - 3, y0:piso - im.height - 3, x1:cx + im.width/2 + 3, y1:piso + 3, tipo, ref, cx, cy:piso - im.height }); }
@@ -5498,6 +5564,8 @@ function colocarEn(i){
 function queHay(x, y){
   if (campoColocar){ let m = null, dm = 40*40; SITIOS.forEach((S, i) => { const d = (S[0]-x)**2 + (S[1]-12-y)**2; if (d < dm){ dm = d; m = i; } }); return m === null ? null : { tipo:'sitio', i:m }; }
   if (campoLang && !campoLang.fin) for (const b of campoLang.bichos) if (b.vivo && (b.x-x)**2 + (b.y-y)**2 < 15*15) return { tipo:'langosta', b };
+  for (const h of campoHuevos) if ((h.x-x)**2 + (h.y-y)**2 < 8*8) return { tipo:'huevo', h };
+  for (const t of campoTristes) if ((t.x-x)**2 + (t.y-y)**2 < 10*10) return { tipo:'triste', t };
   for (const b of campoBurb) if ((b.x-x)**2 + (b.y-y)**2 < 11*11) return { tipo:'burbuja' };
   for (let i = campoHits.length - 1; i >= 0; i--){ const h = campoHits[i]; if (x >= h.x0 && x <= h.x1 && y >= h.y0 && y <= h.y1) return h; }
   const c = campoDatos(); for (let i = 0; i < LOTES.length; i++) if (enLote(LOTES[i], x, y)) return { tipo:'lote', i, propio: i < c.lotes.length };
@@ -5509,6 +5577,8 @@ function tocarCampo(x, y){
   if (campoColocar){ if (h) colocarEn(h.i); else toast('Tocá uno de los lugares marcados'); return; }
   if (!h){ cerrarPop(); return; }
   if (h.tipo==='langosta'){ espantar(h.b); return; }
+  if (h.tipo==='huevo'){ juntarHuevo(h.h.i, h.h.x, h.h.y); return; }
+  if (h.tipo==='triste'){ cuidar(h.t.a.k, h.t.a.x, h.t.a.y - 20); toast('¡' + nombreAnimal(h.t.a.k, h.t.a.i) + ' está contento de nuevo!'); return; }
   if (h.tipo==='burbuja'){ juntarTocando(); return; }
   if (h.tipo==='animal') return popAnimal(h.ref, h.cx, h.cy);
   if (h.tipo==='edif') return popEdif(h.ref, h.cx, h.cy);
@@ -5523,9 +5593,12 @@ function popAnimal(a, x, y){
   let txt = esc(def.desc);
   if (a.k==='ternero' && !campoVisita && Array.isArray(c.crias) && c.crias[a.i] != null){ const eng = c.edificios.feedlot ? 4 : 8, h = Math.max(0, eng - (Date.now() - c.crias[a.i])/3600000); txt += ` Se hace novillo en ${fmtHoras(h)}.`; }
   if (a.k==='perro') txt += ' En las partidas te acompaña y ladra a los que se acercan.';
-  const esP = esPerro(a.k), va = esP && perroElegido() === a.k;
+  const esP = esPerro(a.k), va = esP && perroElegido() === a.k, an = animo(a.k);
+  if (!campoVisita) txt += an === 'feliz' ? ' 💚 Está contento: produce 15% más.' : an === 'triste' ? ' 💧 Hace mucho que nadie lo cuida: produce 20% menos.' : '';
   if (campoVisita) return abrirPop(x, y, esc(nom), `${esc(def.nombre)} de ${esc(c.nombre)}.`);
   const acc = [];
+  acc.push(an === 'feliz' ? { txt:'💚 Contento', off:true, fn:() => {} } : { txt:esP ? '🦴 Darle de comer' : '🌾 Darle de comer y agua', fn:() => cuidar(a.k, a.x, a.y - 20) });
+  if (esP) acc.push({ txt:'🪵 Tirarle el palito', fn:() => tirarPalito(a) });
   if (esP) acc.push(va ? { txt:'🐾 Va a las partidas', off:true, fn:() => {} } : { txt:'🐾 Llevar a las partidas', fn:() => elegirPerro(a.k) });
   if (VENTA_HACIENDA[a.k]) acc.push({ txt:`Vender ${precioHacienda(a.k)}`, fn:() => venderAnimal(a.k) });
   const w = semanaExpo();
@@ -5679,7 +5752,7 @@ function resumenEstancia(){
   return { v:1, nombre:normTxt(c.nombre).slice(0, 22), jugador:(datos.jugador||'').slice(0, 14), nivel:c.nivel||0, animales:an,
     edificios:Object.keys(c.edificios).filter(k => c.edificios[k] && CAMPO_EDIFICIOS[k]), pos:Object.assign({}, c.pos),
     deco:Object.keys(c.deco||{}).filter(k => c.deco[k] && CAMPO_DECO[k]), lotes:c.lotes.map(l => l ? { c:l.c, av:Math.round(avanceLote(l)*100)/100 } : null),
-    nombres:nombresParaSubir(c), pj:visitantePJ(), t:Date.now() };
+    nombres:nombresParaSubir(c), pj:visitantePJ(), skin:(datos.skinSel||{})[visitantePJ()] || 'normal', t:Date.now() };
 }
 function nombresParaSubir(c){ const o = {}; let n = 0;
   for (const k in (c.nombres||{})){ const [esp, i] = k.split(':'); if (!CAMPO_ANIMALES[esp] || !(+i < (c.animales[esp]||0)) || n >= 40) continue;
@@ -5695,6 +5768,7 @@ function limpiarEstancia(d){
   for (const k of lista(d.edificios)) if (CAMPO_EDIFICIOS[k]) o.edificios[k] = true;
   if (d.pos && typeof d.pos === 'object') for (const k in MOVIBLES) if (d.pos[k] != null) o.pos[k] = n(d.pos[k], 0, SITIOS.length - 1);
   for (const k of lista(d.deco)) if (CAMPO_DECO[k]) o.deco[k] = true;
+  o.skin = typeof d.skin === 'string' && SKINS[d.skin] ? d.skin : 'normal';
   o.nombres = {}; if (d.nombres && typeof d.nombres === 'object') for (const k in d.nombres){ const m = /^([a-z]+)_(\d{1,2})$/.exec(k), v = typeof d.nombres[k] === 'string' ? d.nombres[k].replace(/[<>]/g, '').trim().slice(0, 14) : '';
     if (m && CAMPO_ANIMALES[m[1]] && v) o.nombres[m[1] + ':' + m[2]] = v; }
   const nl = NIVELES_CAMPO[o.nivel].lotes;
@@ -5712,7 +5786,7 @@ async function publicarEstancia(){
   if (!DB_URL || !datos.jugador || campoVisita) return;
   const r = resumenEstancia(), firma = JSON.stringify(Object.assign({}, r, { t:0 })); if (firma === estPublicada) return;
   let ok = await NET.put(`estancias/${idEstancia()}/datos`, r);
-  if (ok === false && r.nombres && Object.keys(r.nombres).length){ delete r.nombres; ok = await NET.put(`estancias/${idEstancia()}/datos`, r); }
+  if (ok === false){ delete r.nombres; delete r.skin; ok = await NET.put(`estancias/${idEstancia()}/datos`, r); }
   if (ok !== false) estPublicada = firma;
 }
 // cebar mate: al que lo ceba le da créditos (hasta 5 estancias por día) y al dueño, cuando entra, más créditos
@@ -5756,6 +5830,7 @@ function avisoVisita(){
   const v = campoVisita; if (!v) return;
   avisoCampo(`Visitando <b>${esc(v.d.nombre)}</b>${v.d.jugador ? ' de ' + esc(v.d.jugador) : ''}`, [
     { txt:v.cebado ? '🧉 ¡Mate cebado!' : '🧉 Cebarle un mate', off:!!v.cebado, fn:cebarMate },
+    { txt:v.nota ? '✍️ ¡Notita dejada!' : '✍️ Dejar una notita', off:!!v.nota, fn:dejarNota },
     { txt:'Volver a mi campo', sec:true, fn:volverDeVisita }]);
 }
 async function cebarMate(){
@@ -5768,6 +5843,18 @@ async function cebarMate(){
   if (datos.matesHoy < MATE_TOPE){ datos.matesHoy++; datos.creditos += MATE_VISITA; guardar(); toast(`¡Le cebaste un mate! 🧉 +${MATE_VISITA} créditos (y a ${v.d.jugador || 'el dueño'} le llegan ${MATE_DUENO})`); }
   else toast(`¡Le cebaste un mate! 🧉 A ${v.d.jugador || 'el dueño'} le llegan ${MATE_DUENO} créditos (vos ya cobraste los ${MATE_TOPE} de hoy)`);
   sfx('cofre');
+}
+async function dejarNota(){
+  const v = campoVisita; if (!v || v.nota) return; if (!datos.jugador){ toast('Poné tu nombre en el menú para dejar notitas'); return; }
+  const txt = (prompt(`Notita para ${v.d.jugador || 'el dueño'} (hasta 80 letras):`) || '').replace(/[<>]/g, '').trim().slice(0, 80); if (!txt) return;
+  const ok = await NET.put(`estancias/${v.id}/notas/${idEstancia()}`, { de:datos.jugador.slice(0, 14), txt, t:Date.now() });
+  if (ok === false){ toast('No se pudo dejar la notita. ¿Hay internet?'); return; } v.nota = true; avisoVisita(); toast('¡Notita dejada! ✍️'); sfx('gema');
+}
+async function revisarNotas(){
+  if (!DB_URL || !datos.jugador) return; const m = await NET.get(`estancias/${idEstancia()}/notas`); if (!m || typeof m !== 'object') return;
+  const nuevas = Object.values(m).filter(x => x && typeof x.txt === 'string' && +x.t > (datos.notasVistas||0)).sort((a, b) => a.t - b.t); if (!nuevas.length) return;
+  datos.notasVistas = Math.max(...nuevas.map(x => +x.t)); guardar();
+  $('#novCont') ; abrirPop(CAMPO_W/2, 200, '✍️ Te dejaron ' + (nuevas.length === 1 ? 'una notita' : nuevas.length + ' notitas'), nuevas.slice(-6).map(x => `<b style="display:inline;color:var(--amarillo)">${esc(String(x.de||'Alguien').slice(0,14))}:</b> ${esc(String(x.txt).slice(0, 80))}`).join('<br>'));
 }
 function volverDeVisita(){ campoVisita = null; campoAnim = null; cerrarPop(); $('#campo').classList.remove('visitando'); avisoCampo(null); revisarLangostas(); }
 
