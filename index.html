@@ -4219,6 +4219,7 @@ function dibujarMiniMapa(j){
   const b = bctx, ox = Math.round((MM.cx - j.x)*k), oy = Math.round((MM.cy - j.y)*k);   // el terreno se corre entre redibujos para que no salte
   // marco: sombra, borde oscuro y borde claro, como el resto del HUD
   rect(mx - 2, my - 2, M + 6, M + 6, 'rgba(0,0,0,.35)'); rect(mx - 3, my - 3, M + 6, M + 6, '#15151c'); rect(mx - 2, my - 2, M + 4, M + 4, col.borde);
+  MM.rect = [mx - 4, my - 4, mx + M + 4, my + M + 4];
   b.save(); b.beginPath(); b.rect(mx, my, M, M); b.clip();
   b.globalAlpha = 0.92; b.fillStyle = col.piso; b.fillRect(mx, my, M, M); b.drawImage(MM.can, mx + ox, my + oy); b.globalAlpha = 1;
   const c0x = mx + M/2, c0y = my + M/2;
@@ -4283,6 +4284,38 @@ function dibujarPuerta(it){
 }
 function enAgua(x, pie, w){ const a = bctx.globalAlpha; bctx.globalAlpha = 0.7*a; rect(Math.round(x - w*0.42), pie - 4, Math.round(w*0.84), 5, '#5b97c4'); bctx.globalAlpha = 0.8*a; pAnillo(x, pie - 1, Math.round(w*0.45 + Math.sin(G.t*6)*1.5), '#cfe8f5', 1, 3); bctx.globalAlpha = a; }
 function sombraPies(cx,pie,w){ pElipse(cx, pie, Math.max(2,Math.round(w*0.33)), 1, 'rgba(0,0,0,.3)'); }
+// zonas del HUD (en píxeles del juego): lo que cae ahí abajo se dibuja casi transparente
+function tapaHud(x0, y0, w, h){ for (const z of (MM.zonas||[])) if (x0 < z[2] && x0 + w > z[0] && y0 < z[3] && y0 + h > z[1]) return true; return false; }
+function cartelMundo(s, x, y, color){ const c = txtImg(s, color, '#15151c'), w = c.width*TS + 6, h = c.height*TS + 4; const a0 = bctx.globalAlpha; if (tapaHud(Math.round(x - w/2), y - 2, w, h)) bctx.globalAlpha = a0*0.18; cartel8(s, x, y, color); bctx.globalAlpha = a0; }
+// luz: rayos de ventana en la facu y las aulas, el campo se va poniendo de tarde, y un viñeteado suave en los bordes
+const VINETA = { c:null, w:0, h:0 };
+function luzAmbiente(b){
+  const esc = G.escenario, apagon = G.clima === 'apagon' || G.clima === 'corte';
+  if ((esc === 'facu' || esc === 'aula') && !apagon){
+    // rayos diagonales que entran por los ventanales; se mueven con la cámara (están "pegados" al piso)
+    const paso = 260, ox = OX*0.9, n0 = Math.floor((ox - BH)/paso) - 1, n1 = Math.floor((ox + BW)/paso) + 1;
+    b.save(); b.globalCompositeOperation = 'screen';
+    for (let i = n0; i <= n1; i++){ const h = hashT(i*31 + 7, 3); if (h % 3 === 0) continue;
+      const x = i*paso - ox + (h % 90), ancho = 26 + (h >>> 5) % 34, al = (esc === 'aula' ? 0.12 : 0.10) * (0.8 + 0.2*Math.sin(G.t*0.6 + i));
+      b.fillStyle = esc === 'aula' ? `rgba(255,214,150,${al.toFixed(3)})` : `rgba(255,244,214,${al.toFixed(3)})`;
+      b.beginPath(); b.moveTo(x, 0); b.lineTo(x + ancho, 0); b.lineTo(x + ancho - BH*0.75, BH); b.lineTo(x - BH*0.75, BH); b.closePath(); b.fill(); }
+    b.restore();
+  }
+  if (esc === 'campo'){
+    // la salida a campo dura 7 minutos: arranca a pleno sol y termina de atardecer
+    const k = Math.max(0, Math.min(1, ((G.t % 1260) - 840) / 420));
+    if (k > 0.05){ b.save(); b.globalCompositeOperation = 'multiply';
+      const r = 255, g = Math.round(235 - 70*k), bl = Math.round(205 - 95*k + (k > 0.75 ? (k - 0.75)*160 : 0));
+      b.fillStyle = `rgba(${r},${g},${bl},${(0.16 + 0.22*k).toFixed(3)})`; b.fillRect(0, 0, BW, BH);
+      b.globalCompositeOperation = 'screen'; const gr = b.createLinearGradient(0, 0, 0, BH*0.6); gr.addColorStop(0, `rgba(255,170,90,${(0.10*k).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,170,90,0)'); b.fillStyle = gr; b.fillRect(0, 0, BW, BH*0.6);
+      b.restore(); }
+  }
+  // viñeta: se arma una vez por tamaño de pantalla
+  if (!VINETA.c || VINETA.w !== BW || VINETA.h !== BH){ const c = document.createElement('canvas'); c.width = BW; c.height = BH; const g = c.getContext('2d');
+    const gr = g.createRadialGradient(BW/2, BH/2, Math.min(BW, BH)*0.45, BW/2, BH/2, Math.hypot(BW, BH)*0.58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(8,6,16,0.42)');
+    g.fillStyle = gr; g.fillRect(0, 0, BW, BH); VINETA.c = c; VINETA.w = BW; VINETA.h = BH; }
+  b.drawImage(VINETA.c, 0, 0);
+}
 function cartel8(s, x, y, color){ const c = txtImg(s, color, '#15151c'), cw = c.width*TS, ch = c.height*TS, w = cw + 6, h = ch + 4, x0 = Math.round(x - w/2); bctx.fillStyle = 'rgba(10,10,16,.78)'; bctx.fillRect(x0, y-2, w, h); bctx.fillStyle = color; bctx.fillRect(x0, y-2, w, 1); bctx.drawImage(c, x0+3, y, cw, ch); }
 function texto8(s, x, y, color, borde, izq){ const c = txtImg(s,color,borde), w = c.width*TS; bctx.drawImage(c, izq ? x : x-(w>>1), y, w, c.height*TS); }
 function lineaPix(x0,y0,a,n,g){ const cx = Math.cos(a), cy = Math.sin(a); for (let i=0;i<n;i++) bctx.fillRect(Math.round(x0+cx*i-g/2), Math.round(y0+cy*i-g/2), g, g); }
@@ -4435,8 +4468,14 @@ function dibujar(){
     else if (EVENTOS_MAPA.includes(it.tipo)) dibujarEvento(it);
     else centrado(fx('biz',0,SPR.biz), bx_(it.x), by_(it.y));
   }
+  // columna de luz arriba de los cofres: se ven de lejos
+  if (datos.calidad!=='baja') for (const it of G.items){ if (it.tipo!=='cofre') continue; const x = bx_(it.x), y = by_(it.y); if (x<-20||x>BW+20||y<-90||y>BH+20) continue;
+    const al = 0.16 + 0.07*Math.sin(G.t*3 + it.x), gr = b.createLinearGradient(0, y - 70, 0, y + 4); gr.addColorStop(0, 'rgba(255,230,140,0)'); gr.addColorStop(1, `rgba(255,230,140,${al.toFixed(3)})`);
+    b.fillStyle = gr; b.fillRect(x - 6, y - 70, 12, 74); b.fillStyle = `rgba(255,245,200,${(al*1.2).toFixed(3)})`; b.fillRect(x - 2, y - 70, 4, 74);
+    if (Math.sin(G.t*5 + it.y) > 0.7){ b.fillStyle = '#fff6c8'; b.fillRect(x - 4 + Math.round(Math.sin(G.t*2.3 + it.x)*5), y - 20 - Math.round(((G.t*30 + it.x) % 50)), 1, 1); } }
   for (const g of G.gemas){
     const x = bx_(g.x), y = by_(g.y); if (x<-5||x>BW+5||y<-5||y>BH+5) continue;
+    if (g.v >= 3 && datos.calidad!=='baja'){ const pu = 0.5 + 0.5*Math.sin(G.t*5 + g.x*0.1); b.globalAlpha = 0.18 + 0.14*pu; pElipse(x, y, g.v>=6 ? 5 : 4, g.v>=6 ? 5 : 4, g.v>=6 ? '#ffd86a' : '#8fe0ff'); b.globalAlpha = 1; }
     centrado(g.v>=6 ? fx('g3',0,SPR.g3) : g.v>=3 ? fx('g2',0,SPR.g2) : fx('g1',0,SPR.g1), x, y + (Math.sin(G.t*4+g.x)>0.6?-1:0));
   }
 
@@ -4620,10 +4659,11 @@ function dibujar(){
   const jpx = bx_(j.x), jpy = by_(j.y);
   for (const t of G.textos){ b.globalAlpha = Math.min(1, t.vida*2.5) * (t.charla && Math.abs(bx_(t.x)-jpx) < 70 && Math.abs(by_(t.y)-jpy) < 45 ? 0.3 : 1);
     if (t.num){ const c = txtImg(t.txt, t.color, '#15151c'), k = TS * (t.big ? 2 : 1) * (t.pulso > 0 ? 1.25 : 1), w = Math.round(c.width*k), h = Math.round(c.height*k); b.drawImage(c, bx_(t.x) - (w>>1), by_(t.y) - h, w, h); }
-    else if (t.txt.length > 6) cartel8(t.txt.toUpperCase(), bx_(t.x), by_(t.y), t.color); else texto8(t.txt, bx_(t.x), by_(t.y), t.color, '#15151c'); }
+    else if (t.txt.length > 6) cartelMundo(t.txt.toUpperCase(), bx_(t.x), by_(t.y), t.color); else texto8(t.txt, bx_(t.x), by_(t.y), t.color, '#15151c'); }
   b.globalAlpha = 1;
   for (const e of G.enemigos) if (e.jefe && e.fraseT>0 && !e.invisible && enPantalla(e, 10)) globo(e);
   for (const f of G.efectos) if (f.tipo==='flash') rect(0,0,BW,BH,`rgba(255,250,220,${(f.vida/f.t*(datos.destellos ? 0.7 : 0.18)).toFixed(3)})`);
+  if (!G.dim && datos.calidad!=='baja') luzAmbiente(b);
   // ambiente
   if (!G.dim && datos.calidad!=='baja'){
     const tipoAmb = G.escenario, n = tipoAmb==='campo' ? 14 : 10;
@@ -4648,14 +4688,14 @@ function dibujar(){
     if (fuerza > 0.01){ const gr = b.createRadialGradient(BW/2, BH/2, Math.min(BW,BH)*0.35, BW/2, BH/2, Math.max(BW,BH)*0.7);
       gr.addColorStop(0, 'rgba(200,30,20,0)'); gr.addColorStop(1, `rgba(200,30,20,${Math.min(0.6, fuerza).toFixed(2)})`); b.fillStyle = gr; b.fillRect(0, 0, BW, BH); } }
 
-  if (G.grieta){ const g = G.grieta; cartel8('GRIETA · ' + g.def.nombre.split(',')[0] + ' · ' + Math.max(0, Math.ceil(g.vida)), bx_(g.x), by_(g.y) - 34, '#b48ce0'); }
+  if (G.grieta){ const g = G.grieta; cartelMundo('GRIETA · ' + g.def.nombre.split(',')[0] + ' · ' + Math.max(0, Math.ceil(g.vida)), bx_(g.x), by_(g.y) - 34, '#b48ce0'); }
   if (G.jefe) flecha(bx_(G.jefe.x), by_(G.jefe.y), '#e8604c', G.jefe.def.nombre.split(',')[0].split(' ')[0].toUpperCase());
   for (const e of G.enemigos) if (e.eco) flecha(bx_(e.x), by_(e.y), '#e8604c', e.def.nombre.split(',')[0].split(' ').pop().toUpperCase());
   if (G.grieta) flecha(bx_(G.grieta.x), by_(G.grieta.y), '#b48ce0', 'GRIETA ' + Math.max(0, Math.ceil(G.grieta.vida)));
   // mini-mapa: un plano de verdad de lo que tenés alrededor (en las dimensiones no hace falta)
-  if (!G.dim && datos.minimapa !== false) dibujarMiniMapa(j);
+  if (!G.dim && datos.minimapa !== false) dibujarMiniMapa(j); else MM.rect = null;
   // élites con truco: cartelito arriba
-  for (const e of G.enemigos) if (e.truco && e.hp > 0 && enPantalla(e, 10)) cartel8('ÉLITE · ' + ({ escudo:'ESCUDO', divide:'SE DIVIDE', charco:'CHARCOS' })[e.truco], bx_(e.x), by_(e.y) - Math.round(e.r*2.6/K) - 14, '#ff7a5a');
+  for (const e of G.enemigos) if (e.truco && e.hp > 0 && enPantalla(e, 10)) cartelMundo('ÉLITE · ' + ({ escudo:'ESCUDO', divide:'SE DIVIDE', charco:'CHARCOS' })[e.truco], bx_(e.x), by_(e.y) - Math.round(e.r*2.6/K) - 14, '#ff7a5a');
   // aviso de ola: el borde de la pantalla por donde entra se pone rojo y titila
   if (G.avisoBorde){ const ab = G.avisoBorde, ca = typeof colAviso === 'function' ? colAviso() : '232,60,40', al = (0.25 + 0.25*Math.sin(G.t*14)) * Math.min(1, (ab.max - ab.t)*3);
     const cx = Math.cos(ab.a), cy = Math.sin(ab.a), ex = BW/2 + cx*BW/2, ey = BH/2 + cy*BH/2;
@@ -4728,10 +4768,12 @@ function globo(e){
   const sp = spriteDeEnemigo(e).a, esc = escalaDe(e);
   const x = bx_(e.x), top = by_(e.y + e.r*0.9) - sp.height*esc - 14 - h;
   const left = Math.max(2, Math.min(BW-w-2, x-(w>>1)));
+  const a0 = bctx.globalAlpha; if (tapaHud(left - 1, top - 1, w + 2, h + 5)) bctx.globalAlpha = a0*0.18;
   rect(left-1, top-1, w+2, h+2, '#15151c'); rect(left, top, w, h, '#f2efe6');
   const tx = Math.max(left+2, Math.min(left+w-5, x-1));
   rect(tx-1, top+h+1, 5, 3, '#15151c'); rect(tx, top+h, 3, 3, '#f2efe6');
   lineas.forEach((l,i) => texto8(l, left+1, top+1+i*7*TS, '#1d3529', null, true));
+  bctx.globalAlpha = a0;
 }
 
 /* ---------- HUD ---------- */
@@ -4742,7 +4784,9 @@ function renderHud(){
   if ($('#xpNiv').dataset.n !== String(j.nivel)){ if ($('#xpNiv').dataset.n){ const x = $('.xp'); x.classList.remove('sube'); void x.offsetWidth; x.classList.add('sube'); } $('#xpNiv').dataset.n = j.nivel; $('#xpNiv').textContent = 'NIVEL ' + j.nivel; }
   $('#hudTiempo').textContent = fmtT(G.t);
   $('#hudDim').textContent = G.dios ? (G.t < G.dios.fin ? 'DIOS · leyenda en ' + fmtT(Math.max(0, G.dios.fin - G.t)) : 'DIOS · aguantá todo lo que puedas') : G.dim ? 'Dimensión: ' + G.dim.dim : (G.clima!=='normal' ? CLIMAS[G.clima].nombre : '');
-  { const hd = $('#hud .hud-der'); if (hd){ const r = hd.getBoundingClientRect(); MM.top = Math.ceil((r.bottom + 8)/P) + 3; } }   // el mini-mapa va justo debajo de los botones
+  { const hd = $('#hud .hud-der'); if (hd){ const r = hd.getBoundingClientRect(); MM.top = Math.ceil((r.bottom + 8)/P) + 3; }
+    const zs = []; for (const sel of ['#hud .hud-izq', '#hud .hud-tiempo', '#hud .hud-der', '#slots', '#habBtn', '#consBtns', '#habNombre', '#jefeBarra', '#consejo', '#tutoPaso', '#chatMenu']){ const el = $(sel); if (!el || el.classList.contains('oculto')) continue; const r = el.getBoundingClientRect(); if (r.width && r.height) zs.push([r.left/P - 2, r.top/P - 2, r.right/P + 2, r.bottom/P + 2]); }
+    if (MM.rect) zs.push(MM.rect); MM.zonas = zs; }   // el mini-mapa va justo debajo de los botones
   $('#hudKills').textContent = G.kills + ' ✗'; $('#chatBtn').classList.toggle('oculto', !G.coop); pintarPing();
   const pv = Math.max(0, j.hp/j.maxHp), hb = $('#hpBar');
   hb.style.width = (pv*100) + '%'; hb.classList.toggle('baja', pv<0.35);
