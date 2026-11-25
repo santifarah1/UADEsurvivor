@@ -3305,9 +3305,12 @@ function poolMinions(t){
   if (t>420) p.push('final','ayudante');
   return p;
 }
+// en equipo hay más daño: los enemigos se escalan con la cantidad de jugadores (1 + k por cada compañero)
+function nCoop(){ return G && G.coop && !G.espejo ? Math.max(1, todosLosJugadores().length) : 1; }
+const fCoop = k => 1 + k*(nCoop() - 1);
 function crearMinion(tipo, x, y){
   if (G.enemigos.length >= 380) return;   // tope duro: los eventos (plagas, marchas) no pueden pasarse de acá
-  const d = MINIONS[tipo], f = (1 + G.t/300 + (G.t/900)*(G.t/900)) * (G.clima==='paro' ? 1.5 : 1) * (G.dificil ? 1.5 : 1);
+  const d = MINIONS[tipo], f = (1 + G.t/300 + (G.t/900)*(G.t/900)) * (G.clima==='paro' ? 1.5 : 1) * (G.dificil ? 1.5 : 1) * fCoop(0.55);
   const shiny = !G.dim && Math.random() < 1/300;
   const nuevo = { tipo, x, y, r:d.r, hp:d.hp*f*(shiny?4:1), maxHp:d.hp*f*(shiny?4:1), vel:d.vel*(1+G.t/2200)*(G.clima==='calor'?0.85:1),
     dmg:d.dmg*(1 + G.t/1500), xp:d.xp, kx:0, ky:0, lento:0, flash:0, fase:Math.random()*6, mira:1, paso:0, shiny, escudo:0 };
@@ -3352,7 +3355,7 @@ function spawns(dt){
   if (G.plagaT<=0){
     G.plagaT = 55; mostrarBanner('¡Manga de langostas!');
     const p = posBorde();
-    for (let i=0;i<10+Math.floor(G.t/80);i++) crearMinion('langosta', p.x+rnd(-60,60), p.y+rnd(-60,60));
+    for (let i=0;i<Math.round((10+Math.floor(G.t/80))*fCoop(0.4));i++) crearMinion('langosta', p.x+rnd(-60,60), p.y+rnd(-60,60));
   }
   // eventos sorpresa
   G.eventoT = (G.eventoT ?? rnd(60,100)) - dt;
@@ -3383,7 +3386,7 @@ function spawns(dt){
   G.oleadaT -= dt;
   if (G.oleadaT<=0){
     G.oleadaT = 120; mostrarBanner('¡Semana de parciales!');
-    const n = 22 + Math.floor(G.t/60), R = Math.hypot(VW/2,VH/2)+30, hueco = Math.floor(Math.random()*n), ancho = Math.max(3, Math.round(n*0.14));
+    const n = Math.round((22 + Math.floor(G.t/60)) * fCoop(0.3)), R = Math.hypot(VW/2,VH/2)+30, hueco = Math.floor(Math.random()*n), ancho = Math.max(3, Math.round(n*0.14));
     for (let i=0;i<n;i++){ if ((i - hueco + n) % n < ancho) continue;   // siempre queda una salida
       const a = i*Math.PI*2/n; crearMinion(G.t>420?'recu':'parcial', G.jug.x+Math.cos(a)*R, G.jug.y+Math.sin(a)*R); }
   }
@@ -3391,8 +3394,8 @@ function spawns(dt){
   if (G.spawnT<=0){
     // enemigos por segundo: 1 al arrancar, ~2,2 a los 2 min, ~6 a los 5, ~12 a los 10 y ~23 a los 15 (tope). Antes se multiplicaba x5 entre el minuto 2 y el 5
     const t_ = G.t, porSeg = t_ < 180 ? 1 + t_*t_/12000 : Math.min(24, 3.7 + (Math.min(t_, 600) - 180)/50 + Math.max(0, t_ - 600)/28), n = 1 + Math.floor(t_/150);
-    G.spawnT = n/porSeg * (G.clima==='paro' ? 1.6 : 1);
-    if (G.enemigos.length < 300){
+    G.spawnT = n/(porSeg*fCoop(0.5)) * (G.clima==='paro' ? 1.6 : 1);
+    if (G.enemigos.length < Math.min(360, Math.round(300*fCoop(0.1)))){
       const pool = poolMinions(G.t/1.5);
       for (let i=0;i<n;i++){ const p = posBorde(); crearMinion(elegir(pool), p.x, p.y); }
     } else if (G.t > 420 && Math.random() < 0.12 && G.enemigos.filter(e => e.elite).length < Math.min(45, 8 + (G.t - 420)/30)){
@@ -3475,7 +3478,7 @@ function actualizarMinion(e, dt, dx, dy, d){
 
 /* ---------- pseudojefes ---------- */
 function crearSemi(sj){
-  const def = SEMI_DEF[sj.id], p = posBorde(), f = G.dificil ? 1.5 : 1;
+  const def = SEMI_DEF[sj.id], p = posBorde(), f = (G.dificil ? 1.5 : 1) * fCoop(0.85);
   const e = { jefe:true, semi:true, id:sj.id, def, x:p.x, y:p.y, r:sj.r, hp:sj.hp*f, maxHp:sj.hp*f, vel:sj.vel, dmg:14, xp:0,
     kx:0, ky:0, lento:0, flash:0, t1:2, t2:3, frase:'', fraseT:0, fraseCd:1, mira:1, paso:0, cambio:0, dirA:0 };
   G.enemigos.push(e);
@@ -3542,7 +3545,7 @@ function entrarGrieta(){
   G.grieta = null; G.dim = def; G.examen = null;
   j.x = 0; j.y = 180; j.inv = 1.5; joy = null;
   // la vida crece con tu nivel: si llegás muy fuerte, la pelea igual dura
-  const hpL = Math.round((HP_ORDEN[G.proxLeg] || def.hp) * (G.dificil ? 1.5 : 1) * (1 + 0.03*Math.max(0, j.nivel - 1)));
+  const hpL = Math.round((HP_ORDEN[G.proxLeg] || def.hp) * (G.dificil ? 1.5 : 1) * (1 + 0.03*Math.max(0, j.nivel - 1)) * fCoop(0.85));
   G.bombas = []; G.zonas = []; G.nubes = []; G.pasadas = []; G.juicios = [];
   const e = { jefe:true, leg:true, def, x:0, y:-160, r:def.r, hp:hpL, maxHp:hpL, vel:def.vel, dmg:18, xp:0, t3:6, atk:0,
     kx:0, ky:0, lento:0, flash:0, t1:2.5, t2:4, frase:'', fraseT:0, fraseCd:1, dash:0, pre:0,
@@ -3614,7 +3617,7 @@ function traerEco(){
   const lista = Object.keys(G.st.legs).filter(id => defJefe(id) && id!=='tato');
   const pool = lista.length ? lista : JEFES.map(d => d.id);
   const def = defJefe(pool[G.dios.n % pool.length]); G.dios.n++;
-  const j = G.jug, a = Math.random()*Math.PI*2, hp = 3000 + G.dios.n*900;
+  const j = G.jug, a = Math.random()*Math.PI*2, hp = Math.round((3000 + G.dios.n*900) * fCoop(0.85));
   const pp = { x:j.x + Math.cos(a)*420, y:j.y + Math.sin(a)*420 }; limitarArena(pp, 60); const x = pp.x, y = pp.y;
   G.enemigos.push({ jefe:true, leg:true, eco:true, def, x, y, r:def.r, hp, maxHp:hp, vel:def.vel, dmg:16, xp:0, t3:7, atk:0,
     kx:0, ky:0, lento:0, flash:0, t1:3, t2:5, frase:'', fraseT:0, fraseCd:1.5, dash:0, pre:0, visible:true, visT:3, invisible:false, mira:1, paso:0, fase0:G.dios.n });
@@ -3734,7 +3737,7 @@ function actualizarJefe(e, dt, dx, dy, d){
     case 'tato': {
       // no se muere, pero lo que le pegás se acumula: cuando llenás la barra se arrodilla un rato y suelta premios
       const recibido = Math.max(0, e.maxHp - e.hp); e.hp = e.maxHp;
-      if (!(e.arrod > 0)){ e.acum = (e.acum||0) + recibido; e.umbral = e.umbral || 9000;
+      if (!(e.arrod > 0)){ e.acum = (e.acum||0) + recibido; e.umbral = e.umbral || Math.round(9000 * fCoop(0.9));
         if (e.acum >= e.umbral){ e.arrod = 5; e.acum = 0; e.umbral = Math.round(e.umbral*1.45); avanzar = 0; G.juicios = []; G.ebalas = [];
           hablar(e, '…bueno, me arrodillo un ratito', 2.5); mostrarBanner('¡Tato se arrodilló! Aprovechá'); sfx('jefe'); G.sacudon = 0.4;
           for (let i=0;i<20;i++) G.gemas.push({ x:e.x+rnd(-70,70), y:e.y+rnd(-70,70), v:8 });
@@ -4210,7 +4213,7 @@ function mmTerreno(M){
   g.fillStyle = '#4f9ad8'; for (const l of lagunasCerca(j.x, j.y, R*1.5)){ const lx = W(l.x - x0), ly = W(l.y - y0), r = Math.max(2, W(LAG.r)); g.beginPath(); g.arc(lx, ly, r, 0, Math.PI*2); g.fill(); }
 }
 function dibujarMiniMapa(j){
-  const M = Math.max(40, Math.min(64, Math.round(BH*0.22))), mx = BW - M - 6, my = Math.round(Math.min(BH*0.24, 96/P)), R = MM.R, k = M/2/R;
+  const M = Math.max(40, Math.min(64, Math.round(BH*0.22))), mx = BW - M - 6, my = Math.max(Math.round(Math.min(BH*0.24, 96/P)), MM.top || 0), R = MM.R, k = M/2/R;
   const esc = G.escenario, col = MM_COL[esc] || MM_COL.facu;
   if (!MM.can || MM.M !== M || MM.esc !== esc || G.t - MM.t > 0.16 || G.t < MM.t || Math.hypot(j.x - MM.cx, j.y - MM.cy) > 0.8/k) mmTerreno(M);
   const b = bctx, ox = Math.round((MM.cx - j.x)*k), oy = Math.round((MM.cy - j.y)*k);   // el terreno se corre entre redibujos para que no salte
@@ -4739,6 +4742,7 @@ function renderHud(){
   if ($('#xpNiv').dataset.n !== String(j.nivel)){ if ($('#xpNiv').dataset.n){ const x = $('.xp'); x.classList.remove('sube'); void x.offsetWidth; x.classList.add('sube'); } $('#xpNiv').dataset.n = j.nivel; $('#xpNiv').textContent = 'NIVEL ' + j.nivel; }
   $('#hudTiempo').textContent = fmtT(G.t);
   $('#hudDim').textContent = G.dios ? (G.t < G.dios.fin ? 'DIOS · leyenda en ' + fmtT(Math.max(0, G.dios.fin - G.t)) : 'DIOS · aguantá todo lo que puedas') : G.dim ? 'Dimensión: ' + G.dim.dim : (G.clima!=='normal' ? CLIMAS[G.clima].nombre : '');
+  { const hd = $('#hud .hud-der'); if (hd){ const r = hd.getBoundingClientRect(); MM.top = Math.ceil((r.bottom + 8)/P) + 3; } }   // el mini-mapa va justo debajo de los botones
   $('#hudKills').textContent = G.kills + ' ✗'; $('#chatBtn').classList.toggle('oculto', !G.coop); pintarPing();
   const pv = Math.max(0, j.hp/j.maxHp), hb = $('#hpBar');
   hb.style.width = (pv*100) + '%'; hb.classList.toggle('baja', pv<0.35);
